@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import NavBar from "@/components/NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -33,7 +34,13 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <NavBar />
+        <main style={{ padding: "10px" }}>{children}</main>
+        <footer>
+          <p style={{ textAlign: "center" }}>
+            ©{new Date().getFullYear()} Waveform Analytics
+          </p>
+        </footer>
       </body>
     </html>
   );

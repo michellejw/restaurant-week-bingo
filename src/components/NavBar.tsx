@@ -8,10 +8,10 @@ const NavBar: React.FC = () => {
     <nav className="navbar">
       <ul>
         <li>
-          <a href="#">Home</a>
+          <a href="#">home</a>
         </li>
         <li>
-          <a href="#">About</a>
+          <a href="#">about</a>
         </li>
       </ul>
     </nav>
