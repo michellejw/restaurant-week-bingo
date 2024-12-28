@@ -14,10 +14,10 @@ reasonable.
 
 1. Set up base Next.js project with TypeScript (done)
 2. Create main layout with map and bingo card placeholders (done)
-3. Build reusable Bingo Card component
-    - Grid layout
-    - Single square component
-    - Click handling
+3. Build reusable Bingo Card component (done)
+    - Grid layout (done)
+    - Single square component (done)
+    - Click handling (done)
 4. Build basic Map component (done)
     - Integrate Mapbox (done)
     - Add placeholder markers (done)
@@ -25,10 +25,10 @@ reasonable.
 
 ## Phase 2: Basic State Management
 
-1. Create sample restaurant data structure
+1. Create sample restaurant data structure (done)
 2. Add state management for:
-    - Selected restaurants
-    - Completed squares
+    - Selected restaurants (done)
+    - Completed squares (done)
     - Map/Bingo card interaction
 3. Implement basic restaurant selection logic
 4. Add visual feedback for selections
