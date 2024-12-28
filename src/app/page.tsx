@@ -1,10 +1,32 @@
 'use client';
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import BingoCard from '@/components/BingoCard';
 
+interface Restaurant {
+  id: number;
+  name: string;
+  visited: boolean;
+  coordinates: [number, number];
+}
+
+const sampleRestaurants: Restaurant[] = [
+  { id: 1, name: "Michael's Seafood", visited: false, coordinates: [-77.9006, 34.0494] },
+  { id: 2, name: 'Malama Cafe', visited: false, coordinates: [-77.9078, 34.0362] }, // Coordinates added
+  { id: 3, name: 'Soul Flavor', visited: false, coordinates: [-77.9094, 34.0355] }, // Coordinates added
+  { id: 4, name: "Vinny's Pizza", visited: false, coordinates: [-77.9101, 34.0359] }, // Coordinates added
+  { id: 5, name: "Flaming Amy's", visited: false, coordinates: [-77.9123, 34.0378] }, // Coordinates added
+  { id: 6, name: "Nollie's Tacos", visited: false, coordinates: [-77.9137, 34.0385] }, // Coordinates added
+];
+
 const MainPage: React.FC = () => {
+  // Add state for restaurants
+  const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
+
+  // Keep track of the selected restaurant
+  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
+
   const mapContainer = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -19,29 +41,20 @@ const MainPage: React.FC = () => {
         })
       : null;
 
-    // Sample restaurant data
-    const restaurants = [
-      {
-        name: "Michael's seafood",
-        coordinates: [-77.9006, 34.0494] as [number, number],
-      },
-      {
-        name: 'Malama Cafe',
-        coordinates: [-77.9106, 34.0594] as [number, number],
-      },
-      {
-        name: 'Soul Flavor',
-        coordinates: [-77.9206, 34.0394] as [number, number],
-      },
-    ];
-
     // Add markers to map
     if (map) {
       restaurants.forEach(restaurant => {
-        new mapboxgl.Marker()
+        const marker = new mapboxgl.Marker({
+          color: restaurant.visited ? 'green' : 'red',
+        })
           .setLngLat(restaurant.coordinates)
           .setPopup(new mapboxgl.Popup().setText(restaurant.name))
           .addTo(map);
+
+        //Add click handler to the marker
+        marker.getElement().addEventListener('click', () => {
+          handleMapMarkerClick(restaurant.id);
+        });
       });
     }
 
@@ -50,7 +63,37 @@ const MainPage: React.FC = () => {
         map.remove();
       }
     };
-  }, []);
+  }, [restaurants]);
+
+  // Handle marker click
+  const handleMapMarkerClick = (id: number) => {
+    setRestaurants(prev =>
+      prev.map(restaurant =>
+        restaurant.id === id
+          ? {
+              ...restaurant,
+              visited: true,
+            }
+          : restaurant
+      )
+    );
+    const newSelected = restaurants.find(item => item.id === id) || null;
+    setSelectedRestaurant(newSelected);
+  };
+
+  // Handle bingo square click from the child component
+  const handleBingoSquareClick = (id: number) => {
+    setRestaurants(prev =>
+      prev.map(restaurant =>
+        restaurant.id === id
+          ? {
+              ...restaurant,
+              visited: !restaurant.visited,
+            }
+          : restaurant
+      )
+    );
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
@@ -67,7 +110,7 @@ const MainPage: React.FC = () => {
         <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
       </div>
       <div style={{ flex: 1, backgroundColor: '#f0f0f0', margin: '20px' }}>
-        <BingoCard />
+        <BingoCard restaurants={restaurants} onSquareClick={handleBingoSquareClick} />
       </div>
     </div>
   );
