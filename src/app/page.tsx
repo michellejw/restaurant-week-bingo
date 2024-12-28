@@ -2,6 +2,7 @@
 import React, { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import BingoCard from '@/components/BingoCard';
 
 const MainPage: React.FC = () => {
   const mapContainer = useRef<HTMLDivElement | null>(null);
@@ -66,8 +67,7 @@ const MainPage: React.FC = () => {
         <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
       </div>
       <div style={{ flex: 1, backgroundColor: '#f0f0f0', margin: '20px' }}>
-        <h2>Bingo card placeholder</h2>
-        {/* The bingo card component will go here! */}
+        <BingoCard />
       </div>
     </div>
   );
