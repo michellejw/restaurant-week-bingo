@@ -23,46 +23,46 @@ const sampleRestaurants: Restaurant[] = [
 const MainPage: React.FC = () => {
   // Add state for restaurants
   const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
-
-  // Keep track of the selected restaurant
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Restaurant | null>(null);
-
   const mapContainer = useRef<HTMLDivElement | null>(null);
+  const mapInstance = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<mapboxgl.Marker[]>([]);
 
   useEffect(() => {
-    // Initialize mapbox
-    mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
-    const map = mapContainer.current
-      ? new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/streets-v11',
-          center: [-77.9006, 34.0494],
-          zoom: 11,
-        })
-      : null;
-
-    // Add markers to map
-    if (map) {
-      restaurants.forEach(restaurant => {
-        const marker = new mapboxgl.Marker({
-          color: restaurant.visited ? 'green' : 'red',
-        })
-          .setLngLat(restaurant.coordinates)
-          .setPopup(new mapboxgl.Popup().setText(restaurant.name))
-          .addTo(map);
-
-        //Add click handler to the marker
-        marker.getElement().addEventListener('click', () => {
-          handleMapMarkerClick(restaurant.id);
-        });
+    // Initialize map instance only once
+    if (!mapInstance.current && mapContainer.current) {
+      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
+      mapInstance.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v11',
+        center: [-77.9006, 34.0494],
+        zoom: 11,
       });
     }
+  }, []);
 
-    return () => {
-      if (map) {
-        map.remove();
-      }
-    };
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+
+    // Clear old markers
+    markersRef.current.forEach((marker: mapboxgl.Marker) => marker.remove());
+    markersRef.current = []; // Reset markersRef
+
+    // Add markers for current restaurants
+    restaurants.forEach(restaurant => {
+      const marker = new mapboxgl.Marker({
+        color: restaurant.visited ? 'green' : 'red',
+      })
+        .setLngLat(restaurant.coordinates)
+        .setPopup(new mapboxgl.Popup().setText(restaurant.name))
+        .addTo(map);
+
+      marker.getElement().addEventListener('click', () => {
+        handleMapMarkerClick(restaurant.id);
+      });
+
+      markersRef.current.push(marker);
+    });
   }, [restaurants]);
 
   // Handle marker click
@@ -77,8 +77,6 @@ const MainPage: React.FC = () => {
           : restaurant
       )
     );
-    const newSelected = restaurants.find(item => item.id === id) || null;
-    setSelectedRestaurant(newSelected);
   };
 
   // Handle bingo square click from the child component
