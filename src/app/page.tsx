@@ -57,27 +57,9 @@ const MainPage: React.FC = () => {
         .setPopup(new mapboxgl.Popup().setText(restaurant.name))
         .addTo(map);
 
-      marker.getElement().addEventListener('click', () => {
-        handleMapMarkerClick(restaurant.id);
-      });
-
       markersRef.current.push(marker);
     });
   }, [restaurants]);
-
-  // Handle marker click
-  const handleMapMarkerClick = (id: number) => {
-    setRestaurants(prev =>
-      prev.map(restaurant =>
-        restaurant.id === id
-          ? {
-              ...restaurant,
-              visited: true,
-            }
-          : restaurant
-      )
-    );
-  };
 
   // Handle bingo square click from the child component
   const handleBingoSquareClick = (id: number) => {

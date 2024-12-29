@@ -30,8 +30,8 @@ reasonable.
     - Selected restaurants (done)
     - Completed squares (done)
     - Map/Bingo card interaction
-3. Implement basic restaurant selection logic
-4. Add visual feedback for selections
+3. Implement basic restaurant selection logic (done)
+4. Add visual feedback for selections (done)
 
 ## Phase 3: Data Layer
 
