@@ -35,12 +35,12 @@ reasonable.
 
 ## Phase 3: Data Layer
 
-1. Set up Supabase project
+1. Set up Supabase project (done)
 2. Design database schema:
-    - Restaurants table
-    - Users table
-    - Visits table
-3. Set up Prisma
+    - Restaurants table (done)
+    - Users table (done)
+    - Visits table (done)
+3. Set up Prisma * Note prisma only works with node stable releases
 4. Create basic API routes for:
     - Fetching restaurants
     - Updating visits
