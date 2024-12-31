@@ -85,5 +85,38 @@ reasonable.
 4. Write admin documentation
 5. Document API endpoints
 
-Would you like me to break down any of these phases in more detail? We can also adjust
-this plan based on your priorities or specific challenges you want to tackle first.
+---
+
+# Prisma + Supabase Integration Summary
+
+I had to resolve some issues when setting up prisma with supabase and wanted to summarize
+here for future me...
+
+## Environment Setup
+
+- Use `.env` file (not `.env.local`) for compatibility with both Next.js and Prisma
+- Include a `.env.example` in the repo with placeholder values
+- Add `.env` to `.gitignore` (this was done automatically by WebStorm which is nice)
+
+## Required Environment Variables
+
+```
+DATABASE_URL="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres"
+```
+
+## Prisma Schema Configuration
+
+```prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Transaction pooler connection
+  directUrl = env("DIRECT_URL") // Direct connection
+}
+```
+
+## Connection Types (Supabase)
+
+- Use Transaction Pooler for `DATABASE_URL` (regular queries)
+- Use Direct Connection for `DIRECT_URL` (migrations/schema changes)
+- Don't use Session Pooler for Next.js apps
