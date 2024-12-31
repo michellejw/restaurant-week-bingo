@@ -29,7 +29,7 @@ reasonable.
 2. Add state management for:
     - Selected restaurants (done)
     - Completed squares (done)
-    - Map/Bingo card interaction
+    - Map/Bingo card interaction (done)
 3. Implement basic restaurant selection logic (done)
 4. Add visual feedback for selections (done)
 
