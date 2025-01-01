@@ -40,10 +40,10 @@ reasonable.
     - Restaurants table (done)
     - Users table (done)
     - Visits table (done)
-3. Set up Prisma * Note prisma only works with node stable releases
+3. Set up Prisma * Note prisma only works with node stable releases (done)
 4. Create basic API routes for:
-    - Fetching restaurants
-    - Updating visits
+    - Fetching restaurants (done)
+    - Updating visits (done)
 5. Connect UI to real data
 
 ## Phase 4: Authentication
