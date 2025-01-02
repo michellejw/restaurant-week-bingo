@@ -220,7 +220,7 @@ npx tsc prisma/seed.ts
 ## **Next Steps**
 
 1. Update your API routes to handle additional functionality (e.g., updating, deleting
-   records).
-2. Build your frontend to interact with the database using these API routes.
+   records). (done)
+2. Build your frontend to interact with the database using these API routes. (done)
 3. Explore advanced Prisma features like aggregations, transactions, and optimizing
    queries.

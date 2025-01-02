@@ -44,7 +44,7 @@ reasonable.
 4. Create basic API routes for:
     - Fetching restaurants (done)
     - Updating visits (done)
-5. Connect UI to real data
+5. Connect UI to real data (done)
 
 ## Phase 4: Authentication
 

@@ -11,24 +11,33 @@ interface Restaurant {
   coordinates: [number, number];
 }
 
-const sampleRestaurants: Restaurant[] = [
-  { id: 1, name: "Michael's Seafood", visited: false, coordinates: [-77.9006, 34.0494] },
-  { id: 2, name: 'Malama Cafe', visited: false, coordinates: [-77.9078, 34.0362] }, // Coordinates added
-  { id: 3, name: 'Soul Flavor', visited: false, coordinates: [-77.9094, 34.0355] }, // Coordinates added
-  { id: 4, name: "Vinny's Pizza", visited: false, coordinates: [-77.9101, 34.0359] }, // Coordinates added
-  { id: 5, name: "Flaming Amy's", visited: false, coordinates: [-77.9123, 34.0378] }, // Coordinates added
-  { id: 6, name: "Nollie's Tacos", visited: false, coordinates: [-77.9137, 34.0385] }, // Coordinates added
-];
-
 const MainPage: React.FC = () => {
   // Add state for restaurants
-  const [restaurants, setRestaurants] = useState<Restaurant[]>(sampleRestaurants);
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const mapContainer = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
 
+  // Fetch live data from the API on page load
   useEffect(() => {
-    // Initialize map instance only once
+    const fetchRestaurants = async () => {
+      try {
+        const response = await fetch('/api/restaurants'); // call the GET API route
+        const data = await response.json();
+        setRestaurants(data); // Update state with live data
+      } catch (error) {
+        console.error('Error fetching restaurants', error);
+      }
+    };
+    const loadRestaurants = async () => {
+      await fetchRestaurants();
+    };
+
+    loadRestaurants().catch(error => console.error('Error in loadRestaurants:', error));
+  }, []);
+
+  // Initialize map instance only once
+  useEffect(() => {
     if (!mapInstance.current && mapContainer.current) {
       mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
       mapInstance.current = new mapboxgl.Map({
@@ -40,6 +49,7 @@ const MainPage: React.FC = () => {
     }
   }, []);
 
+  // Add markers to the map whenever restaurants are updated
   useEffect(() => {
     const map = mapInstance.current;
     if (!map) return;
@@ -62,17 +72,37 @@ const MainPage: React.FC = () => {
   }, [restaurants]);
 
   // Handle bingo square click from the child component
-  const handleBingoSquareClick = (id: number) => {
-    setRestaurants(prev =>
-      prev.map(restaurant =>
-        restaurant.id === id
-          ? {
-              ...restaurant,
-              visited: !restaurant.visited,
-            }
-          : restaurant
-      )
-    );
+  const handleBingoSquareClick = async (id: number) => {
+    try {
+      // Find the restaurant to update its visited status
+      const restaurant = restaurants.find(r => r.id === id);
+      if (!restaurant) return;
+
+      // Update the database via the PUT API route
+      const response = await fetch('/api/restaurants', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ restaurantId: id, visited: !restaurant.visited }),
+      });
+
+      if (response.ok) {
+        // Update the UI state after successfully updating the backend
+        setRestaurants(prev =>
+          prev.map(r =>
+            r.id === id
+              ? {
+                  ...r,
+                  visited: !r.visited,
+                }
+              : r
+          )
+        );
+      } else {
+        console.error('Failed to update restaurant in the backend.');
+      }
+    } catch (error) {
+      console.error('Error updating restaurant', error);
+    }
   };
 
   return (
