@@ -18,10 +18,11 @@ model Restaurant {
 }
 
 model User {
-  id     Int     @id @default(autoincrement())
-  email  String  @unique
-  name   String?
-  visits Visit[]
+  id      Int     @id @default(autoincrement())
+  email   String  @unique
+  name    String?
+  isAdmin Boolean
+  visits  Visit[]
 }
 
 model Visit {
