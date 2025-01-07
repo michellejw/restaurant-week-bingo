@@ -37,6 +37,7 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=New+Amsterdam:wght@400&display=swap"
           rel="stylesheet"
         />
+        <title>layout</title>
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <NavBar isAuthenticated={isAuthenticated} />
