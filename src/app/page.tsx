@@ -107,7 +107,6 @@ const MainPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <h1>Restaurant Week Bingo!</h1>
       <div
         style={{
           flex: 1,

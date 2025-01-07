@@ -48,9 +48,9 @@ reasonable.
 
 ## Phase 4: Authentication
 
-1. Set up Auth0
-2. Add login/logout functionality
-3. Create protected routes
+1. Set up Auth0 (done)
+2. Add login/logout functionality (done)
+3. Create protected routes (done)
 4. Add user-specific data handling
 5. Implement session management
 
