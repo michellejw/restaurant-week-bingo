@@ -2,6 +2,7 @@
 
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { AuthButton } from '../auth/auth-button';
+import Link from 'next/link';
 
 export default function Navbar() {
   const { user, isLoading } = useUser();
@@ -16,6 +17,14 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {user && !isLoading && (
               <>
+                {user.isAdmin && (
+                  <Link
+                    href="/admin"
+                    className="px-4 py-2 text-gray-600 hover:text-gray-900 font-medium"
+                  >
+                    Admin Dashboard
+                  </Link>
+                )}
                 <span className="text-gray-600">
                   Welcome, {user.name || user.email}!
                 </span>

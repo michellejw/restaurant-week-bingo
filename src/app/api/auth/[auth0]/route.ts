@@ -51,6 +51,12 @@ const afterCallback = async (req: Request, session: any) => {
       if (insertError) {
         console.error('Error creating user in Supabase:', insertError);
       }
+      
+      // Add isAdmin status to session
+      session.user.isAdmin = false;
+    } else {
+      // Add the existing user's admin status to the session
+      session.user.isAdmin = existingUser.isAdmin;
     }
 
     return session;
