@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Auth0ProviderComponent } from '@/components/providers/auth0-provider';
-import { AuthButton } from '@/components/auth/auth-button';
+import { LogoutButton } from '@/components/auth/logout-button';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -27,8 +27,8 @@ export default function RootLayout({
                   <div className="flex-shrink-0">
                     <h1 className="text-xl font-bold text-gray-900">Restaurant Week Bingo</h1>
                   </div>
-                  <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                    <AuthButton />
+                  <div>
+                    <LogoutButton />
                   </div>
                 </div>
               </div>
