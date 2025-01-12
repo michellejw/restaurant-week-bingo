@@ -68,6 +68,28 @@ When a non-authenticated user visits the site, they should be directed to a land
 2. **Admin Dashboard Interface**
    - Design and develop the admin-specific dashboard with React components for managing restaurants and QR codes.
    - Implement routing to different admin pages for restaurant setup and QR code management.
+   - Create the following admin components and features:
+     - Restaurant Management:
+       - Form component for adding new restaurants (name, address, description, website)
+       - Table/grid view of existing restaurants with edit and delete functionality
+       - Image upload capability for restaurant photos
+       - Validation to ensure required fields are filled
+     - QR Code Management:
+       - Automatic QR code generation for each restaurant
+       - Interface to view and download QR codes
+       - Ability to regenerate QR codes if needed
+     - Admin Dashboard Layout:
+       - Sidebar navigation between different admin sections
+       - Summary statistics (total restaurants, total visits, active users)
+       - Activity log of recent changes
+     - Security:
+       - Role-based access control using Auth0 roles
+       - Audit logging for all admin actions
+     - Data Management:
+       - Bulk import/export functionality for restaurant data
+       - Backup and restore capabilities
+   - Implement proper error handling and success notifications for all admin actions
+   - Add confirmation dialogs for destructive actions (delete, regenerate QR codes)
 3. **Main User Interface**
    - Develop the Bingo card interface using React state for interactivity.
    - Integrate Mapbox for displaying interactive maps with restaurant markers.

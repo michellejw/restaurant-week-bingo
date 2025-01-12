@@ -3,7 +3,7 @@
 import { useUser } from '@auth0/nextjs-auth0/client';
 import { AuthButton } from '../auth/auth-button';
 
-export function Navbar() {
+export default function Navbar() {
   const { user, isLoading } = useUser();
 
   return (
@@ -15,11 +15,13 @@ export function Navbar() {
           </div>
           <div className="flex items-center space-x-4">
             {user && !isLoading && (
-              <span className="text-gray-600">
-                Welcome, {user.name || user.email}!
-              </span>
+              <>
+                <span className="text-gray-600">
+                  Welcome, {user.name || user.email}!
+                </span>
+                <AuthButton />
+              </>
             )}
-            <AuthButton />
           </div>
         </div>
       </div>
