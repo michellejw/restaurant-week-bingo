@@ -1,4 +1,4 @@
-import Image from "next/image";
+import Link from 'next/link'
 
 export default function Home() {
   return (
@@ -22,20 +22,20 @@ export default function Home() {
                 Visit local restaurants, scan QR codes, and win prizes! Join the fun during Pleasure Island Restaurant Week.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
-                <a
-                  href="#"
+                <Link
+                  href="/auth"
                   className="rounded-md bg-primary-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-primary-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600"
                 >
                   Get Started
-                </a>
-                <a href="#" className="text-sm font-semibold leading-6 text-gray-900">
+                </Link>
+                <Link href="#how-it-works" className="text-sm font-semibold leading-6 text-gray-900">
                   Learn more <span aria-hidden="true">→</span>
-                </a>
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }
