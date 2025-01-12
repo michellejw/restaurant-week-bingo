@@ -15,56 +15,56 @@ Non-admin users should be able to view the map and the list of restaurants, but 
 
 The bingo card should be a flexible grid of squares that have the name of the restaurant on them. The specific grid layout should adjust based on the number of restaurants and the screen size. 
 
+When a non-authenticated user visits the site, they should be directed to a landing page with a button to login. Once the user is logged in, there should be a logout button in the navbar. 
+
 ## Tools and Frameworks
 
 ### Frontend
-- **React**: A JavaScript library for building user interfaces with a component-based architecture.
-- **Next.js**: A React framework for server-side rendering, static site generation, and optimized loading.
+- **React**: A JavaScript library for building user interfaces with components.
+- **Next.js**: A React framework that provides server-side rendering, static site generation, and optimized loading.
 - **Tailwind CSS**: A utility-first CSS framework for rapid, responsive UI development.
 
 ### Backend and Database
-- **Supabase**: An open-source Firebase alternative providing database, authentication, real-time updates, and storage capabilities.
+- **Supabase**: Utilized for the database to store and manage application data like users, restaurants, and visits.
+- **Auth0**: Provides comprehensive authentication solutions including social logins, enterprise identity providers, and secure access management.
 
 ### Authentication
-- **Supabase Auth**: Supports email/password auth, JWT token management, and third-party logins such as Google, Apple, and Facebook.
+- **Auth0**: Manages user authentication and authorization, supporting a variety of identity providers.
 
 ### Hosting/Deployment
-- **Vercel**: For hosting the Next.js frontend with seamless deployment and high performance.
-- **Supabase**: Manages backend functionalities, including database operations and authentication.
+- **Vercel**: For deploying and hosting the Next.js frontend efficiently.
+- **Supabase**: Manages backend database functionalities.
 
 ### Additional Tools
-- **Mapbox**: For embedding custom, interactive maps to display restaurant locations.
-- **QR Code API**: Integrated for generating and validating QR codes necessary for the bingo game mechanics.
+- **Mapbox**: Embedded for displaying interactive maps to show restaurant locations.
+- **QR Code API**: Integrated for generating and validating QR codes needed for the bingo game mechanics.
 
 ## Development Phases
 
 ### Phase 1: Project Setup and Initial Configuration
 #### Objective: Establish the foundational structure and settings of the project.
 1. **Initialize the Next.js Application**
-   - Start the next.js project inside the current directory. There is no current next.js project in there so all files need to be created from scratch.
+   - Command: `npx create-next-app my-bingo-app`
+   - Navigate into the project directory and set up version control with Git.
 2. **Integrate Tailwind CSS**
-   - Follow the Tailwind CSS installation guide tailored for Next.js to ensure optimal configuration for post-processing.
-3. **Configure Supabase Project**
-   - Create a new project in Supabase.
-   - Secure API keys and endpoints for later use in the frontend.
+   - Follow the Tailwind CSS installation guide tailored for Next.js to ensure optimal configuration.
+3. **Setup Environment for Auth0 and Supabase**
+   - Secure API keys and endpoints for both Auth0 and Supabase for later use in the frontend.
 
-### Phase 2: Authentication Setup
-#### Objective: Configure robust authentication mechanisms using Supabase for both regular and admin users.
-1. **Enable Supabase Authentication**
-   - Set up email/password login and configure third-party providers in the Supabase dashboard.
-   - Define environment variables for Supabase URL and keys in Next.js for secure communication.
-2. **Implement Authentication Handling in Frontend**
-   - Utilize Supabase JS library to facilitate login/logout functionalities.
-   - Create context or use hooks for managing authentication state throughout the app.
-3. **Admin Verification**
-   - Add a user role attribute (`role`) in the Supabase user metadata for distinguishing between admin and non-admin users.
-   - Implement conditional UI rendering in Next.js based on the user's role.
+### Phase 2: Authentication Setup Using Auth0
+#### Objective: Configure robust authentication mechanisms using Auth0.
+1. **Setup Auth0**
+   - Create an Auth0 account and a new application.
+   - Configure domain and client ID in Auth0 and add them to the Next.js environment variables.
+2. **Implement Authentication in Frontend**
+   - Use the Auth0 React SDK to integrate login/logout functionality.
+   - Handle user authentication state using React contexts or hooks.
 
 ### Phase 3: User Interface Development
 #### Objective: Develop intuitive and responsive interfaces for both the admin dashboard and the main user interface.
 1. **Navbar Component**
-   - Implement a dynamic navbar that adjusts content based on authentication state.
-   - Include "Logout" button and conditional "Admin Dashboard" access for admin users.
+   - Implement a dynamic navbar that adjusts content based on user authentication state.
+   - Include "Logout" button and conditional "Admin Dashboard" access for admin users, based on Auth0 roles.
 2. **Admin Dashboard Interface**
    - Design and develop the admin-specific dashboard with React components for managing restaurants and QR codes.
    - Implement routing to different admin pages for restaurant setup and QR code management.
@@ -72,19 +72,18 @@ The bingo card should be a flexible grid of squares that have the name of the re
    - Develop the Bingo card interface using React state for interactivity.
    - Integrate Mapbox for displaying interactive maps with restaurant markers.
 
-### Phase 4: Database Design and Integration
+### Phase 4: Database Setup and Integration Using Supabase
 #### Objective: Set up a scalable database schema and integrate it with the frontend.
 1. **Design Database Schema in Supabase**
-   - Define tables for `Users`, `Restaurants`, `Visits`, and potentially `BingoCards`.
-   - Establish relationships and permissions in Supabase for data integrity and security.
+   - Define tables for `Users`, `Restaurants`, `Visits`, and `BingoCards`.
+   - Establish relationships and permissions in Supabase for data integrity.
 2. **Data Fetching and Manipulation**
-   - Use Supabase's real-time capabilities to fetch and update restaurant data.
-   - Implement secure API endpoints using Supabase functions if complex server-side logic is required.
+   - Implement real-time data fetching from Supabase to populate restaurant data and manage visits.
 
 ### Phase 5: QR Code Integration
 #### Objective: Implement QR code generation and scanning functionalities.
 1. **QR Code Generation**
-   - Use a third-party QR Code API to generate QR codes for each restaurant, storing them in the database.
+   - Use a third-party QR Code API to generate QR codes for each restaurant, storing them in the Supabase database.
 2. **QR Code Scanning**
    - Integrate a QR code scanning library in the React app.
    - Connect scan validations to update user visits and Bingo card status dynamically.
@@ -93,13 +92,11 @@ The bingo card should be a flexible grid of squares that have the name of the re
 #### Objective: Ensure the app is robust, performant, and ready for deployment.
 1. **Comprehensive Testing**
    - Write unit tests for React components using Jest.
-   - Conduct end-to-end tests with Cypress to ensure all workflows operate as expected.
+   - Conduct end-to-end tests with tools like Cypress.
 2. **Performance Optimization**
-   - Optimize React component rendering.
-   - Utilize Supabase performance tuning for database queries.
+   - Optimize React component rendering and database interactions.
 3. **Deployment**
-   - Deploy the frontend via Vercel and configure environment variables.
-   - Ensure backend configurations in Supabase are production-ready.
+   - Deploy the frontend via Vercel and ensure that the Supabase database is configured for production use.
 
 ### Phase 7: Documentation and Launch
 #### Objective: Document the system thoroughly and prepare for a successful launch.
@@ -109,4 +106,4 @@ The bingo card should be a flexible grid of squares that have the name of the re
    - Develop marketing materials and plan a launch event to promote the app.
 
 ## Conclusion
-This detailed roadmap guides you through each phase of developing the Pleasure Island Restaurant Week Bingo App using modern technologies and best practices. It ensures that both admin and non-admin functionalities are fully supported and secure, providing a comprehensive blueprint for a successful project.
+This roadmap provides a clear and detailed path through all phases of developing the Pleasure Island Restaurant Week Bingo App using Auth0 for authentication and Supabase for database management. It ensures a secure, efficient, and user-friendly experience, ready for a successful deployment.
