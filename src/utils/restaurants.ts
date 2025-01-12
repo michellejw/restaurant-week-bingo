@@ -1,14 +1,38 @@
-import { supabase } from './supabase';
+import { supabase, checkSupabaseConnection } from './supabase';
 import { Restaurant, RestaurantVisit, RestaurantWithVisitStatus } from '@/types/restaurant';
 
 export async function getAllRestaurants(): Promise<Restaurant[]> {
-    const { data, error } = await supabase
-        .from('restaurants')
-        .select('*')
-        .order('name');
+    console.log('Fetching restaurants...');
     
-    if (error) throw error;
-    return data || [];
+    // First check if we can connect to Supabase
+    const canConnect = await checkSupabaseConnection();
+    console.log('Can connect to Supabase:', canConnect);
+
+    const response = await supabase
+        .from('restaurants')
+        .select('*', { count: 'exact' });
+    
+    console.log('Raw Supabase response:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: response.error,
+        data: response.data,
+        count: response.count
+    });
+
+    if (response.error) {
+        console.error('Error fetching restaurants:', {
+            error: response.error,
+            status: response.status,
+            statusText: response.statusText,
+            message: response.error.message,
+            details: response.error.details
+        });
+        throw response.error;
+    }
+
+    console.log(`Found ${response.count} restaurants:`, response.data);
+    return response.data || [];
 }
 
 export async function getRestaurantsWithVisitStatus(userId: string): Promise<RestaurantWithVisitStatus[]> {
