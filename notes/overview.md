@@ -69,17 +69,17 @@ When a non-authenticated user visits the site, they should be directed to a land
    - Design and develop the admin-specific dashboard with React components for managing restaurants and QR codes.
    - Implement routing to different admin pages for restaurant setup and QR code management.
    - Create the following admin components and features:
-     - Restaurant Management:
-       - Form component for adding new restaurants (name, address, description, website)
-       - Table/grid view of existing restaurants with edit and delete functionality
-       - Image upload capability for restaurant photos
-       - Validation to ensure required fields are filled
+     - Restaurant Management: 
+       - Form component for adding new restaurants (name, address, description, website) (done)
+       - Table/grid view of existing restaurants with edit and delete functionality (done)
+       - Image upload capability for restaurant photos (maybe later, not really necessary)
+       - Validation to ensure required fields are filled (done)
      - QR Code Management:
-       - Automatic QR code generation for each restaurant
+       - Automatic QR code generation for each restaurant 
        - Interface to view and download QR codes
        - Ability to regenerate QR codes if needed
      - Admin Dashboard Layout:
-       - Sidebar navigation between different admin sections
+       - Sidebar navigation between different admin sections (done)
        - Summary statistics (total restaurants, total visits, active users)
        - Activity log of recent changes
      - Security:
