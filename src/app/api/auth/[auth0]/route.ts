@@ -1,5 +1,5 @@
 import { handleAuth, handleCallback } from '@auth0/nextjs-auth0';
-import { supabase } from '@/utils/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 const afterCallback = async (req: Request, session: any) => {
   try {
@@ -17,46 +17,59 @@ const afterCallback = async (req: Request, session: any) => {
       sub: user.sub
     });
 
-    // Check if user exists in Supabase
-    const { data: existingUser, error: selectError } = await supabase
-      .from('users')
-      .select('*')
-      .eq('email', user.email)
-      .single();
+    // Create admin Supabase client with service role
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_KEY!,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      }
+    );
 
-    console.log('Supabase select result:', { existingUser, selectError });
-
-    if (selectError && selectError.code !== 'PGRST116') {
-      console.error('Error checking for existing user:', selectError);
-      return session;
-    }
-
-    if (!existingUser) {
-      console.log('Attempting to create new user in Supabase');
-      const newUser = {
-        email: user.email,
-        name: user.name || user.email?.split('@')[0] || 'Anonymous',
-        isAdmin: false,
-      };
-      console.log('New user data:', newUser);
-
-      const { data: insertedUser, error: insertError } = await supabase
+    try {
+      // First try to get the user
+      const { data: existingUser, error: selectError } = await supabaseAdmin
         .from('users')
-        .insert([newUser])
-        .select()
+        .select('*')
+        .eq('email', user.email)
         .single();
 
-      console.log('Supabase insert result:', { insertedUser, insertError });
+      console.log('Supabase select result:', { existingUser, selectError });
 
-      if (insertError) {
-        console.error('Error creating user in Supabase:', insertError);
+      let userData = existingUser;
+
+      // If user doesn't exist, create them
+      if (!existingUser && (!selectError || selectError.code === 'PGRST116')) {
+        console.log('Creating new user in Supabase');
+        const { data: newUser, error: insertError } = await supabaseAdmin
+          .from('users')
+          .insert([{
+            email: user.email,
+            name: user.name || user.email?.split('@')[0] || 'Anonymous',
+            isAdmin: false
+          }])
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error creating user:', insertError);
+          return session;
+        }
+
+        userData = newUser;
+        console.log('Created new user:', newUser);
       }
-      
-      // Add isAdmin status to session
-      session.user.isAdmin = false;
-    } else {
-      // Add the existing user's admin status to the session
-      session.user.isAdmin = existingUser.isAdmin;
+
+      if (userData) {
+        // Set the admin status in the session
+        session.user.isAdmin = userData.isAdmin;
+        console.log('Set user admin status:', userData.isAdmin);
+      }
+    } catch (error) {
+      console.error('Error managing user in Supabase:', error);
     }
 
     return session;

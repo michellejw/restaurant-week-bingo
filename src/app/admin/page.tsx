@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/utils/supabase';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({
@@ -9,42 +8,47 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalVisits: 0,
   });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        // Get total restaurants
-        const { count: restaurantCount } = await supabase
-          .from('restaurants')
-          .select('*', { count: 'exact', head: true });
-
-        // Get total users
-        const { count: userCount } = await supabase
-          .from('users')
-          .select('*', { count: 'exact', head: true });
-
-        // Get total visits
-        const { count: visitCount } = await supabase
-          .from('visits')
-          .select('*', { count: 'exact', head: true });
-
-        setStats({
-          totalRestaurants: restaurantCount || 0,
-          totalUsers: userCount || 0,
-          totalVisits: visitCount || 0,
-        });
+        const response = await fetch('/api/admin/stats');
+        if (!response.ok) {
+          throw new Error('Failed to fetch stats');
+        }
+        const data = await response.json();
+        setStats(data);
       } catch (error) {
         console.error('Error fetching stats:', error);
+        setError('Failed to load dashboard stats');
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchStats();
   }, []);
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-gray-500">Loading dashboard stats...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="text-2xl font-bold mb-8">Dashboard Overview</h1>
       
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-400 p-4 mb-8">
+          <p className="text-red-700">{error}</p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Stats Cards */}
         <div className="bg-white p-6 rounded-lg shadow-sm">
