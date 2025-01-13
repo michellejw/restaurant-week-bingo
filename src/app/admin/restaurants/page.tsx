@@ -37,18 +37,20 @@ export default function RestaurantsAdmin() {
     }
 
     try {
-      const { error } = await supabase
-        .from('restaurants')
-        .delete()
-        .eq('id', restaurantId);
+      const response = await fetch(`/api/admin/restaurants/${restaurantId}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete restaurant');
+      }
       
       // Refresh the list
       fetchRestaurants();
     } catch (err) {
       console.error('Error deleting restaurant:', err);
-      setError('Failed to delete restaurant');
+      setError(err instanceof Error ? err.message : 'Failed to delete restaurant');
     }
   }
 
