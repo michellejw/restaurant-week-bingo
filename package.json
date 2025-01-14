@@ -12,6 +12,7 @@
     "@auth0/nextjs-auth0": "^3.5.0",
     "@supabase/supabase-js": "^2.47.12",
     "@types/mapbox-gl": "^3.4.1",
+    "@yudiel/react-qr-scanner": "^2.1.0",
     "mapbox-gl": "^3.9.2",
     "next": "15.1.4",
     "qrcode": "^1.5.4",

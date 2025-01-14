@@ -6,6 +6,7 @@ export interface Restaurant {
     latitude: number;
     longitude: number;
     qr_code?: string;
+    short_code?: string;
     created_at: string;
     updated_at: string;
 }
