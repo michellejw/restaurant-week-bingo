@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String            @id @default(uuid())
+  email         String            @unique
+  name          String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  isAdmin       Boolean           @default(false)
+  raffleEntries RaffleEntry[]
+  visits        RestaurantVisit[]
+}
+
+model Restaurant {
+  id        String            @id @default(uuid())
+  name      String
+  address   String
+  url       String?
+  latitude  Float
+  longitude Float
+  code      String            @unique
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  visits    RestaurantVisit[]
+}
+
+model RestaurantVisit {
+  id           String     @id @default(uuid())
+  userId       String
+  restaurantId String
+  visitedAt    DateTime   @default(now())
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id])
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([userId, restaurantId])
+}
+
+model RaffleEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  createdAt DateTime @default(now())
+  squares   Int
+  user      User     @relation(fields: [userId], references: [id])
+}
