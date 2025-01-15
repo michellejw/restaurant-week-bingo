@@ -1,129 +1,183 @@
 'use client';
-import React, { useEffect, useRef, useState } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import BingoCard from '@/components/BingoCard';
 
-interface Restaurant {
-  id: number;
-  name: string;
-  visited: boolean;
-  coordinates: [number, number];
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import AuthForm from '@/components/AuthForm';
+import BingoCard from '@/components/BingoCard';
+import dynamic from 'next/dynamic';
+import CheckInForm from '@/components/CheckInForm';
+
+// Dynamically import the map component with SSR disabled
+const RestaurantMap = dynamic(
+  () => import('@/components/RestaurantMap'),
+  { ssr: false }
+);
+
+interface UserStats {
+  visit_count: number;
+  raffle_entries: number;
 }
 
-const MainPage: React.FC = () => {
-  // Add state for restaurants
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const mapContainer = useRef<HTMLDivElement | null>(null);
-  const mapInstance = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<mapboxgl.Marker[]>([]);
+export default function Home() {
+  const [user, setUser] = useState<any>(null);
+  const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [lastVisitTime, setLastVisitTime] = useState<number>(Date.now());
 
-  // Fetch live data from the API on page load
+  // Initialize auth and fetch initial data
   useEffect(() => {
-    const fetchRestaurants = async () => {
+    let mounted = true;
+
+    const initialize = async () => {
       try {
-        const response = await fetch('/api/restaurants'); // call the GET API route
-        const data = await response.json();
-        setRestaurants(data); // Update state with live data
-      } catch (error) {
-        console.error('Error fetching restaurants', error);
+        // Get initial session
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!mounted) return;
+
+        if (session?.user) {
+          setUser(session.user);
+          // Fetch initial stats
+          const { data, error } = await supabase
+            .from('user_stats')
+            .select('visit_count, raffle_entries')
+            .eq('user_id', session.user.id)
+            .single();
+
+          if (!mounted) return;
+
+          if (error && error.code === 'PGRST116') {
+            // Create initial stats if they don't exist
+            const { data: newData } = await supabase
+              .from('user_stats')
+              .insert([{ user_id: session.user.id, visit_count: 0, raffle_entries: 0 }])
+              .select()
+              .single();
+            
+            if (mounted) {
+              setUserStats(newData || { visit_count: 0, raffle_entries: 0 });
+            }
+          } else if (!error && data) {
+            if (mounted) {
+              setUserStats(data);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Initialization error:', err);
+        if (mounted) {
+          setError(err instanceof Error ? err.message : 'An error occurred');
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
-    const loadRestaurants = async () => {
-      await fetchRestaurants();
-    };
 
-    loadRestaurants().catch(error => console.error('Error in loadRestaurants:', error));
-  }, []);
+    initialize();
 
-  // Initialize map instance only once
-  useEffect(() => {
-    if (!mapInstance.current && mapContainer.current) {
-      mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN || '';
-      mapInstance.current = new mapboxgl.Map({
-        container: mapContainer.current,
-        style: 'mapbox://styles/mapbox/streets-v11',
-        center: [-77.9006, 34.0494],
-        zoom: 11,
-      });
-    }
-  }, []);
-
-  // Add markers to the map whenever restaurants are updated
-  useEffect(() => {
-    const map = mapInstance.current;
-    if (!map) return;
-
-    // Clear old markers
-    markersRef.current.forEach((marker: mapboxgl.Marker) => marker.remove());
-    markersRef.current = []; // Reset markersRef
-
-    // Add markers for current restaurants
-    restaurants.forEach(restaurant => {
-      const marker = new mapboxgl.Marker({
-        color: restaurant.visited ? 'green' : 'red',
-      })
-        .setLngLat(restaurant.coordinates)
-        .setPopup(new mapboxgl.Popup().setText(restaurant.name))
-        .addTo(map);
-
-      markersRef.current.push(marker);
-    });
-  }, [restaurants]);
-
-  // Handle bingo square click from the child component
-  const handleBingoSquareClick = async (id: number) => {
-    try {
-      // Find the restaurant to update its visited status
-      const restaurant = restaurants.find(r => r.id === id);
-      if (!restaurant) return;
-
-      // Update the database via the PUT API route
-      const response = await fetch('/api/restaurants', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ restaurantId: id, visited: !restaurant.visited }),
-      });
-
-      if (response.ok) {
-        // Update the UI state after successfully updating the backend
-        setRestaurants(prev =>
-          prev.map(r =>
-            r.id === id
-              ? {
-                  ...r,
-                  visited: !r.visited,
-                }
-              : r
-          )
-        );
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      if (session?.user) {
+        setUser(session.user);
       } else {
-        console.error('Failed to update restaurant in the backend.');
+        setUser(null);
+        setUserStats({ visit_count: 0, raffle_entries: 0 });
       }
-    } catch (error) {
-      console.error('Error updating restaurant', error);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Handle new visits
+  const handleCheckIn = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_stats')
+        .select('visit_count, raffle_entries')
+        .eq('user_id', user.id)
+        .single();
+        
+      if (!error && data) {
+        setUserStats(data);
+      }
+    } catch (err) {
+      console.error('Error updating stats after check-in:', err);
     }
+    
+    setLastVisitTime(Date.now());
   };
 
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
-      <h1>Restaurant Week Bingo!</h1>
-      <div
-        style={{
-          flex: 1,
-          backgroundColor: '#e0e0e0',
-          marginBottom: '20px',
-          marginLeft: '-10px',
-          marginRight: '-10px',
-        }}
-      >
-        <div ref={mapContainer} style={{ width: '100%', height: '100%' }}></div>
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4">Loading...</div>
+          {error && (
+            <div className="text-red-600 text-sm">
+              Error: {error}
+            </div>
+          )}
+        </div>
       </div>
-      <div style={{ flex: 1, backgroundColor: '#f0f0f0', margin: '20px' }}>
-        <BingoCard restaurants={restaurants} onSquareClick={handleBingoSquareClick} />
-      </div>
-    </div>
-  );
-};
+    );
+  }
 
-export default MainPage;
+  return (
+    <main className="min-h-screen bg-gray-50">
+      {!user ? (
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="max-w-md w-full px-4">
+            <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
+              Restaurant Week Bingo
+            </h1>
+            <AuthForm />
+          </div>
+        </div>
+      ) : (
+        <div className="max-w-7xl mx-auto px-4 py-8">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Restaurant Week Bingo</h1>
+              <p className="text-gray-600">
+                Restaurants visited: {userStats.visit_count}
+                {userStats.raffle_entries > 0 && (
+                  <span className="ml-2 text-purple-600">
+                    ({userStats.raffle_entries} raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'} earned!)
+                  </span>
+                )}
+              </p>
+            </div>
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
+            >
+              Sign Out
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="space-y-8">
+              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+                <RestaurantMap />
+              </div>
+              <CheckInForm onCheckIn={handleCheckIn} />
+            </div>
+            <div className="bg-white rounded-lg shadow-md p-4">
+              <BingoCard key={lastVisitTime} />
+            </div>
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

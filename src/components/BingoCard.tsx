@@ -1,37 +1,96 @@
 'use client';
 
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
 
 interface Restaurant {
-  id: number;
+  id: string;
   name: string;
+  code: string;
   visited: boolean;
 }
 
-interface BingoCardProps {
-  restaurants: Restaurant[];
-  onSquareClick: (id: number) => void;
-}
+export default function BingoCard() {
+  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-const BingoCard: React.FC<BingoCardProps> = ({ restaurants, onSquareClick }) => {
+  const fetchRestaurants = async () => {
+    try {
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (userError) throw userError;
+      if (!user) {
+        setRestaurants([]);
+        return;
+      }
+
+      const { data: restaurantsData, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select('*')
+        .order('name');
+
+      if (restaurantsError) throw restaurantsError;
+
+      const { data: visitsData, error: visitsError } = await supabase
+        .from('visits')
+        .select('restaurant_id')
+        .eq('user_id', user.id);
+
+      if (visitsError) throw visitsError;
+
+      const visitedRestaurantIds = new Set(visitsData?.map(v => v.restaurant_id) || []);
+      const processedRestaurants = restaurantsData.map(restaurant => ({
+        ...restaurant,
+        visited: visitedRestaurantIds.has(restaurant.id)
+      }));
+      
+      setRestaurants(processedRestaurants);
+    } catch (err) {
+      console.error('Error fetching restaurants:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load restaurants');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRestaurants();
+  }, []);
+
+  if (loading && restaurants.length === 0) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-gray-500">Loading bingo card...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center p-8">
+        <div className="text-red-500">Error: {error}</div>
+      </div>
+    );
+  }
+
+  const gridCols = Math.ceil(Math.sqrt(restaurants.length));
+
   return (
-    <div className="grid grid-cols-3 gap-4 p-4 md:grid-cols-4 lg:grid-cols-5">
-      {restaurants.map(restaurant => (
-        <button
+    <div className="grid gap-4 p-4" style={{ 
+      gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`
+    }}>
+      {restaurants.map((restaurant) => (
+        <div
           key={restaurant.id}
-          className={`p-4 border rounded-lg text-center font-medium 
-            ${
-              restaurant.visited
-                ? 'bg-pink-500 text-white border-pink-700'
-                : 'bg-white text-gray-700 border-gray-300'
+          className={`aspect-square p-4 border rounded-lg flex items-center justify-center text-center
+            ${restaurant.visited 
+              ? 'bg-purple-500 text-white' 
+              : 'bg-white hover:bg-purple-50'
             }`}
-          onClick={() => onSquareClick(restaurant.id)}
         >
-          {restaurant.name}
-        </button>
+          <span className="text-sm font-medium">{restaurant.name}</span>
+        </div>
       ))}
     </div>
   );
-};
-
-export default BingoCard;
+} 
