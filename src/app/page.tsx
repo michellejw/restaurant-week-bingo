@@ -6,6 +6,7 @@ import AuthForm from '@/components/AuthForm';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInForm from '@/components/CheckInForm';
+import { User } from '@supabase/supabase-js';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -19,7 +20,7 @@ interface UserStats {
 }
 
 export default function Home() {
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

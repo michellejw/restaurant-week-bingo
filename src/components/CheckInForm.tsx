@@ -38,7 +38,7 @@ export default function CheckInForm({ onCheckIn }: CheckInFormProps) {
       }
 
       // Check if already visited
-      const { data: existingVisit, error: visitError } = await supabase
+      const { data: existingVisit } = await supabase
         .from('visits')
         .select('id')
         .eq('user_id', user.id)
