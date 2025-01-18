@@ -84,17 +84,25 @@ $$;
 
 CREATE OR REPLACE FUNCTION update_user_stats()
 RETURNS TRIGGER AS $$
+DECLARE
+    visit_count_val INTEGER;
 BEGIN
+    -- Count all visits for this user
+    SELECT COUNT(*) INTO visit_count_val
+    FROM visits
+    WHERE user_id = NEW.user_id;
+
+    -- Update stats with the actual count
     INSERT INTO user_stats (user_id, visit_count, raffle_entries)
     VALUES (
         NEW.user_id,
-        1,
-        FLOOR(1/5)
+        visit_count_val,
+        FLOOR(visit_count_val/5)
     )
     ON CONFLICT (user_id) DO UPDATE
     SET 
-        visit_count = user_stats.visit_count + 1,
-        raffle_entries = FLOOR((user_stats.visit_count + 1)/5),
+        visit_count = EXCLUDED.visit_count,
+        raffle_entries = EXCLUDED.raffle_entries,
         last_updated = NOW();
     RETURN NEW;
 END;
