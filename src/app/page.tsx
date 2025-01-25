@@ -50,13 +50,13 @@ export default function Home() {
 
           if (error && error.code === 'PGRST116') {
             // Create initial stats if they don't exist
-            const { data: newData } = await supabase
+            const { data: newData, error: insertError } = await supabase
               .from('user_stats')
               .insert([{ user_id: session.user.id, visit_count: 0, raffle_entries: 0 }])
               .select()
               .single();
             
-            if (mounted) {
+            if (mounted && !insertError) {
               setUserStats(newData || { visit_count: 0, raffle_entries: 0 });
             }
           } else if (!error && data) {
@@ -80,11 +80,21 @@ export default function Home() {
     initialize();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
       
       if (session?.user) {
         setUser(session.user);
+        // Fetch latest stats whenever auth state changes
+        const { data, error } = await supabase
+          .from('user_stats')
+          .select('visit_count, raffle_entries')
+          .eq('user_id', session.user.id)
+          .single();
+          
+        if (mounted && !error && data) {
+          setUserStats(data);
+        }
       } else {
         setUser(null);
         setUserStats({ visit_count: 0, raffle_entries: 0 });
