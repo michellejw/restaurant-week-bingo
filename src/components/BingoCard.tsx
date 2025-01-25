@@ -82,10 +82,10 @@ export default function BingoCard() {
       {restaurants.map((restaurant) => (
         <div
           key={restaurant.id}
-          className={`aspect-square p-4 border rounded-lg flex items-center justify-center text-center
+          className={`aspect-square p-4 border rounded-lg flex items-center justify-center text-center transition-colors duration-200
             ${restaurant.visited 
-              ? 'bg-purple-500 text-white' 
-              : 'bg-white hover:bg-purple-50'
+              ? 'bg-coral-500 text-white border-coral-600' 
+              : 'bg-white hover:bg-coral-50 border-gray-100'
             }`}
         >
           <span className="text-sm font-medium">{restaurant.name}</span>

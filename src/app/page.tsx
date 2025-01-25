@@ -146,44 +146,39 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50">
       {!user ? (
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="max-w-md w-full px-4">
-            <h1 className="text-3xl font-bold text-center mb-8 text-gray-900">
+        <div className="flex min-h-screen items-center justify-center p-4">
+          <div className="w-full max-w-md animate-fade-in">
+            <h1 className="mb-8 text-center text-3xl font-bold text-gray-900">
               Restaurant Week Bingo
             </h1>
             <AuthForm />
           </div>
         </div>
       ) : (
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Restaurant Week Bingo</h1>
+        <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 animate-fade-in">
+          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="space-y-1">
               <p className="text-gray-600">
                 Restaurants visited: {userStats.visit_count}
                 {userStats.raffle_entries > 0 && (
-                  <span className="ml-2 text-purple-600">
+                  <span className="ml-2 text-coral-500 font-medium">
                     ({userStats.raffle_entries} raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'} earned!)
                   </span>
                 )}
               </p>
             </div>
-            <button
-              onClick={() => supabase.auth.signOut()}
-              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900"
-            >
-              Sign Out
-            </button>
-          </div>
+          </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-8">
-              <div className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div className="space-y-6">
+              <div className="card">
+                <CheckInForm onCheckIn={handleCheckIn} />
+              </div>
+              <div className="card p-4">
                 <RestaurantMap />
               </div>
-              <CheckInForm onCheckIn={handleCheckIn} />
             </div>
-            <div className="bg-white rounded-lg shadow-md p-4">
+            <div className="card p-6">
               <BingoCard key={lastVisitTime} />
             </div>
           </div>

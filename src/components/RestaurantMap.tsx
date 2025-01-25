@@ -6,19 +6,29 @@ import 'leaflet/dist/leaflet.css';
 import { supabase } from '@/lib/supabase';
 import L from 'leaflet';
 
-// Fix for default marker icons in Leaflet with Next.js
-const createIcon = (color: string) => L.icon({
-  iconUrl: `/marker-icon-${color}.png`,
-  iconRetinaUrl: `/marker-icon-2x-${color}.png`,
-  shadowUrl: '/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
+// Modern SVG marker icons
+const createIcon = (fillColor: string) => {
+  const svgTemplate = `
+    <svg width="24" height="32" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
+      </filter>
+      <path d="M18 0C8.064 0 0 8.064 0 18c0 8.01 9.42 19.476 14.688 25.416C16.02 45.9 17.064 47.052 18 48c0.936-0.948 1.98-2.1 3.312-4.584C26.58 37.476 36 26.01 36 18c0-9.936-8.064-18-18-18z" 
+        fill="${fillColor}" filter="url(#shadow)"/>
+    </svg>
+  `;
 
-const visitedIcon = createIcon('green');
-const unvisitedIcon = createIcon('blue');
+  return L.divIcon({
+    html: `<div style="width: 24px; height: 32px;">${svgTemplate}</div>`,
+    className: '',
+    iconSize: [24, 32],
+    iconAnchor: [12, 32],
+    popupAnchor: [0, -32]
+  });
+};
+
+const visitedIcon = createIcon('#ff5436'); // coral-500
+const unvisitedIcon = createIcon('#94a3b8'); // gray-400
 
 interface Restaurant {
   id: string;
@@ -35,13 +45,40 @@ const mapContainerStyle = {
   height: '400px'
 };
 
+type LatLngBounds = [[number, number], [number, number]];
+
 export default function RestaurantMap() {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [center, setCenter] = useState<[number, number]>([0, 0]);
+  const [bounds, setBounds] = useState<LatLngBounds | null>(null);
 
   useEffect(() => {
     fetchRestaurants();
   }, []);
+
+  const calculateBounds = (locations: Restaurant[]): LatLngBounds | null => {
+    if (locations.length === 0) return null;
+    
+    let minLat = locations[0].latitude;
+    let maxLat = locations[0].latitude;
+    let minLng = locations[0].longitude;
+    let maxLng = locations[0].longitude;
+
+    locations.forEach(location => {
+      minLat = Math.min(minLat, location.latitude);
+      maxLat = Math.max(maxLat, location.latitude);
+      minLng = Math.min(minLng, location.longitude);
+      maxLng = Math.max(maxLng, location.longitude);
+    });
+
+    // Add a smaller padding to the bounds (5% instead of 10%)
+    const latPadding = (maxLat - minLat) * 0.05;
+    const lngPadding = (maxLng - minLng) * 0.05;
+
+    return [
+      [minLat - latPadding, minLng - lngPadding],
+      [maxLat + latPadding, maxLng + lngPadding]
+    ];
+  };
 
   const fetchRestaurants = async () => {
     try {
@@ -67,26 +104,28 @@ export default function RestaurantMap() {
       }));
 
       setRestaurants(processedRestaurants);
-
-      // Calculate center point
-      if (processedRestaurants.length > 0) {
-        const avgLat = processedRestaurants.reduce((sum, r) => sum + r.latitude, 0) / processedRestaurants.length;
-        const avgLng = processedRestaurants.reduce((sum, r) => sum + r.longitude, 0) / processedRestaurants.length;
-        setCenter([avgLat, avgLng]);
-      }
+      setBounds(calculateBounds(processedRestaurants));
     } catch (error) {
       console.error('Error fetching restaurants:', error);
     }
   };
 
-  if (!center[0] && !center[1]) {
+  if (!bounds) {
     return <div>Loading map...</div>;
   }
 
+  const center: [number, number] = [
+    (bounds[0][0] + bounds[1][0]) / 2,
+    (bounds[0][1] + bounds[1][1]) / 2
+  ];
+
   return (
     <MapContainer
+      bounds={bounds}
       center={center}
-      zoom={13}
+      zoom={14}
+      minZoom={13}
+      maxZoom={18}
       style={mapContainerStyle}
       scrollWheelZoom={false}
     >
@@ -101,25 +140,25 @@ export default function RestaurantMap() {
           icon={restaurant.visited ? visitedIcon : unvisitedIcon}
         >
           <Popup>
-            <div className="p-2">
-              <h3 className="font-bold">{restaurant.name}</h3>
-              <p className="text-sm">{restaurant.address}</p>
-              <a
-                href={restaurant.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-purple-600 hover:text-purple-800"
-              >
-                Visit Website
-              </a>
-              <div className="mt-2">
-                <span className={`inline-block px-2 py-1 text-xs rounded ${
-                  restaurant.visited 
-                    ? 'bg-purple-100 text-purple-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {restaurant.visited ? 'Visited' : 'Not visited'}
-                </span>
+            <div className="text-center">
+              <h3 className="font-medium mb-1">{restaurant.name}</h3>
+              <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
+              {restaurant.url && (
+                <a
+                  href={restaurant.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-coral-600 hover:text-coral-800"
+                >
+                  Visit Website
+                </a>
+              )}
+              <div className={`mt-2 px-2 py-1 rounded text-sm ${
+                restaurant.visited
+                ? 'bg-coral-100 text-coral-800'
+                : 'bg-gray-100 text-gray-800'
+              }`}>
+                {restaurant.visited ? 'Visited!' : 'Not visited yet'}
               </div>
             </div>
           </Popup>

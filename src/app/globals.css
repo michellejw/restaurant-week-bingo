@@ -5,10 +5,53 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --accent: #ff5436;
+  --accent-light: #ffa494;
+  --accent-dark: #c61d06;
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer base {
+  body {
+    @apply text-foreground bg-background antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-medium tracking-tight;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply px-4 py-2 rounded-lg transition-all duration-200 font-medium;
+  }
+
+  .btn-primary {
+    @apply bg-coral-500 text-white hover:bg-coral-600 active:bg-coral-700;
+  }
+
+  .btn-secondary {
+    @apply bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300;
+  }
+
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md;
+  }
+
+  .input {
+    @apply w-full px-4 py-2 rounded-lg border border-gray-200 focus:border-coral-500 focus:ring-2 focus:ring-coral-100 transition-all duration-200;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
 }
