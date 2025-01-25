@@ -73,3 +73,4 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [ ] Add page to describe how the bingo game works
 - [ ] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
 - [ ] Implement a more sophisticated authentication system that allows users to sign in via Google, Facebook, Apple, or email/password. Do this through Auth0. 
+- [ ] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
