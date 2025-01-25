@@ -19,8 +19,13 @@ interface UserStats {
   raffle_entries: number;
 }
 
+interface UserProfile {
+  name: string | null;
+}
+
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +44,18 @@ export default function Home() {
 
         if (session?.user) {
           setUser(session.user);
+          
+          // Fetch user profile
+          const { data: profileData } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (mounted && profileData) {
+            setUserProfile(profileData);
+          }
+
           // Fetch initial stats
           const { data, error } = await supabase
             .from('user_stats')
@@ -157,15 +174,26 @@ export default function Home() {
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 animate-fade-in">
           <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="space-y-1">
-              <p className="text-gray-600">
-                Restaurants visited: {userStats.visit_count}
-                {userStats.raffle_entries > 0 && (
-                  <span className="ml-2 text-coral-500 font-medium">
-                    ({userStats.raffle_entries} raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'} earned!)
+            <div className="space-y-2">
+              <h2 className="text-xl font-medium text-gray-900">
+                Welcome, {userProfile?.name || user.email?.split('@')[0]}!
+              </h2>
+              <div className="flex gap-4 items-center text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-6 w-6 font-medium">
+                    {userStats.visit_count}
                   </span>
+                  <span className="text-gray-600">restaurants visited</span>
+                </div>
+                {userStats.raffle_entries > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center bg-purple-100 text-purple-700 rounded-full h-6 w-6 font-medium">
+                      {userStats.raffle_entries}
+                    </span>
+                    <span className="text-gray-600">raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'}</span>
+                  </div>
                 )}
-              </p>
+              </div>
             </div>
           </header>
 
