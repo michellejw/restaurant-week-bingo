@@ -1,34 +1,16 @@
 'use client'
 
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { useAuth } from '@/lib/AuthContext'
 
 export default function NavBar() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const supabase = createClientComponentClient()
+  const { isLoggedIn, signOut } = useAuth()
   const router = useRouter()
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      setIsLoggedIn(!!session)
-    }
-    
-    checkAuth()
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session)
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase.auth])
 
   const handleAuthClick = async () => {
     if (isLoggedIn) {
-      await supabase.auth.signOut()
-      router.refresh()
+      await signOut()
     } else {
       router.push('/')
     }
@@ -41,12 +23,12 @@ export default function NavBar() {
           <Link href="/" className="flex-shrink-0">
             <span className="text-lg font-semibold text-gray-900">Restaurant Week Bingo</span>
           </Link>
-          {isLoggedIn && (
+          {isLoggedIn !== null && (
             <button
               onClick={handleAuthClick}
               className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
             >
-              Sign Out
+              {isLoggedIn ? 'Sign Out' : 'Sign In'}
             </button>
           )}
         </div>

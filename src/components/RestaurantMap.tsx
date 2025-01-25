@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import { supabase } from '@/lib/supabase';
 import L from 'leaflet';
+import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/lib/supabase';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string) => {
@@ -50,8 +51,9 @@ export default function RestaurantMap() {
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon } | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { isLoggedIn, userId } = useAuth();
 
-  // Initialize icons on client side only
   useEffect(() => {
     setIsClient(true);
     setIcons({
@@ -61,20 +63,20 @@ export default function RestaurantMap() {
   }, []);
 
   const fetchRestaurants = useCallback(async () => {
+    if (!isLoggedIn || !userId) return;
+    
     try {
+      setIsLoading(true);
       const { data: restaurantsData, error } = await supabase
         .from('restaurants')
         .select('*');
 
       if (error) throw error;
 
-      const user = await supabase.auth.getUser();
-      if (!user.data.user) return;
-
       const { data: visitsData } = await supabase
         .from('visits')
         .select('restaurant_id')
-        .eq('user_id', user.data.user.id);
+        .eq('user_id', userId);
 
       const visitedRestaurantIds = new Set(visitsData?.map(v => v.restaurant_id));
 
@@ -87,14 +89,41 @@ export default function RestaurantMap() {
       setBounds(calculateBounds(processedRestaurants));
     } catch (error) {
       console.error('Error fetching restaurants:', error);
+    } finally {
+      setIsLoading(false);
     }
-  }, []);
+  }, [isLoggedIn, userId]);
+
+  // Subscribe to visits changes
+  useEffect(() => {
+    if (!isLoggedIn || !userId) return;
+
+    const subscription = supabase
+      .channel('visits-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'visits',
+          filter: `user_id=eq.${userId}`
+        },
+        () => {
+          fetchRestaurants();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [isLoggedIn, userId, fetchRestaurants]);
 
   useEffect(() => {
-    if (isClient) {
+    if (isClient && isLoggedIn && userId) {
       fetchRestaurants();
     }
-  }, [fetchRestaurants, isClient]);
+  }, [fetchRestaurants, isClient, isLoggedIn, userId]);
 
   const calculateBounds = (locations: Restaurant[]): LatLngBounds | null => {
     if (locations.length === 0) return null;
@@ -120,18 +149,30 @@ export default function RestaurantMap() {
     ];
   };
 
-  if (!isClient || !icons || !bounds) {
+  if (!isClient || !icons) {
     return <div>Loading map...</div>;
   }
 
-  const center: [number, number] = [
+  if (isLoading) {
+    return <div>Loading restaurants...</div>;
+  }
+
+  if (!isLoggedIn) {
+    return <div>Please sign in to view the restaurant map.</div>;
+  }
+
+  if (!bounds && restaurants.length > 0) {
+    return <div>Error loading map bounds.</div>;
+  }
+
+  const center: [number, number] = bounds ? [
     (bounds[0][0] + bounds[1][0]) / 2,
     (bounds[0][1] + bounds[1][1]) / 2
-  ];
+  ] : [0, 0];
 
   return (
     <MapContainer
-      bounds={bounds}
+      bounds={bounds || undefined}
       center={center}
       zoom={14}
       minZoom={13}
