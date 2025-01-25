@@ -67,7 +67,8 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 
 ## NEXT STEPS
 - [ ] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
-- [ ] Add chamber of commerce logo somewhere
+- [ ] Add chamber of commerce logo to the main page and the landing page
+- [ ] Adjust the text on the landing page to say (line 1): "Pleasure Island Chamber of Commerce presents" and (line 2): "Restaurant Week Bingo!"
 - [ ] Add a separate page to list/summarize sponsors (add link to it on the nav bar)
 - [ ] A banner at the bottom of the main page that cycles through sponsors whenever the page is visited or refreshed
 - [ ] Add page to describe how the bingo game works
