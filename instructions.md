@@ -1,28 +1,75 @@
 # Pleasure Island Restaurant Week Bingo
 
-The big idea here is that we want to build a restaurant week bingo web app for a local chamber of commerce. Users should be able to easily log in and enter a code visible at each restaurant to collect squares on their bingo cards. When they have different #'s of squares filled in, they are automatically entered into a raffle. Users should be able to login using simple email/password authentication. 
+## Overview
+A restaurant week bingo web application for a local chamber of commerce. Users collect squares on their bingo card by entering codes from participating restaurants, earning raffle entries based on their progress.
 
-Raffle entries should be based on number of squares filled in. Every 5 squares filled in should be an entry into the raffle.
+## Technical Stack
+- React
+- Next.js
+- TypeScript
+- Tailwind CSS
+- Supabase (Authentication & Database)
+- Leaflet (Map Integration)
 
-The style of the app should be modern and sleek. We should use a lot of white space and clean lines. We should use an accent color to make certain features of the app pop, without being too distracting. (maybe a nice shade of purple).
+## Core Features
 
-  The flow should be like this:
-  - there is a landing page that is very simple and if the user is not logged in, it shows a "log in or sign up" button
-  - when the user clicks that button, it shows an email/password form. the button underneath those fields should say "log in or sign up". If the user is already in the database, they will just get immediately logged in. if not, a message pops up telling them to check their email to confirm the sign up. (supabase should send an email with a link). 
-  - The main page once a user is logged in is simple and is just a map and a bingo card and a button to "check in" which should open up an entry form for users to enter a restaurant code.  There should also be a simple "tally" of # of restaurants visited somewhere near the top. 
-  - The map should automatically center on the restaurant locations. Map markers should be clickable and display the restaurant name, address, and URL.
-  - The bingo card should be a flexible grid of squares that have the name of the restaurant on them. The specific grid layout should adjust based on the number of restaurants and the screen size. 
-  - When the user enters a valid code, it should add it to their tally of visits, the corresponding bingo card should change color, and the corresponding map marker should also change color.
-  
-We should use a responsive design that looks good on both mobile and desktop.
+### Authentication
+- Email/password authentication via Supabase
+- Automatic sign-up flow with email verification
+- Seamless login for existing users
 
-Please use react, next.js, tailwind, typescript, and supabase.
+### User Interface
+- Modern, clean design with ample white space
+- Coral accent color (implemented via Tailwind)
+- Responsive design for both mobile and desktop
+- Navigation bar for easy access to features
 
-For now there is no admin dashboard view. We will add restaurants and codes using the supabase admin dashboard.
+### Main Components
+1. **Navigation**
+   - Persistent navigation bar
+   - Login/Signup button for unauthenticated users
 
-please be sure to correctly set all of the appropriate permissions for the supabase tables.
+2. **Restaurant Map**
+   - Leaflet-based map auto-centered on restaurant locations
+   - Interactive markers showing:
+     - Restaurant name
+     - Address
+     - URL
+   - Visual indication of visited restaurants
 
-use leaflet for the map.
+3. **Bingo Card**
+   - Flexible grid layout adapting to:
+     - Number of restaurants
+     - Screen size
+   - Visual indication of visited restaurants
+   - Restaurant names displayed in squares
 
-ensure there is a mechanism for tallying each user's visited restaurants and total tally. 
+4. **Check-in System**
+   - Simple form for entering restaurant codes
+   - Visit counter/tally display
+   - Automatic updates to:
+     - Visit count
+     - Bingo card
+     - Map markers
 
+### Raffle System
+- Automatic entry based on progress
+- One raffle entry for every 5 squares filled
+
+### Data Management
+- Restaurants and codes managed via Supabase admin dashboard
+- Appropriate table permissions set in Supabase
+- Visit tracking and tallying mechanism per user
+
+## Future Features
+- Admin dashboard (planned)
+
+
+## NEXT STEPS
+- [ ] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
+- [ ] Add chamber of commerce logo somewhere
+- [ ] Add a separate page to list/summarize sponsors (add link to it on the nav bar)
+- [ ] A banner at the bottom of the main page that cycles through sponsors whenever the page is visited or refreshed
+- [ ] Add page to describe how the bingo game works
+- [ ] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
+- [ ] Implement a more sophisticated authentication system that allows users to sign in via Google, Facebook, Apple, or email/password. Do this through Auth0. 
