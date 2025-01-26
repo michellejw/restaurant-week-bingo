@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { BrowserQRCodeReader, IScannerControls } from '@zxing/browser';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
 
@@ -22,6 +22,8 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const controlsRef = useRef<IScannerControls | null>(null);
 
   const handleCheckIn = useCallback(async (checkInCode: string) => {
     setLoading(true);
@@ -69,32 +71,41 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   }, [user, onCheckIn, onClose]);
 
   useEffect(() => {
-    if (mode === 'qr') {
-      const scanner = new Html5QrcodeScanner('qr-reader', {
-        qrbox: {
-          width: 250,
-          height: 250,
-        },
-        fps: 10,
-        aspectRatio: 1.0,
-        showTorchButtonIfSupported: true,
-        showZoomSliderIfSupported: true,
-        defaultZoomValueIfSupported: 2,
-      }, false);
-
-      scanner.render((decodedText) => {
-        handleCheckIn(decodedText);
-        scanner.clear();
-        setMode('manual'); // Switch back to manual mode after successful scan
-      }, (error) => {
-        // Only log errors that aren't about QR codes not being found
-        if (!error?.includes?.('No QR code found')) {
-          console.error('QR Code scanning error:', error);
+    if (mode === 'qr' && videoRef.current) {
+      const codeReader = new BrowserQRCodeReader();
+      
+      const startScanning = async () => {
+        try {
+          // Get available video devices
+          const videoInputDevices = await BrowserQRCodeReader.listVideoInputDevices();
+          
+          // Use the back camera by default (usually the last device)
+          const deviceId = videoInputDevices[videoInputDevices.length - 1].deviceId;
+          
+          // Start scanning
+          const controls = await codeReader.decodeFromVideoDevice(
+            deviceId,
+            videoRef.current!,
+            (result) => {
+              if (result) {
+                handleCheckIn(result.getText());
+                setMode('manual');
+              }
+            }
+          );
+          
+          controlsRef.current = controls;
+        } catch (error) {
+          console.error('Error starting QR scanner:', error);
+          setMessage('Unable to start camera. Please try manual entry.');
+          setMode('manual');
         }
-      });
+      };
+
+      startScanning();
 
       return () => {
-        scanner.clear();
+        controlsRef.current?.stop();
       };
     }
   }, [mode, handleCheckIn]);
@@ -112,7 +123,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Check In</h2>
           <button
-            onClick={onClose}
+            onClick={() => {
+              controlsRef.current?.stop();
+              onClose();
+            }}
             className="text-gray-500 hover:text-gray-700"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,9 +184,12 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
           </form>
         ) : (
           <div className="w-full">
-            <div id="qr-reader" className="w-full overflow-hidden rounded-lg" />
+            <video 
+              ref={videoRef}
+              className="w-full aspect-square object-cover rounded-lg"
+            />
             <p className="text-sm text-gray-500 mt-2 text-center">
-              Position the QR code within the frame to scan
+              Position the QR code within the camera view
             </p>
           </div>
         )}
