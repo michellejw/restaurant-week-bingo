@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/AuthContext';
+import { DatabaseService } from '@/lib/services/database';
 
 interface Restaurant {
   id: string;
@@ -11,34 +12,26 @@ interface Restaurant {
 }
 
 export default function BingoCard() {
+  const { user, isLoading: authLoading } = useAuth();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchRestaurants = async () => {
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
       if (!user) {
         setRestaurants([]);
         return;
       }
 
-      const { data: restaurantsData, error: restaurantsError } = await supabase
-        .from('restaurants')
-        .select('*')
-        .order('name');
+      // Get all restaurants
+      const restaurantsData = await DatabaseService.restaurants.getAll();
+      
+      // Get user's visits
+      const visits = await DatabaseService.visits.getByUser(user.id);
+      const visitedRestaurantIds = new Set(visits.map(v => v.restaurant_id));
 
-      if (restaurantsError) throw restaurantsError;
-
-      const { data: visitsData, error: visitsError } = await supabase
-        .from('visits')
-        .select('restaurant_id')
-        .eq('user_id', user.id);
-
-      if (visitsError) throw visitsError;
-
-      const visitedRestaurantIds = new Set(visitsData?.map(v => v.restaurant_id) || []);
+      // Process restaurants with visit status
       const processedRestaurants = restaurantsData.map(restaurant => ({
         ...restaurant,
         visited: visitedRestaurantIds.has(restaurant.id)
@@ -54,8 +47,10 @@ export default function BingoCard() {
   };
 
   useEffect(() => {
-    fetchRestaurants();
-  }, []);
+    if (!authLoading) {
+      fetchRestaurants();
+    }
+  }, [user, authLoading]);
 
   if (loading && restaurants.length === 0) {
     return (

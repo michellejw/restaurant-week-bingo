@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { DatabaseService } from '@/lib/services/database';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string) => {
@@ -32,7 +32,7 @@ interface Restaurant {
   id: string;
   name: string;
   address: string;
-  url: string;
+  url: string | null;
   latitude: number;
   longitude: number;
   visited: boolean;
@@ -56,7 +56,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const [isClient, setIsClient] = useState(false);
   const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { isLoggedIn, userId } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   useEffect(() => {
     setIsClient(true);
@@ -67,36 +67,24 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   }, []);
 
   const fetchRestaurants = useCallback(async () => {
-    if (!isLoggedIn || !userId) return;
+    if (!user) return;
     
     try {
       setIsLoading(true);
       console.log('Fetching restaurants...');
       
-      // Fetch visits first
-      const { data: visitsData, error: visitsError } = await supabase
-        .from('visits')
-        .select('restaurant_id')
-        .eq('user_id', userId);
-
-      if (visitsError) throw visitsError;
+      // Get all restaurants
+      const restaurantsData = await DatabaseService.restaurants.getAll();
       
-      const visitedIds = new Set(visitsData?.map(v => v.restaurant_id));
-      console.log('Visited IDs:', Array.from(visitedIds));
+      // Get user's visits
+      const visits = await DatabaseService.visits.getByUser(user.id);
+      const visitedIds = new Set(visits.map(v => v.restaurant_id));
       
-      // Then fetch restaurants
-      const { data: restaurantsData, error: restaurantsError } = await supabase
-        .from('restaurants')
-        .select('*');
-
-      if (restaurantsError) throw restaurantsError;
-
       const processedRestaurants = restaurantsData.map(restaurant => ({
         ...restaurant,
         visited: visitedIds.has(restaurant.id)
       }));
 
-      console.log('Restaurant states:', processedRestaurants.map(r => `${r.name}: ${r.visited}`));
       setRestaurants(processedRestaurants);
       setBounds(calculateBounds(processedRestaurants));
     } catch (error) {
@@ -104,24 +92,15 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [isLoggedIn, userId]);
+  }, [user]);
 
   // Fetch on mount and when lastCheckIn changes
   useEffect(() => {
-    if (isClient) {
+    if (isClient && !authLoading) {
       console.log('Fetching due to lastCheckIn update:', lastCheckIn);
       fetchRestaurants();
     }
-  }, [fetchRestaurants, isClient, lastCheckIn]);
-
-  useEffect(() => {
-    console.log('Restaurants state changed:', 
-      restaurants.map(r => ({
-        name: r.name,
-        visited: r.visited
-      }))
-    );
-  }, [restaurants]);
+  }, [fetchRestaurants, isClient, lastCheckIn, authLoading]);
 
   const calculateBounds = (locations: Restaurant[]): LatLngBounds | null => {
     if (locations.length === 0) return null;
@@ -155,7 +134,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     return <div>Loading restaurants...</div>;
   }
 
-  if (!isLoggedIn) {
+  if (!user) {
     return <div>Please sign in to view the restaurant map.</div>;
   }
 

@@ -1,13 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/AuthContext';
+import { DatabaseService } from '@/lib/services/database';
 
 interface CheckInFormProps {
   onCheckIn?: () => void;
 }
 
 export default function CheckInForm({ onCheckIn }: CheckInFormProps) {
+  const { user } = useAuth();
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -18,53 +20,35 @@ export default function CheckInForm({ onCheckIn }: CheckInFormProps) {
     setMessage('');
 
     try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (userError) throw userError;
       if (!user) {
         setMessage('Please log in to check in.');
         return;
       }
 
       // Find restaurant by code
-      const { data: restaurant, error: restaurantError } = await supabase
-        .from('restaurants')
-        .select('id, name')
-        .eq('code', code.toUpperCase())
-        .single();
+      try {
+        const restaurant = await DatabaseService.restaurants.getByCode(code);
+        
+        // Check if already visited
+        const alreadyVisited = await DatabaseService.visits.checkExists(user.id, restaurant.id);
+        if (alreadyVisited) {
+          setMessage('You have already checked in at this restaurant!');
+          return;
+        }
 
-      if (restaurantError || !restaurant) {
-        setMessage('Invalid restaurant code. Please try again.');
-        return;
+        // Record the visit
+        await DatabaseService.visits.create(user.id, restaurant.id);
+
+        setMessage(`Check-in successful at ${restaurant.name}!`);
+        setCode('');
+        onCheckIn?.();
+      } catch (error: any) {
+        if (error.message?.includes('No data returned')) {
+          setMessage('Invalid restaurant code. Please try again.');
+        } else {
+          throw error;
+        }
       }
-
-      // Check if already visited
-      const { data: existingVisit } = await supabase
-        .from('visits')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('restaurant_id', restaurant.id)
-        .single();
-
-      if (existingVisit) {
-        setMessage('You have already checked in at this restaurant!');
-        return;
-      }
-
-      // Record the visit
-      const { error: insertError } = await supabase
-        .from('visits')
-        .insert([
-          {
-            user_id: user.id,
-            restaurant_id: restaurant.id,
-          }
-        ]);
-
-      if (insertError) throw insertError;
-
-      setMessage(`Check-in successful at ${restaurant.name}!`);
-      setCode('');
-      onCheckIn?.();
     } catch (error) {
       console.error('Error during check-in:', error);
       setMessage('An error occurred. Please try again.');

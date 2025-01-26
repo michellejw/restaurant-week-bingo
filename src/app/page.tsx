@@ -1,12 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/lib/AuthContext';
+import { DatabaseService } from '@/lib/services/database';
 import AuthForm from '@/components/AuthForm';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInForm from '@/components/CheckInForm';
-import { User } from '@supabase/supabase-js';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -24,62 +24,45 @@ interface UserProfile {
 }
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, isLoading: authLoading } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastVisitTime, setLastVisitTime] = useState<number>(Date.now());
 
-  // Initialize auth and fetch initial data
+  // Initialize and fetch initial data
   useEffect(() => {
     let mounted = true;
 
     const initialize = async () => {
       try {
-        // Get initial session
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!mounted) return;
+        if (!user) return;
 
-        if (session?.user) {
-          setUser(session.user);
-          
-          // Fetch user profile
-          const { data: profileData } = await supabase
-            .from('users')
-            .select('name')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (mounted && profileData) {
-            setUserProfile(profileData);
+        // Fetch user profile
+        const profileData = await DatabaseService.users.getProfile(user.id);
+        if (mounted) {
+          setUserProfile(profileData);
+        }
+
+        // Fetch initial stats
+        try {
+          const stats = await DatabaseService.userStats.get(user.id);
+          if (mounted) {
+            setUserStats(stats);
           }
-
-          // Fetch initial stats
-          const { data, error } = await supabase
-            .from('user_stats')
-            .select('visit_count, raffle_entries')
-            .eq('user_id', session.user.id)
-            .single();
-
-          if (!mounted) return;
-
-          if (error && error.code === 'PGRST116') {
+        } catch (error: any) {
+          if (error.message?.includes('No data returned')) {
             // Create initial stats if they don't exist
-            const { data: newData, error: insertError } = await supabase
-              .from('user_stats')
-              .insert([{ user_id: session.user.id, visit_count: 0, raffle_entries: 0 }])
-              .select()
-              .single();
-            
-            if (mounted && !insertError) {
-              setUserStats(newData || { visit_count: 0, raffle_entries: 0 });
-            }
-          } else if (!error && data) {
+            const newStats = await DatabaseService.userStats.createOrUpdate(user.id, {
+              visit_count: 0,
+              raffle_entries: 0
+            });
             if (mounted) {
-              setUserStats(data);
+              setUserStats(newStats);
             }
+          } else {
+            throw error;
           }
         }
       } catch (err) {
@@ -94,50 +77,22 @@ export default function Home() {
       }
     };
 
-    initialize();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!mounted) return;
-      
-      if (session?.user) {
-        setUser(session.user);
-        // Fetch latest stats whenever auth state changes
-        const { data, error } = await supabase
-          .from('user_stats')
-          .select('visit_count, raffle_entries')
-          .eq('user_id', session.user.id)
-          .single();
-          
-        if (mounted && !error && data) {
-          setUserStats(data);
-        }
-      } else {
-        setUser(null);
-        setUserStats({ visit_count: 0, raffle_entries: 0 });
-      }
-    });
+    if (!authLoading) {
+      initialize();
+    }
 
     return () => {
       mounted = false;
-      subscription.unsubscribe();
     };
-  }, []);
+  }, [user, authLoading]);
 
   // Handle new visits
   const handleCheckIn = async () => {
     if (!user) return;
     
     try {
-      const { data, error } = await supabase
-        .from('user_stats')
-        .select('visit_count, raffle_entries')
-        .eq('user_id', user.id)
-        .single();
-        
-      if (!error && data) {
-        setUserStats(data);
-      }
+      const stats = await DatabaseService.userStats.get(user.id);
+      setUserStats(stats);
     } catch (err) {
       console.error('Error updating stats after check-in:', err);
     }
@@ -145,7 +100,7 @@ export default function Home() {
     setLastVisitTime(Date.now());
   };
 
-  if (loading) {
+  if (loading && authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
