@@ -203,7 +203,7 @@ export default function Home() {
                 <CheckInForm onCheckIn={handleCheckIn} />
               </div>
               <div className="card p-4">
-                <RestaurantMap />
+                <RestaurantMap lastCheckIn={lastVisitTime} />
               </div>
             </div>
             <div className="card p-6">

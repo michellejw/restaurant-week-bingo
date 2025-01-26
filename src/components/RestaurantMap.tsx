@@ -46,7 +46,11 @@ const mapContainerStyle = {
 
 type LatLngBounds = [[number, number], [number, number]];
 
-export default function RestaurantMap() {
+interface RestaurantMapProps {
+  lastCheckIn?: number;
+}
+
+export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [isClient, setIsClient] = useState(false);
@@ -67,24 +71,32 @@ export default function RestaurantMap() {
     
     try {
       setIsLoading(true);
-      const { data: restaurantsData, error } = await supabase
-        .from('restaurants')
-        .select('*');
-
-      if (error) throw error;
-
-      const { data: visitsData } = await supabase
+      console.log('Fetching restaurants...');
+      
+      // Fetch visits first
+      const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
         .select('restaurant_id')
         .eq('user_id', userId);
 
-      const visitedRestaurantIds = new Set(visitsData?.map(v => v.restaurant_id));
+      if (visitsError) throw visitsError;
+      
+      const visitedIds = new Set(visitsData?.map(v => v.restaurant_id));
+      console.log('Visited IDs:', Array.from(visitedIds));
+      
+      // Then fetch restaurants
+      const { data: restaurantsData, error: restaurantsError } = await supabase
+        .from('restaurants')
+        .select('*');
+
+      if (restaurantsError) throw restaurantsError;
 
       const processedRestaurants = restaurantsData.map(restaurant => ({
         ...restaurant,
-        visited: visitedRestaurantIds.has(restaurant.id)
+        visited: visitedIds.has(restaurant.id)
       }));
 
+      console.log('Restaurant states:', processedRestaurants.map(r => `${r.name}: ${r.visited}`));
       setRestaurants(processedRestaurants);
       setBounds(calculateBounds(processedRestaurants));
     } catch (error) {
@@ -94,36 +106,22 @@ export default function RestaurantMap() {
     }
   }, [isLoggedIn, userId]);
 
-  // Subscribe to visits changes
+  // Fetch on mount and when lastCheckIn changes
   useEffect(() => {
-    if (!isLoggedIn || !userId) return;
-
-    const subscription = supabase
-      .channel('visits-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'visits',
-          filter: `user_id=eq.${userId}`
-        },
-        () => {
-          fetchRestaurants();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [isLoggedIn, userId, fetchRestaurants]);
-
-  useEffect(() => {
-    if (isClient && isLoggedIn && userId) {
+    if (isClient) {
+      console.log('Fetching due to lastCheckIn update:', lastCheckIn);
       fetchRestaurants();
     }
-  }, [fetchRestaurants, isClient, isLoggedIn, userId]);
+  }, [fetchRestaurants, isClient, lastCheckIn]);
+
+  useEffect(() => {
+    console.log('Restaurants state changed:', 
+      restaurants.map(r => ({
+        name: r.name,
+        visited: r.visited
+      }))
+    );
+  }, [restaurants]);
 
   const calculateBounds = (locations: Restaurant[]): LatLngBounds | null => {
     if (locations.length === 0) return null;
@@ -172,6 +170,7 @@ export default function RestaurantMap() {
 
   return (
     <MapContainer
+      key={restaurants.map(r => `${r.id}-${r.visited}`).join(',')}
       bounds={bounds || undefined}
       center={center}
       zoom={14}
@@ -186,7 +185,7 @@ export default function RestaurantMap() {
       />
       {restaurants.map((restaurant) => (
         <Marker
-          key={restaurant.id}
+          key={`${restaurant.id}-${restaurant.visited}`}
           position={[restaurant.latitude, restaurant.longitude]}
           icon={restaurant.visited ? icons.visited : icons.unvisited}
         >
