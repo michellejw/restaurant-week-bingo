@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
 
@@ -17,7 +17,7 @@ export default function BingoCard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchRestaurants = async () => {
+  const fetchRestaurants = useCallback(async () => {
     try {
       if (!user) {
         setRestaurants([]);
@@ -44,13 +44,13 @@ export default function BingoCard() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     if (!authLoading) {
       fetchRestaurants();
     }
-  }, [user, authLoading]);
+  }, [fetchRestaurants, authLoading]);
 
   if (loading && restaurants.length === 0) {
     return (

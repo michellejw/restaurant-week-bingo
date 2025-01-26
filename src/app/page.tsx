@@ -6,7 +6,7 @@ import { DatabaseService } from '@/lib/services/database';
 import AuthForm from '@/components/AuthForm';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
-import CheckInForm from '@/components/CheckInForm';
+import CheckInModal from '@/components/CheckInModal';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -23,6 +23,11 @@ interface UserProfile {
   name: string | null;
 }
 
+type DatabaseError = {
+  message?: string;
+  code?: string;
+};
+
 export default function Home() {
   const { user, isLoading: authLoading } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -30,6 +35,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastVisitTime, setLastVisitTime] = useState<number>(Date.now());
+  const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
 
   // Initialize and fetch initial data
   useEffect(() => {
@@ -51,8 +57,9 @@ export default function Home() {
           if (mounted) {
             setUserStats(stats);
           }
-        } catch (error: any) {
-          if (error.message?.includes('No data returned')) {
+        } catch (error) {
+          const dbError = error as DatabaseError;
+          if (dbError.message?.includes('No data returned')) {
             // Create initial stats if they don't exist
             const newStats = await DatabaseService.userStats.createOrUpdate(user.id, {
               visit_count: 0,
@@ -150,13 +157,16 @@ export default function Home() {
                 )}
               </div>
             </div>
+            <button
+              onClick={() => setIsCheckInModalOpen(true)}
+              className="btn btn-primary"
+            >
+              Check In
+            </button>
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <div className="card">
-                <CheckInForm onCheckIn={handleCheckIn} />
-              </div>
               <div className="card p-4">
                 <RestaurantMap lastCheckIn={lastVisitTime} />
               </div>
@@ -165,6 +175,12 @@ export default function Home() {
               <BingoCard key={lastVisitTime} />
             </div>
           </div>
+
+          <CheckInModal
+            isOpen={isCheckInModalOpen}
+            onClose={() => setIsCheckInModalOpen(false)}
+            onCheckIn={handleCheckIn}
+          />
         </div>
       )}
     </main>
