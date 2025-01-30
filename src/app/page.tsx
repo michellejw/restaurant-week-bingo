@@ -7,6 +7,7 @@ import AuthForm from '@/components/AuthForm';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
+import Image from 'next/image';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -127,9 +128,21 @@ export default function Home() {
       {!user ? (
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="w-full max-w-md animate-fade-in">
-            <h1 className="mb-8 text-center text-3xl font-bold text-gray-900">
-              Restaurant Week Bingo
-            </h1>
+            <div className="mb-8 text-center">
+              <div className="mb-6">
+                <Image
+                  src="/PICC-logo.png"
+                  alt="Pleasure Island Chamber of Commerce"
+                  width={300}
+                  height={150}
+                  className="mx-auto"
+                  priority
+                />
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome to Restaurant Week Bingo!
+              </h1>
+            </div>
             <AuthForm />
           </div>
         </div>

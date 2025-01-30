@@ -23,12 +23,12 @@ export default function NavBar() {
           <Link href="/" className="flex-shrink-0">
             <span className="text-lg font-semibold text-gray-900">Restaurant Week Bingo</span>
           </Link>
-          {isLoggedIn !== null && (
+          {isLoggedIn && (
             <button
               onClick={handleAuthClick}
               className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-purple-600 transition-colors"
             >
-              {isLoggedIn ? 'Sign Out' : 'Sign In'}
+              Sign Out
             </button>
           )}
         </div>

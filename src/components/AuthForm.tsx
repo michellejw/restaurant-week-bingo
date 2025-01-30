@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthForm() {
@@ -8,11 +8,39 @@ export default function AuthForm() {
   const [password, setPassword] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+
+  // Check for error parameter in URL
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash.includes('error=access_denied')) {
+      setMessage('Password reset link has expired. Please request a new one.');
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
+
+    if (isResetMode) {
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: `${window.location.origin}/reset-password?type=recovery`
+        });
+        
+        if (error) {
+          setMessage(error.message);
+        } else {
+          setMessage('Password reset instructions have been sent to your email!');
+        }
+      } catch (error) {
+        setMessage('An error occurred. Please try again.');
+        console.error('Reset password error:', error);
+      }
+      setLoading(false);
+      return;
+    }
 
     try {
       const { error } = await supabase.auth.signInWithPassword({
@@ -36,9 +64,16 @@ export default function AuthForm() {
     } catch (error) {
       setMessage('An error occurred. Please try again.');
       console.error('Auth error:', error);
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
+  };
+
+  const toggleMode = () => {
+    setIsResetMode(!isResetMode);
+    setMessage('');
+    setPassword('');
+    // Clear the error from URL without refreshing
+    window.history.replaceState(null, '', window.location.pathname);
   };
 
   return (
@@ -57,19 +92,21 @@ export default function AuthForm() {
             required
           />
         </div>
-        <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="input"
-            required
-          />
-        </div>
+        {!isResetMode && (
+          <div>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="input"
+              required={!isResetMode}
+            />
+          </div>
+        )}
         <button
           type="submit"
           disabled={loading}
@@ -84,8 +121,15 @@ export default function AuthForm() {
               Processing...
             </span>
           ) : (
-            'Log in or Sign up'
+            isResetMode ? 'Send Reset Instructions' : 'Log in or Sign up'
           )}
+        </button>
+        <button
+          type="button"
+          onClick={toggleMode}
+          className="w-full text-sm text-gray-600 hover:text-purple-600 transition-colors"
+        >
+          {isResetMode ? 'Back to login' : 'Forgot your password?'}
         </button>
         {message && (
           <p className="mt-2 text-sm text-center text-coral-600 animate-fade-in">{message}</p>

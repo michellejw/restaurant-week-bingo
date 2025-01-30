@@ -66,13 +66,15 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 
 
 ## NEXT STEPS
-- [ ] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
+- [x] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
 - [ ] Add chamber of commerce logo to the main page and the landing page
 - [ ] Adjust the text on the landing page to say (line 1): "Pleasure Island Chamber of Commerce presents" and (line 2): "Restaurant Week Bingo!"
+- [ ] Remove the sign in button from the navigation bar on the landing page when users are logged out. (but keep the log out button on the nav bar on the main page when users are logged in)
 - [ ] Add a separate page to list/summarize sponsors (add link to it on the nav bar)
 - [ ] A banner at the bottom of the main page that cycles through sponsors whenever the page is visited or refreshed
+- [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
 - [ ] Add page to describe how the bingo game works
 - [ ] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
-- [ ] Implement a more sophisticated authentication system that allows users to sign in via Google, Facebook, Apple, or email/password. Do this through Auth0. 
+- [ ] Implement a more sophisticated authentication system that allows users to sign in via Google, Facebook, Apple, or email/password. Do this through Auth0. (this is lower priority - we at least have email working and the other stuff I'll add if I have time)
 - [ ] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
 - [ ] Add a button for if people forget their password ?? (unless this is part of the auth0 implementation)
