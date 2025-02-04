@@ -110,7 +110,7 @@ export default function AuthForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="btn btn-brand w-full disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -127,7 +127,7 @@ export default function AuthForm() {
         <button
           type="button"
           onClick={toggleMode}
-          className="w-full text-sm text-gray-600 hover:text-purple-600 transition-colors"
+          className="w-full text-sm text-gray-600 hover:text-coral-600 transition-colors"
         >
           {isResetMode ? 'Back to login' : 'Forgot your password?'}
         </button>
@@ -137,4 +137,4 @@ export default function AuthForm() {
       </form>
     </div>
   );
-} 
+}

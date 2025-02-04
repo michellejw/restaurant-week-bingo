@@ -33,6 +33,10 @@
     @apply bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300;
   }
 
+  .btn-brand {
+    @apply bg-[#1B3C8C] text-white hover:bg-[#15306F] active:bg-[#102355];
+  }
+
   .card {
     @apply bg-white rounded-xl shadow-sm border border-gray-100 transition-all duration-200 hover:shadow-md;
   }

@@ -8,6 +8,7 @@ import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
 import Image from 'next/image';
+import Link from 'next/link';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -142,6 +143,12 @@ export default function Home() {
               <h1 className="text-3xl font-bold text-gray-900">
                 Welcome to Restaurant Week Bingo!
               </h1>
+              <Link 
+                href="/how-to-play"
+                className="inline-block mt-4 px-6 py-3 text-sm font-medium text-coral-700 hover:text-coral-800 bg-coral-100 hover:bg-coral-200 rounded-lg transition-colors"
+              >
+                Learn How to Play
+              </Link>
             </div>
             <AuthForm />
           </div>
@@ -162,7 +169,7 @@ export default function Home() {
                 </div>
                 {userStats.raffle_entries > 0 && (
                   <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center bg-purple-100 text-purple-700 rounded-full h-6 w-6 font-medium">
+                    <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-6 w-6 font-medium">
                       {userStats.raffle_entries}
                     </span>
                     <span className="text-gray-600">raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'}</span>
