@@ -32,8 +32,8 @@ export default function HowToPlay() {
             <div className="space-y-4 text-gray-600">
               <p>When you visit a restaurant:</p>
               <ol className="list-decimal list-inside space-y-2 ml-4">
-                <li>Click the "Check In" button at the top of your screen</li>
-                <li>Find the Restaurant's special bingo poster</li>
+                <li>Click the &ldquo;Check In&rdquo; button at the top of your screen</li>
+                <li>Find the Restaurant&apos;s special bingo poster</li>
                 <li>Scan the QR code or fill in the code manually</li>
                 <li>Your visit will be recorded and your bingo card updated</li>
               </ol>
