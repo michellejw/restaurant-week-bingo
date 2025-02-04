@@ -66,16 +66,22 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 
 
 ## NEXT STEPS
+### Completed
 - [x] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
 - [x] Add chamber of commerce logo to the main page and the landing page
 - [x] Adjust the text on the landing page to say (line 1): "Pleasure Island Chamber of Commerce presents" and (line 2): "Restaurant Week Bingo!"
 - [x] Remove the sign in button from the navigation bar on the landing page when users are logged out. (but keep the log out button on the nav bar on the main page when users are logged in)
 - [x] Add a separate page to list/summarize sponsors (add link to it on the nav bar)
-- [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
 - [x] Add page to describe how the bingo game works
 - [x] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
 - [x] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
 - [x] Add a button for if people forget their password ?? (unless this is part of the auth0 implementation)
-- [X] Set up proper email (SMTP) for production
+- [x] Set up proper email (SMTP) for production
 - [x] Improve the sign-up experience by adding a way for users to view their password on the sign-up/log in page
+
+### Coming soon!
+- [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
+- [ ] Add actual sponsors: will need to create a new table in the database for sponsors, and then add the sponsors to the page. One column in the sponsors table will include the logo file name, if available. Other fields will include the name, address, phone number, URL, brief description, and promo offer, if available. The code should recognize if the optional fields are available in the database and display them accordingly (e.g., logo, promo offer).
 - [ ] Consider requesting that users provide a phone number on sign-up to help with prize fulfillment
+- [ ] Create a script for generating the bingo posters for each restaurant. This should include the restaurant name, the QR code, and the manual check-in code, probably on an 8.5x11 sheet of paper.
+- [ ] describethe prizes available via raffle, probably on the "how to play" page. 
