@@ -203,11 +203,11 @@ export default function Home() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="space-y-6">
-              <div className="card p-4">
+              <div className="card p-4 border-l-4 border-[#ff5436]">
                 <RestaurantMap lastCheckIn={lastVisitTime} />
               </div>
             </div>
-            <div className="card p-6">
+            <div className="card p-6 border-l-4 border-[#ff5436]">
               <BingoCard key={lastVisitTime} />
             </div>
           </div>

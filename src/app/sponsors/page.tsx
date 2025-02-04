@@ -57,12 +57,12 @@ export default function SponsorsPage() {
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+        <div className="card p-8 md:p-12">
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
             {sponsors.map((sponsor) => (
               <div
                 key={sponsor.id}
-                className="bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow duration-300"
+                className="card p-6 hover:shadow-lg transition-shadow duration-300 border-l-4 border-[#ff5436]"
               >
                 <div className="relative w-32 h-32 mx-auto mb-4">
                   <Image

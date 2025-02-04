@@ -11,7 +11,7 @@ export default function ContactPage() {
           <p className="text-lg text-gray-600">Get in touch with the Pleasure Island Chamber of Commerce</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+        <div className="card p-8 md:p-12 border-l-4 border-[#ff5436]">
           <div className="grid gap-8 md:gap-12">
             <div className="text-center">
               <h2 className="text-xl font-semibold text-coral-600 mb-2">

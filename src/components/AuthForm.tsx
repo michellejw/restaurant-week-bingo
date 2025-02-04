@@ -78,7 +78,7 @@ export default function AuthForm() {
   };
 
   return (
-    <div className="card p-8">
+    <div className="card p-8 border-l-4 border-[#ff5436]">
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
@@ -130,7 +130,7 @@ export default function AuthForm() {
         <button
           type="submit"
           disabled={loading}
-          className="btn btn-brand w-full disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-2 text-white bg-[#ff5436] hover:bg-[#ff5436]/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
