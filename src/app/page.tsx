@@ -140,8 +140,13 @@ export default function Home() {
                   priority
                 />
               </div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Welcome to Restaurant Week Bingo!
+              <h1 className="space-y-1">
+                <span className="block text-xl font-medium text-gray-600">
+                  Welcome to
+                </span>
+                <span className="block text-3xl font-extrabold text-gray-900 tracking-tight">
+                  Restaurant Week Bingo
+                </span>
               </h1>
               <Link 
                 href="/how-to-play"

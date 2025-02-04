@@ -75,6 +75,6 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
 - [ ] Add page to describe how the bingo game works
 - [ ] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
-- [ ] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
+- [x] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
 - [x] Add a button for if people forget their password ?? (unless this is part of the auth0 implementation)
 - [X] Set up proper email (SMTP) for production
