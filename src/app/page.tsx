@@ -166,18 +166,29 @@ export default function Home() {
                 Welcome, {userProfile?.name || user.email?.split('@')[0]}!
               </h2>
               <div className="flex gap-4 items-center text-sm">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-6 w-6 font-medium">
-                    {userStats.visit_count}
-                  </span>
-                  <span className="text-gray-600">restaurants visited</span>
-                </div>
-                {userStats.raffle_entries > 0 && (
-                  <div className="flex items-center gap-2">
-                    <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-6 w-6 font-medium">
-                      {userStats.raffle_entries}
+                <div className="flex items-center gap-2 group">
+                  <div className="relative">
+                    <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-8 w-8 font-medium group-hover:bg-coral-200 transition-colors">
+                      {userStats.visit_count}
                     </span>
-                    <span className="text-gray-600">raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-coral-600 absolute -top-1 -right-1" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M9 2a4 4 0 00-4 4v1H3a1 1 0 00-.994.89l-1 9A1 1 0 002 18h16a1 1 0 00.994-1.11l-1-9A1 1 0 0017 7h-2V6a4 4 0 00-4-4h-2zm7 7h-3v1a1 1 0 11-2 0V9H7v1a1 1 0 11-2 0V9H2v9h16V9zm-9-3V6a2 2 0 114 0v1H7z" />
+                    </svg>
+                  </div>
+                  <span className="text-gray-600 group-hover:text-gray-900 transition-colors">restaurants visited</span>
+                </div>
+                
+                {userStats.raffle_entries > 0 && (
+                  <div className="flex items-center gap-2 group">
+                    <div className="relative">
+                      <span className="inline-flex items-center justify-center bg-coral-100 text-coral-700 rounded-full h-8 w-8 font-medium group-hover:bg-coral-200 transition-colors">
+                        {userStats.raffle_entries}
+                      </span>
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5 text-coral-600 absolute -top-1 -right-1" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 100 4v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2a2 2 0 100-4V6z" />
+                      </svg>
+                    </div>
+                    <span className="text-gray-600 group-hover:text-gray-900 transition-colors">raffle {userStats.raffle_entries === 1 ? 'entry' : 'entries'}</span>
                   </div>
                 )}
               </div>

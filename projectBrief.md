@@ -71,9 +71,8 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [x] Adjust the text on the landing page to say (line 1): "Pleasure Island Chamber of Commerce presents" and (line 2): "Restaurant Week Bingo!"
 - [x] Remove the sign in button from the navigation bar on the landing page when users are logged out. (but keep the log out button on the nav bar on the main page when users are logged in)
 - [ ] Add a separate page to list/summarize sponsors (add link to it on the nav bar)
-- [ ] A banner at the bottom of the main page that cycles through sponsors whenever the page is visited or refreshed
 - [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
-- [ ] Add page to describe how the bingo game works
+- [x] Add page to describe how the bingo game works
 - [ ] Add a "contact us" page that includes the email, phone number, physical address, and URL for the chamber of commerce
 - [x] On the landing page, where users are prompted to log in or sign up, add a button to "learn more" that opens a modal with a description of the bingo game and the rules.
 - [x] Add a button for if people forget their password ?? (unless this is part of the auth0 implementation)

@@ -35,6 +35,11 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         return;
       }
 
+      if (!checkInCode.trim()) {
+        setMessage('Please enter a restaurant code.');
+        return;
+      }
+
       try {
         const restaurant = await DatabaseService.restaurants.getByCode(checkInCode);
         
@@ -56,15 +61,22 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         }, 2000);
       } catch (error) {
         const dbError = error as DatabaseError;
-        if (dbError.message?.includes('No data returned')) {
-          setMessage('Invalid restaurant code. Please try again.');
+        if (dbError.message?.includes('No data returned') || dbError.code === 'PGRST116') {
+          setMessage('Invalid restaurant code. Please check the code and try again.');
+        } else if (dbError.code === '23505') { // Unique constraint violation
+          setMessage('You have already checked in at this restaurant!');
+        } else if (dbError.code === '42501') { // RLS policy violation
+          setMessage('You do not have permission to check in. Please log in again.');
+        } else if (dbError.code?.startsWith('23')) { // Other database constraint errors
+          setMessage('Unable to check in. Please try again later.');
         } else {
-          throw error;
+          console.error('Unexpected error during check-in:', dbError);
+          setMessage('An error occurred. Please try again later.');
         }
       }
     } catch (error) {
       console.error('Error during check-in:', error);
-      setMessage('An error occurred. Please try again.');
+      setMessage('An error occurred. Please try again later.');
     } finally {
       setLoading(false);
     }
