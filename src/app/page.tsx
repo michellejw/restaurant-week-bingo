@@ -142,7 +142,7 @@ export default function Home() {
               </div>
               <h1 className="space-y-1">
                 <span className="block text-xl font-medium text-gray-600">
-                  Welcome to
+                  Welcomes you to
                 </span>
                 <span className="block text-3xl font-extrabold text-gray-900 tracking-tight">
                   Restaurant Week Bingo
