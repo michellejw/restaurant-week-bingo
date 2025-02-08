@@ -80,8 +80,11 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [x] Improve the sign-up experience by adding a way for users to view their password on the sign-up/log in page
 
 ### Coming soon!
-- [ ] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
+- [x] Add the actual restaurant list instead of placeholder restaurants (and remove the placeholder restaurants)
+- [x] Fix: map is not auto-centering to show all the restaurant locations
+- [x] Add description to restaurant map pop-ups
 - [ ] Add actual sponsors: will need to create a new table in the database for sponsors, and then add the sponsors to the page. One column in the sponsors table will include the logo file name, if available. Other fields will include the name, address, phone number, URL, brief description, and promo offer, if available. The code should recognize if the optional fields are available in the database and display them accordingly (e.g., logo, promo offer).
 - [ ] Consider requesting that users provide a phone number on sign-up to help with prize fulfillment
 - [ ] Create a script for generating the bingo posters for each restaurant. This should include the restaurant name, the QR code, and the manual check-in code, probably on an 8.5x11 sheet of paper.
 - [ ] describethe prizes available via raffle, probably on the "how to play" page. 
+- [ ] Adjust the map markers so that they don't obscure each other when zoomed at the default zoom level. 

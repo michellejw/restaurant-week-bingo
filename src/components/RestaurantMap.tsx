@@ -1,9 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
+import 'leaflet.markercluster/dist/leaflet.markercluster';
+import 'leaflet.markercluster/dist/MarkerCluster.css';
+import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
 
@@ -36,6 +40,7 @@ interface Restaurant {
   latitude: number;
   longitude: number;
   visited: boolean;
+  description?: string | null;
 }
 
 const mapContainerStyle = {
@@ -48,6 +53,135 @@ type LatLngBounds = [[number, number], [number, number]];
 
 interface RestaurantMapProps {
   lastCheckIn?: number;
+}
+
+// Add FitBounds component to handle map fitting
+function FitBounds({ bounds }: { bounds: LatLngBounds }) {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds, {
+        padding: [50, 50], // Add padding in pixels
+        maxZoom: 15 // Limit max zoom when fitting bounds
+      });
+    }
+  }, [map, bounds]);
+  return null;
+}
+
+// Extend L.Marker to include visited property
+class CustomMarker extends L.Marker {
+  visited: boolean;
+  constructor(latLng: L.LatLngExpression, options: L.MarkerOptions & { visited: boolean }) {
+    super(latLng, options);
+    this.visited = options.visited;
+  }
+}
+
+// Create a custom cluster icon that shows visited/unvisited proportions
+const createClusterIcon = (cluster: L.MarkerCluster) => {
+  const markers = cluster.getAllChildMarkers();
+  const visited = markers.reduce((count, marker) => {
+    return count + ((marker as any).visitedStatus ? 1 : 0);
+  }, 0);
+  const total = markers.length;
+  const size = 40;
+
+  // Create an SVG for the cluster
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('width', `${size}px`);
+  svg.setAttribute('height', `${size}px`);
+  svg.setAttribute('viewBox', '0 0 40 40');
+
+  // Background circle
+  const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  circle.setAttribute('cx', '20');
+  circle.setAttribute('cy', '20');
+  circle.setAttribute('r', '18');
+  circle.setAttribute('fill', '#ffffff');
+  circle.setAttribute('stroke', '#94a3b8');
+  circle.setAttribute('stroke-width', '2');
+  svg.appendChild(circle);
+
+  // Add the text showing "visited/total"
+  const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  text.setAttribute('x', '20');
+  text.setAttribute('y', '24');
+  text.setAttribute('text-anchor', 'middle');
+  text.setAttribute('font-size', '14px');
+  text.setAttribute('font-weight', 'bold');
+  
+  // First number (visited) in coral
+  const visitedText = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+  visitedText.setAttribute('fill', '#ff5436');
+  visitedText.textContent = visited.toString();
+  
+  // Slash in gray
+  const slashText = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+  slashText.setAttribute('fill', '#94a3b8');
+  slashText.textContent = '/';
+  
+  // Total number in gray
+  const totalText = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+  totalText.setAttribute('fill', '#94a3b8');
+  totalText.textContent = total.toString();
+  
+  text.appendChild(visitedText);
+  text.appendChild(slashText);
+  text.appendChild(totalText);
+  svg.appendChild(text);
+
+  return L.divIcon({
+    html: svg.outerHTML,
+    className: 'custom-cluster-icon',
+    iconSize: L.point(size, size),
+    iconAnchor: [size/2, size/2]
+  });
+};
+
+// Add ResetView component
+function ResetView({ bounds }: { bounds: LatLngBounds }) {
+  const map = useMap();
+  
+  return (
+    <div className="leaflet-top leaflet-left" style={{ marginTop: '80px' }}>
+      <div className="leaflet-control leaflet-bar">
+        <button
+          onClick={() => {
+            map.fitBounds(bounds, {
+              padding: [50, 50],
+              maxZoom: 15
+            });
+          }}
+          className="leaflet-control-zoom-in"
+          style={{ 
+            width: '30px', 
+            height: '30px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            fontSize: '18px',
+            cursor: 'pointer'
+          }}
+          title="Reset map view"
+        >
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="2.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="w-4 h-4"
+          >
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+            <path d="M3 3v5h5" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
 }
 
 export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
@@ -117,8 +251,9 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
       maxLng = Math.max(maxLng, location.longitude);
     });
 
-    const latPadding = (maxLat - minLat) * 0.05;
-    const lngPadding = (maxLng - minLng) * 0.05;
+    // Increase padding to 10% for better visibility
+    const latPadding = (maxLat - minLat) * 0.1;
+    const lngPadding = (maxLng - minLng) * 0.1;
 
     return [
       [minLat - latPadding, minLng - lngPadding],
@@ -152,8 +287,8 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
       key={restaurants.map(r => `${r.id}-${r.visited}`).join(',')}
       bounds={bounds || undefined}
       center={center}
-      zoom={14}
-      minZoom={13}
+      zoom={bounds ? undefined : 14}
+      minZoom={11}
       maxZoom={18}
       style={mapContainerStyle}
       scrollWheelZoom={false}
@@ -162,37 +297,60 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      {restaurants.map((restaurant) => (
-        <Marker
-          key={`${restaurant.id}-${restaurant.visited}`}
-          position={[restaurant.latitude, restaurant.longitude]}
-          icon={restaurant.visited ? icons.visited : icons.unvisited}
-        >
-          <Popup>
-            <div className="text-center">
-              <h3 className="font-medium mb-1">{restaurant.name}</h3>
-              <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
-              {restaurant.url && (
-                <a
-                  href={restaurant.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-coral-600 hover:text-coral-800"
-                >
-                  Visit Website
-                </a>
-              )}
-              <div className={`mt-2 px-2 py-1 rounded text-sm ${
-                restaurant.visited
-                ? 'bg-coral-100 text-coral-800'
-                : 'bg-gray-100 text-gray-800'
-              }`}>
-                {restaurant.visited ? 'Visited!' : 'Not visited yet'}
-              </div>
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+      {bounds && <FitBounds bounds={bounds} />}
+      {bounds && <ResetView bounds={bounds} />}
+      <MarkerClusterGroup
+        chunkedLoading
+        iconCreateFunction={createClusterIcon}
+        maxClusterRadius={40}
+        spiderfyOnMaxZoom={true}
+        showCoverageOnHover={false}
+        children={restaurants.map((restaurant) => {
+          const marker = L.marker([restaurant.latitude, restaurant.longitude], {
+            icon: restaurant.visited ? icons.visited : icons.unvisited
+          });
+          (marker as any).visitedStatus = restaurant.visited;
+          return (
+            <Marker
+              key={`${restaurant.id}-${restaurant.visited}`}
+              position={[restaurant.latitude, restaurant.longitude]}
+              icon={restaurant.visited ? icons.visited : icons.unvisited}
+              ref={(ref) => {
+                if (ref) {
+                  (ref as any).visitedStatus = restaurant.visited;
+                }
+              }}
+            >
+              <Popup>
+                <div className="text-center">
+                  <h3 className="font-medium mb-1">{restaurant.name}</h3>
+                  <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
+                  {restaurant.description && (
+                    <p className="text-sm text-gray-700 mb-2">{restaurant.description}</p>
+                  )}
+                  {restaurant.url && (
+                    <a
+                      href={restaurant.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm text-coral-600 hover:text-coral-800"
+                    >
+                      Visit Website
+                    </a>
+                  )}
+                  <div className={`mt-2 px-2 py-1 rounded text-sm ${
+                    restaurant.visited
+                    ? 'bg-coral-100 text-coral-800'
+                    : 'bg-gray-100 text-gray-800'
+                  }`}>
+                    {restaurant.visited ? 'Visited!' : 'Not visited yet'}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          );
+        })}
+      />
     </MapContainer>
   );
 } 
