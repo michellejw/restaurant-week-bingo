@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -10,6 +10,11 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
+
+// Custom type for marker options
+interface CustomMarkerOptions extends L.MarkerOptions {
+  visited?: boolean;
+}
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string) => {
@@ -69,20 +74,12 @@ function FitBounds({ bounds }: { bounds: LatLngBounds }) {
   return null;
 }
 
-// Extend L.Marker to include visited property
-class CustomMarker extends L.Marker {
-  visited: boolean;
-  constructor(latLng: L.LatLngExpression, options: L.MarkerOptions & { visited: boolean }) {
-    super(latLng, options);
-    this.visited = options.visited;
-  }
-}
-
 // Create a custom cluster icon that shows visited/unvisited proportions
 const createClusterIcon = (cluster: L.MarkerCluster) => {
   const markers = cluster.getAllChildMarkers();
   const visited = markers.reduce((count, marker) => {
-    return count + ((marker as any).visitedStatus ? 1 : 0);
+    const options = marker.options as CustomMarkerOptions;
+    return count + (options.visited ? 1 : 0);
   }, 0);
   const total = markers.length;
   const size = 40;
@@ -305,19 +302,21 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
         maxClusterRadius={40}
         spiderfyOnMaxZoom={true}
         showCoverageOnHover={false}
-        children={restaurants.map((restaurant) => {
-          const marker = L.marker([restaurant.latitude, restaurant.longitude], {
-            icon: restaurant.visited ? icons.visited : icons.unvisited
-          });
-          (marker as any).visitedStatus = restaurant.visited;
+      >
+        {restaurants.map((restaurant) => {
+          const markerOptions: CustomMarkerOptions = {
+            icon: restaurant.visited ? icons.visited : icons.unvisited,
+            visited: restaurant.visited
+          };
+          
           return (
             <Marker
-              key={`${restaurant.id}-${restaurant.visited}`}
+              key={restaurant.id}
               position={[restaurant.latitude, restaurant.longitude]}
-              icon={restaurant.visited ? icons.visited : icons.unvisited}
+              icon={markerOptions.icon}
               ref={(ref) => {
                 if (ref) {
-                  (ref as any).visitedStatus = restaurant.visited;
+                  (ref.options as CustomMarkerOptions).visited = restaurant.visited;
                 }
               }}
             >
@@ -350,7 +349,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
             </Marker>
           );
         })}
-      />
+      </MarkerClusterGroup>
     </MapContainer>
   );
 } 

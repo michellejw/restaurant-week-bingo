@@ -4,10 +4,17 @@ import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+  const supabase = createMiddlewareClient({ 
+    req: request, 
+    res 
+  });
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getSession();
+  // Refresh session if expired
+  const { error } = await supabase.auth.getSession();
+  
+  if (error) {
+    console.error('Session refresh error:', error);
+  }
 
   return res;
 }
