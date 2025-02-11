@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, useMapEvent } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import MarkerClusterGroup from 'react-leaflet-cluster';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -69,20 +69,14 @@ function FitBounds({ bounds }: { bounds: LatLngBounds }) {
   return null;
 }
 
-// Extend L.Marker to include visited property
-class CustomMarker extends L.Marker {
-  visited: boolean;
-  constructor(latLng: L.LatLngExpression, options: L.MarkerOptions & { visited: boolean }) {
-    super(latLng, options);
-    this.visited = options.visited;
-  }
-}
+// Define a type for markers with visited status
+type MarkerWithVisitedStatus = L.Marker & { visitedStatus?: boolean };
 
 // Create a custom cluster icon that shows visited/unvisited proportions
 const createClusterIcon = (cluster: L.MarkerCluster) => {
-  const markers = cluster.getAllChildMarkers();
+  const markers = cluster.getAllChildMarkers() as MarkerWithVisitedStatus[];
   const visited = markers.reduce((count, marker) => {
-    return count + ((marker as any).visitedStatus ? 1 : 0);
+    return count + (marker.visitedStatus ? 1 : 0);
   }, 0);
   const total = markers.length;
   const size = 40;
@@ -283,74 +277,64 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   ] : [0, 0];
 
   return (
-    <MapContainer
-      key={restaurants.map(r => `${r.id}-${r.visited}`).join(',')}
-      bounds={bounds || undefined}
-      center={center}
-      zoom={bounds ? undefined : 14}
-      minZoom={11}
-      maxZoom={18}
-      style={mapContainerStyle}
-      scrollWheelZoom={false}
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {bounds && <FitBounds bounds={bounds} />}
-      {bounds && <ResetView bounds={bounds} />}
-      <MarkerClusterGroup
-        chunkedLoading
-        iconCreateFunction={createClusterIcon}
-        maxClusterRadius={40}
-        spiderfyOnMaxZoom={true}
-        showCoverageOnHover={false}
-        children={restaurants.map((restaurant) => {
-          const marker = L.marker([restaurant.latitude, restaurant.longitude], {
-            icon: restaurant.visited ? icons.visited : icons.unvisited
-          });
-          (marker as any).visitedStatus = restaurant.visited;
-          return (
-            <Marker
-              key={`${restaurant.id}-${restaurant.visited}`}
-              position={[restaurant.latitude, restaurant.longitude]}
-              icon={restaurant.visited ? icons.visited : icons.unvisited}
-              ref={(ref) => {
-                if (ref) {
-                  (ref as any).visitedStatus = restaurant.visited;
-                }
-              }}
-            >
-              <Popup>
-                <div className="text-center">
-                  <h3 className="font-medium mb-1">{restaurant.name}</h3>
-                  <p className="text-sm text-gray-600 mb-2">{restaurant.address}</p>
-                  {restaurant.description && (
-                    <p className="text-sm text-gray-700 mb-2">{restaurant.description}</p>
-                  )}
-                  {restaurant.url && (
-                    <a
-                      href={restaurant.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-coral-600 hover:text-coral-800"
-                    >
-                      Visit Website
-                    </a>
-                  )}
-                  <div className={`mt-2 px-2 py-1 rounded text-sm ${
-                    restaurant.visited
-                    ? 'bg-coral-100 text-coral-800'
-                    : 'bg-gray-100 text-gray-800'
-                  }`}>
-                    {restaurant.visited ? 'Visited!' : 'Not visited yet'}
+    <div className="relative w-full h-[400px]">
+      {isClient && icons && (
+        <MapContainer
+          style={mapContainerStyle}
+          center={center}
+          zoom={bounds ? undefined : 14}
+          minZoom={11}
+          maxZoom={18}
+          scrollWheelZoom={false}
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          />
+          {bounds && <FitBounds bounds={bounds} />}
+          {bounds && <ResetView bounds={bounds} />}
+          <MarkerClusterGroup
+            chunkedLoading
+            iconCreateFunction={createClusterIcon}
+            showCoverageOnHover={false}
+            maxClusterRadius={40}
+            disableClusteringAtZoom={15}
+            spiderfyOnMaxZoom={false}
+            removeOutsideVisibleBounds={true}
+            animate={false}
+          >
+            {restaurants.map((restaurant) => (
+              <Marker
+                key={restaurant.id}
+                position={[restaurant.latitude, restaurant.longitude]}
+                icon={restaurant.visited ? icons.visited : icons.unvisited}
+              >
+                <Popup>
+                  <div className="text-center">
+                    <h3 className="font-bold">{restaurant.name}</h3>
+                    <p>{restaurant.address}</p>
+                    {restaurant.url && (
+                      <a
+                        href={restaurant.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        Visit Website
+                      </a>
+                    )}
                   </div>
-                </div>
-              </Popup>
-            </Marker>
-          );
-        })}
-      />
-    </MapContainer>
+                </Popup>
+              </Marker>
+            ))}
+          </MarkerClusterGroup>
+        </MapContainer>
+      )}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+        </div>
+      )}
+    </div>
   );
 } 
