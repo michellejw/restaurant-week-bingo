@@ -45,7 +45,7 @@ export default function AuthForm() {
 
     try {
       // Use our persistence-enabled sign in
-      const { data, error } = await signInWithPersistence(email, password);
+      const { error } = await signInWithPersistence(email, password);
 
       if (error) {
         // If login fails, try to sign up
