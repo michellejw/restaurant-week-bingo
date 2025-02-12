@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from './supabase';
+import { supabase, signOutAndClear, attemptAutoReLogin } from './supabase';
 import type { User } from '@supabase/supabase-js';
 
 type AuthContextType = {
@@ -29,7 +29,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
+      if (!session?.user) {
+        // Session expired, try auto re-login
+        const { data } = await attemptAutoReLogin();
+        setUser(data?.user ?? null);
+      } else {
+        setUser(session.user);
+      }
     } catch (error) {
       console.error('Session refresh error:', error);
       setUser(null);
@@ -47,36 +53,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     initialize();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        localStorage.removeItem('_persist'); // Clean up persisted credentials on sign out
+        router.push('/');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setUser(session?.user ?? null);
+      } else if (event === 'USER_UPDATED') {
+        setUser(session?.user ?? null);
+      }
     });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, []);
+  }, [router]);
 
   const signOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      setUser(null);
-      router.push('/');
-    } catch (error) {
-      console.error('Sign out error:', error);
-    }
-  };
-
-  const value = {
-    user,
-    isLoading,
-    isLoggedIn: !!user,
-    signOut,
-    refreshSession,
+    await signOutAndClear();
+    setUser(null);
+    router.push('/');
   };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoading,
+        isLoggedIn: !!user,
+        signOut,
+        refreshSession,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useAuth } from '@/lib/AuthContext'
 import { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
+import { checkSession } from '@/lib/supabase'
 
 export default function NavBar() {
   const { isLoggedIn, signOut } = useAuth()
@@ -44,6 +45,14 @@ export default function NavBar() {
             <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
               Contact Us
             </Link>
+            {isLoggedIn && (
+              <button
+                onClick={() => checkSession()}
+                className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors"
+              >
+                Check Session
+              </button>
+            )}
             <button
               onClick={handleAuthClick}
               className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors"
