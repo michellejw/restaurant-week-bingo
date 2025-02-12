@@ -86,16 +86,6 @@ export const signOutAndClear = async () => {
   return supabase.auth.signOut();
 };
 
-// Test function to check session state
-export const checkSession = async () => {
-  const { data: { session } } = await supabase.auth.getSession();
-  console.log('Current session:', session);
-  if (session) {
-    console.log('Session expires at:', new Date(session.expires_at! * 1000).toLocaleString());
-  }
-  return session;
-};
-
 // Helper to handle Supabase errors consistently
 export function handleSupabaseError(error: unknown): never {
   const supaError = error as Error;
