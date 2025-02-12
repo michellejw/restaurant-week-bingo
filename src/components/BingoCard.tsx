@@ -68,8 +68,6 @@ export default function BingoCard() {
     );
   }
 
-  const gridCols = Math.ceil(Math.sqrt(restaurants.length));
-
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
       {restaurants.map((restaurant) => (
