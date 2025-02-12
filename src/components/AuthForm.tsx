@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase, signInWithPersistence, checkSession } from '@/lib/supabase';
+import { supabase, signInWithPersistence } from '@/lib/supabase';
 
 export default function AuthForm() {
   const [email, setEmail] = useState('');
@@ -59,12 +59,6 @@ export default function AuthForm() {
         } else if (signUpData.user) {
           setMessage('Please check your email to confirm your signup!');
         }
-      } else {
-        // Debug: verify persistence storage
-        console.log('Persistence check:', {
-          hasPersistedCreds: !!localStorage.getItem('_persist'),
-          session: await checkSession()
-        });
       }
     } catch (error) {
       setMessage('An error occurred. Please try again.');
