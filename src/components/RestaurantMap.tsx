@@ -10,6 +10,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
+import type { MarkerCluster } from 'leaflet';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string) => {
@@ -69,18 +70,16 @@ function FitBounds({ bounds }: { bounds: LatLngBounds }) {
   return null;
 }
 
-// Define a type for markers with visited status
-type MarkerWithVisitedStatus = L.Marker & { visitedStatus?: boolean };
-
 // Create a custom cluster icon that shows visited/unvisited proportions
-const createClusterIcon = (cluster: any) => {
+const createClusterIcon = (cluster: MarkerCluster) => {
   // Get all markers in the cluster
-  const markers = cluster.getAllChildMarkers ? cluster.getAllChildMarkers() : cluster.markers || [];
-  const childCount = cluster.getChildCount ? cluster.getChildCount() : markers.length;
+  const markers = cluster.getAllChildMarkers();
+  const childCount = cluster.getChildCount();
   
   // Count visited restaurants by looking at the original data
-  const visited = markers.reduce((count: number, marker: any) => {
-    const restaurant = marker.options?.restaurant as Restaurant;
+  const visited = markers.reduce((count: number, marker: L.Marker) => {
+    // We know the marker has our custom restaurant property
+    const restaurant = (marker.options as { restaurant?: Restaurant })?.restaurant;
     return count + (restaurant?.visited ? 1 : 0);
   }, 0);
   
@@ -313,8 +312,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
                 key={restaurant.id}
                 position={[restaurant.latitude, restaurant.longitude]}
                 icon={restaurant.visited ? icons.visited : icons.unvisited}
-                // Pass the restaurant data to the marker
-                // @ts-ignore
+                // @ts-expect-error - restaurant prop is needed for cluster counting
                 restaurant={restaurant}
               >
                 <Popup>
