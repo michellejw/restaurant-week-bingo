@@ -73,12 +73,17 @@ function FitBounds({ bounds }: { bounds: LatLngBounds }) {
 type MarkerWithVisitedStatus = L.Marker & { visitedStatus?: boolean };
 
 // Create a custom cluster icon that shows visited/unvisited proportions
-const createClusterIcon = (cluster: L.MarkerCluster) => {
-  const markers = cluster.getAllChildMarkers() as MarkerWithVisitedStatus[];
-  const visited = markers.reduce((count, marker) => {
-    return count + (marker.visitedStatus ? 1 : 0);
+const createClusterIcon = (cluster: any) => {
+  // Get all markers in the cluster
+  const markers = cluster.getAllChildMarkers ? cluster.getAllChildMarkers() : cluster.markers || [];
+  const childCount = cluster.getChildCount ? cluster.getChildCount() : markers.length;
+  
+  // Count visited restaurants by looking at the original data
+  const visited = markers.reduce((count: number, marker: any) => {
+    const restaurant = marker.options?.restaurant as Restaurant;
+    return count + (restaurant?.visited ? 1 : 0);
   }, 0);
-  const total = markers.length;
+  
   const size = 40;
 
   // Create an SVG for the cluster
@@ -118,7 +123,7 @@ const createClusterIcon = (cluster: L.MarkerCluster) => {
   // Total number in gray
   const totalText = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
   totalText.setAttribute('fill', '#94a3b8');
-  totalText.textContent = total.toString();
+  totalText.textContent = childCount.toString();
   
   text.appendChild(visitedText);
   text.appendChild(slashText);
@@ -308,6 +313,9 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
                 key={restaurant.id}
                 position={[restaurant.latitude, restaurant.longitude]}
                 icon={restaurant.visited ? icons.visited : icons.unvisited}
+                // Pass the restaurant data to the marker
+                // @ts-ignore
+                restaurant={restaurant}
               >
                 <Popup>
                   <div className="text-center">
