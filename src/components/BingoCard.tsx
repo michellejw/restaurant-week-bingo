@@ -71,19 +71,17 @@ export default function BingoCard() {
   const gridCols = Math.ceil(Math.sqrt(restaurants.length));
 
   return (
-    <div className="grid gap-4 p-4" style={{ 
-      gridTemplateColumns: `repeat(${gridCols}, minmax(0, 1fr))`
-    }}>
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
       {restaurants.map((restaurant) => (
         <div
           key={restaurant.id}
-          className={`aspect-square p-4 border rounded-lg flex items-center justify-center text-center transition-colors duration-200
+          className={`aspect-square p-2 sm:p-4 border rounded-lg flex items-center justify-center text-center transition-colors duration-200
             ${restaurant.visited 
               ? 'bg-coral-500 text-white border-coral-600' 
               : 'bg-white hover:bg-coral-50 border-gray-100'
             }`}
         >
-          <span className="text-sm font-medium">{restaurant.name}</span>
+          <span className="text-xs sm:text-sm font-medium leading-tight">{restaurant.name}</span>
         </div>
       ))}
     </div>
