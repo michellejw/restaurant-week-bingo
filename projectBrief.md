@@ -64,7 +64,6 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 ## Future Features
 - Admin dashboard (planned)
 
-
 ## NEXT STEPS
 ### Completed
 - [x] Add QR code scanner to the check-in system: allow users to either scan a QR code or enter a simpler code manually. The check in system should include a button to "check in" that opens a modal to either scan a QR code or enter a simpler code manually.
@@ -87,12 +86,19 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [ ] Request that users provide a phone number on sign-up to help with prize fulfillment
 - [ ] add a user settings page to allow users to update their name, email, and phone number, or to request a password reset. 
 - [ ] remove QR code scanning from the check-in system - codes only.
+- [ ] add restaurant phone number to the restaurant info pop-up
+- [ ] fill in sponsor info in the sponsors page
+- [ ] add a special icon to the restaurant map for retail sponsors (like a shopping bag) - they should also have a pop up with extra info
+- [ ] make the layout a vertical stack. stretch map across the page. Bingo card is below the map. check in button is above the map and should be stretched to the width of the map/page.
 
-### From Jax
+### To request from PICC
 - [ ] Add actual sponsors: will need to create a new table in the database for sponsors, and then add the sponsors to the page. One column in the sponsors table will include the logo file name, if available. Other fields will include the name, address, phone number, URL, brief description, and promo offer, if available. The code should recognize if the optional fields are available in the database and display them accordingly (e.g., logo, promo offer).
 - [ ] describethe prizes available via raffle, probably on the "how to play" page. (and generally review and update the how to play page)
 
 
-## Crazy ideas for future work
-- [ ] Add special login for restaurant owners to update their info (e.g. add a new location, update their description, etc.), upload a logo (strict on size and format), and add a promo offer.
+## Ideas for future work (probably won't happen this time around)
+- [ ] Add special login for restaurant owners to update their info (e.g. add a new location, update their description, etc.), upload a logo (strict on size and format), and add a promo offer. Should probably be a completely different login and signup process and the site will be very different (e.g. no bingo card, no map)
 - [ ] Add a stats page for restaurants to view anonymized visit totals, etc. (e.g. # visits vs day of week, # visits vs time of day, etc.)
+- [ ] consider setting up bingo card sorting so that it is different for different users. Or maybe have a shuffle button?? Maybe put visited restaurants at the top of the grid? 
+- [ ] click on bingo card square to highlight the corresponding restaurant on the map
+- [ ] revisit admin dashboard - so admins can directly add/edit restaurants, info, and codes. 
