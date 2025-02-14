@@ -44,6 +44,11 @@ export default function NavBar() {
             <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
               Contact Us
             </Link>
+            {isLoggedIn && (
+              <Link href="/settings" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
+                Settings
+              </Link>
+            )}
             <button
               onClick={handleAuthClick}
               className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors"
@@ -89,6 +94,15 @@ export default function NavBar() {
           >
             Contact Us
           </Link>
+          {isLoggedIn && (
+            <Link
+              href="/settings"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Settings
+            </Link>
+          )}
           <button
             onClick={() => {
               handleAuthClick()

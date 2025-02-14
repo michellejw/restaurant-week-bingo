@@ -19,6 +19,7 @@ CREATE TABLE users (
     id UUID PRIMARY KEY REFERENCES auth.users(id),
     email TEXT NOT NULL,
     name TEXT,
+    phone TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     last_login TIMESTAMPTZ DEFAULT NOW()
 );
