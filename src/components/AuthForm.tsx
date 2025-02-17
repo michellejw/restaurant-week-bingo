@@ -27,7 +27,7 @@ export default function AuthForm() {
     if (isResetMode) {
       try {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: `${window.location.origin}/reset-password?type=recovery`
+          redirectTo: `${window.location.origin}/reset-password?type=recovery&mode=update`
         });
         
         if (error) {

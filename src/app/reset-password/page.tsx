@@ -12,14 +12,26 @@ export default function ResetPassword() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
+    const handlePasswordRecovery = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const error = hashParams.get('error');
+      const type = new URLSearchParams(window.location.search).get('type');
+      
+      if (error === 'access_denied') {
+        setMessage('Password reset link has expired. Please request a new one.');
+        setTimeout(() => {
+          router.push('/');
+        }, 3000);
+        return;
+      }
+
+      // Only redirect if we're not in recovery mode and there's no error
+      if (!type && !error) {
         router.push('/');
       }
     };
     
-    checkSession();
+    handlePasswordRecovery();
   }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
