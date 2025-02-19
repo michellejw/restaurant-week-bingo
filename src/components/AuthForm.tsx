@@ -44,25 +44,43 @@ export default function AuthForm() {
     }
 
     try {
+      console.log('⭐️ Starting auth process...');
+      
       // Use our persistence-enabled sign in
       const { error } = await signInWithPersistence(email, password);
+      console.log('🔑 Sign in attempt:', { hasError: !!error, errorMessage: error?.message });
 
       if (error) {
+        console.log('📝 Attempting signup instead');
         // If login fails, try to sign up
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/welcome`
+          }
+        });
+
+        console.log('📨 Signup completed:', {
+          success: !!signUpData?.user,
+          userId: signUpData?.user?.id,
+          hasError: !!signUpError,
+          errorMessage: signUpError?.message
         });
 
         if (signUpError) {
+          console.log('❌ Signup error:', signUpError.message);
           setMessage(signUpError.message);
         } else if (signUpData.user) {
+          console.log('✅ Signup successful, email verification needed');
           setMessage('Please check your email to confirm your signup!');
         }
+      } else {
+        console.log('✅ Sign in successful');
       }
     } catch (error) {
+      console.error('❌ Auth error:', error);
       setMessage('An error occurred. Please try again.');
-      console.error('Auth error:', error);
     }
     setLoading(false);
   };
