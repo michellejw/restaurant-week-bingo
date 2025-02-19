@@ -31,7 +31,7 @@ export default function VerifyEmailPage() {
             Check Your Email
           </h2>
           <p className="mt-4 text-lg text-gray-600">
-            We've sent a verification link to{' '}
+            We&apos;ve sent a verification link to{' '}
             <span className="font-medium">{user?.email}</span>
           </p>
           <p className="mt-2 text-sm text-gray-500">
