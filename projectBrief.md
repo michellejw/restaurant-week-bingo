@@ -87,7 +87,7 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [x] add a user settings page to allow users to update their name, email, and phone number, or to request a password reset. 
 - [x] remove QR code scanning from the check-in system - codes only.
 - [x] add restaurant phone number to the restaurant table
-- [ ] add restaurant phone number to the restaurant info pop-up
+- [x] add restaurant phone number to the restaurant info pop-up
 - [ ] fill in sponsor info in the sponsors page
 - [ ] add a special icon to the restaurant map for retail sponsors (like a shopping bag) - they should also have a pop up with extra info
 - [ ] make the layout a vertical stack. stretch map across the page. Bingo card is below the map. check in button is above the map and should be stretched to the width of the map/page.
