@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -31,6 +31,7 @@ export default function Settings() {
   const [message, setMessage] = useState('');
   const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
+  const initialValuesSet = useRef(false);
 
   useEffect(() => {
     if (!user?.id) {
@@ -38,11 +39,12 @@ export default function Settings() {
       return;
     }
 
-    // Set initial values from profile
-    if (profile) {
+    // Only set initial values once
+    if (profile && !initialValuesSet.current) {
       setName(profile.name || '');
       // Format phone number from database
       setPhone(profile.phone ? formatPhoneNumber(profile.phone) : '');
+      initialValuesSet.current = true;
     }
   }, [user, profile, router]);
 
