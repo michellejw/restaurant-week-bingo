@@ -105,7 +105,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch profile when user changes
   useEffect(() => {
     refreshProfile();
-  }, [user]);
+  }, [user, refreshProfile]);
 
   const signOut = async () => {
     await signOutAndClear();

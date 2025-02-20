@@ -41,8 +41,8 @@ interface Restaurant {
   latitude: number;
   longitude: number;
   visited: boolean;
-  description: string | null;
-  phone: string | null;
+  description?: string | null;
+  phone?: string | null;
 }
 
 const mapContainerStyle = {

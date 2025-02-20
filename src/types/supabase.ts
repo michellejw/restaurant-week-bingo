@@ -10,6 +10,8 @@ export type Database = {
           code: string;
           latitude: number;
           longitude: number;
+          description: string | null;
+          phone: string | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['restaurants']['Row'], 'id' | 'created_at'>;
