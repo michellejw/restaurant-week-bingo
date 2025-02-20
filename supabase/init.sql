@@ -40,6 +40,8 @@ CREATE TABLE restaurants (
     latitude FLOAT8 NOT NULL,
     longitude FLOAT8 NOT NULL,
     description TEXT,
+    phone TEXT,
+    specials TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
