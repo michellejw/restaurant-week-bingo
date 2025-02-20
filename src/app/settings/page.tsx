@@ -6,58 +6,78 @@ import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 
+// Format phone number as (XXX) XXX-XXXX
+const formatPhoneNumber = (value: string) => {
+  const numbers = value.replace(/\D/g, '');
+  if (numbers.length === 0) return '';
+  if (numbers.length <= 3) return `(${numbers}`;
+  if (numbers.length <= 6) return `(${numbers.slice(0, 3)}) ${numbers.slice(3)}`;
+  return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
+};
+
+// Remove formatting to store in database
+const unformatPhoneNumber = (value: string) => value.replace(/\D/g, '');
+
+// Validate phone number
+const isValidPhoneNumber = (value: string) => {
+  const numbers = value.replace(/\D/g, '');
+  return numbers.length === 10;
+};
+
 export default function Settings() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { user } = useAuth();
+  const { user, profile, refreshProfile } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      if (!user?.id) {
-        router.push('/');
-        return;
-      }
+    if (!user?.id) {
+      router.push('/');
+      return;
+    }
 
-      try {
-        const { data, error } = await supabase
-          .from('users')
-          .select('name, phone')
-          .eq('id', user.id)
-          .single();
+    // Set initial values from profile
+    if (profile) {
+      setName(profile.name || '');
+      // Format phone number from database
+      setPhone(profile.phone ? formatPhoneNumber(profile.phone) : '');
+    }
+  }, [user, profile, router]);
 
-        if (error) throw error;
-
-        if (data) {
-          setName(data.name || '');
-          setPhone(data.phone || '');
-        }
-      } catch (error) {
-        console.error('Error fetching user data:', error);
-      }
-    };
-
-    fetchUserData();
-  }, [user, router]);
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formattedNumber = formatPhoneNumber(e.target.value);
+    if (formattedNumber.length <= 14) { // (XXX) XXX-XXXX = 14 chars
+      setPhone(formattedNumber);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
 
+    // Validate phone number if provided
+    if (phone && !isValidPhoneNumber(phone)) {
+      setMessage('Please enter a valid 10-digit phone number');
+      setLoading(false);
+      return;
+    }
+
     try {
       const { error } = await supabase
         .from('users')
         .update({
           name,
-          phone
+          phone: phone ? unformatPhoneNumber(phone) : null
         })
         .eq('id', user?.id);
 
       if (error) throw error;
 
+      // Refresh the profile in the context
+      await refreshProfile();
       setMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -74,9 +94,17 @@ export default function Settings() {
   return (
     <main className="min-h-screen bg-gray-50 pt-20 p-4">
       <div className="max-w-2xl mx-auto animate-fade-in">
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">
           Account Settings
         </h1>
+        <div className="text-center mb-8 max-w-xl mx-auto">
+          <p className="text-gray-600 mb-3">
+            Thank you for supporting our local restaurants and bars during Restaurant Week! Your participation helps make our community even more vibrant.
+          </p>
+          <p className="text-gray-600">
+            Please make sure to provide your contact information below so we can reach you if you win one of our exciting prizes. You can update these details anytime!
+          </p>
+        </div>
         <div className="card p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -112,9 +140,10 @@ export default function Settings() {
                 type="tel"
                 id="phone"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
                 className="input"
-                placeholder="Enter your phone number"
+                placeholder="(XXX) XXX-XXXX"
+                pattern="\(\d{3}\) \d{3}-\d{4}"
               />
             </div>
             <div className="flex flex-col gap-4">

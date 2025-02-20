@@ -4,6 +4,7 @@ import ClientNavWrapper from "@/components/ClientNavWrapper";
 import { metadata } from "./metadata";
 import { AuthProvider } from '@/lib/AuthContext';
 import Link from 'next/link';
+import ProfileBanner from "@/components/ProfileBanner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +30,12 @@ export default function RootLayout({
       >
         <AuthProvider>
           <ClientNavWrapper />
-          <main className="pt-16 flex-grow">
-            {children}
-          </main>
+          <div className="pt-16">
+            <ProfileBanner />
+            <main className="flex-grow">
+              {children}
+            </main>
+          </div>
           <footer className="py-6 px-4 mt-auto border-t border-gray-100">
             <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
               <p>
