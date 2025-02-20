@@ -24,15 +24,22 @@ export default function WelcomePage() {
     setIsSubmitting(true);
     setError('');
 
+    if (!user?.id) {
+      setError('No user found. Please try logging in again.');
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      console.log('📝 Updating user info:', { name, phone });
+      console.log('📝 Updating user info:', { id: user.id, name, phone });
       const { error: updateError } = await supabase
         .from('users')
-        .update({
+        .upsert({
+          id: user.id,
+          email: user.email,
           name,
           phone,
-        })
-        .eq('id', user?.id);
+        });
 
       if (updateError) throw updateError;
 

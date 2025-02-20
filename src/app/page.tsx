@@ -130,13 +130,12 @@ export default function Home() {
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="w-full max-w-md animate-fade-in">
             <div className="mb-8 text-center">
-              <div className="mb-6">
+              <div className="relative w-[300px] h-[150px] mx-auto mb-6">
                 <Image
-                  src="/PICC-logo.png"
+                  src="/images/PICC-logo.png"
                   alt="Pleasure Island Chamber of Commerce"
-                  width={300}
-                  height={150}
-                  className="mx-auto"
+                  fill
+                  style={{ objectFit: 'contain' }}
                   priority
                 />
               </div>

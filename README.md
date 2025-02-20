@@ -99,6 +99,27 @@ CREATE TABLE user_stats (
 - `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase project's anon/public key
 
+## Static Assets
+
+Static files (images, fonts, etc.) should be placed in the appropriate subdirectory under `public/`:
+- Images go in `public/images/`
+- Fonts go in `public/fonts/`
+- Other static assets should be organized in appropriate subdirectories
+
+When referencing these files in the code, use paths relative to the `public` directory:
+```jsx
+// Example image usage
+<Image src="/images/example.png" alt="Example" />
+```
+
+The middleware is configured to serve static files without authentication, supporting the following:
+- All files in `public/images/` and `public/fonts/`
+- Common file types: .png, .svg, .jpg, .ico
+- Next.js system files (_next/static, _next/image)
+- favicon.ico
+
+If you need to add support for additional file types, update the matcher in `src/middleware.ts`.
+
 ## Contributing
 
 1. Fork the repository

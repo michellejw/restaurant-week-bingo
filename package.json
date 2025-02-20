@@ -9,6 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.7.2",
+    "@fortawesome/free-solid-svg-icons": "^6.7.2",
+    "@fortawesome/react-fontawesome": "^0.2.2",
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@types/leaflet.markercluster": "^1.5.5",
     "@zxing/browser": "^0.1.5",

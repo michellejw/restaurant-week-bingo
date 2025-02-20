@@ -11,6 +11,8 @@ export default function NavBar() {
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  console.log('🎯 NavBar rendered:', { isLoggedIn });
+
   const handleAuthClick = async () => {
     if (isLoggedIn) {
       await signOut()
@@ -18,6 +20,11 @@ export default function NavBar() {
       router.push('/')
     }
   }
+
+  const handleSettingsClick = () => {
+    console.log('🔧 Settings button clicked, navigating...');
+    window.location.href = '/settings';
+  };
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)
@@ -45,9 +52,12 @@ export default function NavBar() {
               Contact Us
             </Link>
             {isLoggedIn && (
-              <Link href="/settings" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
+              <a
+                href="http://localhost:3000/settings"
+                className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors"
+              >
                 Settings
-              </Link>
+              </a>
             )}
             <button
               onClick={handleAuthClick}
@@ -95,18 +105,18 @@ export default function NavBar() {
             Contact Us
           </Link>
           {isLoggedIn && (
-            <Link
-              href="/settings"
-              className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
+            <a
+              href="http://localhost:3000/settings"
+              className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               Settings
-            </Link>
+            </a>
           )}
           <button
             onClick={() => {
-              handleAuthClick()
-              setIsMenuOpen(false)
+              handleAuthClick();
+              setIsMenuOpen(false);
             }}
             className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
           >

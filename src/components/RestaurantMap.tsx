@@ -11,25 +11,36 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
 import type { MarkerCluster } from 'leaflet';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faLocationDot } from '@fortawesome/free-solid-svg-icons';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string) => {
+  // Convert the FontAwesome icon to an SVG string
+  const faIcon = faLocationDot;
   const svgTemplate = encodeURIComponent(`
-    <svg width="24" height="32" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-        <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.3"/>
-      </filter>
-      <path d="M18 0C8.064 0 0 8.064 0 18c0 8.01 9.42 19.476 14.688 25.416C16.02 45.9 17.064 47.052 18 48c0.936-0.948 1.98-2.1 3.312-4.584C26.58 37.476 36 26.01 36 18c0-9.936-8.064-18-18-18z" 
-        fill="${fillColor}" filter="url(#shadow)"/>
+    <svg width="32" height="42" viewBox="0 0 384 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+          <feOffset dx="0" dy="2" />
+          <feGaussianBlur stdDeviation="2" />
+          <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.3 0"/>
+          <feBlend mode="normal" in="SourceGraphic" />
+        </filter>
+      </defs>
+      <g filter="url(#shadow)">
+        <path d="M215.7 499.2C267 435 384 279.4 384 192C384 86 298 0 192 0S0 86 0 192c0 87.4 117 243 168.3 307.2c12.3 15.3 35.1 15.3 47.4 0zM192 128a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" fill="${fillColor}"/>
+        <path d="M192 112a80 80 0 1 0 0 160 80 80 0 1 0 0-160zm0 16a64 64 0 1 1 0 128 64 64 0 1 1 0-128z" fill="white"/>
+      </g>
     </svg>
   `);
 
   return L.divIcon({
-    html: `<div style="width: 24px; height: 32px;"><img src="data:image/svg+xml,${svgTemplate}" /></div>`,
+    html: `<div style="width: 32px; height: 42px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"><img src="data:image/svg+xml,${svgTemplate}" /></div>`,
     className: '',
-    iconSize: [24, 32],
-    iconAnchor: [12, 32],
-    popupAnchor: [0, -32]
+    iconSize: [32, 42],
+    iconAnchor: [16, 42],
+    popupAnchor: [0, -42]
   });
 };
 
@@ -42,6 +53,7 @@ interface Restaurant {
   longitude: number;
   visited: boolean;
   description?: string | null;
+  phone?: string | null;
 }
 
 const mapContainerStyle = {
@@ -316,19 +328,49 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
                 restaurant={restaurant}
               >
                 <Popup>
-                  <div className="text-center">
-                    <h3 className="font-bold">{restaurant.name}</h3>
-                    <p>{restaurant.address}</p>
-                    {restaurant.url && (
-                      <a
-                        href={restaurant.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        Visit Website
-                      </a>
-                    )}
+                  <div className="min-w-[200px] p-1">
+                    <div className="border-l-4 border-[#ff5436] pl-3">
+                      <h3 className="font-bold text-lg mb-2">{restaurant.name}</h3>
+                      <div className="space-y-2 text-sm">
+                        <p className="text-gray-600">{restaurant.address}</p>
+                        
+                        {restaurant.phone && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                            </svg>
+                            <a
+                              href={`tel:${restaurant.phone}`}
+                              className="hover:text-[#ff5436] transition-colors"
+                            >
+                              {restaurant.phone}
+                            </a>
+                          </div>
+                        )}
+                        
+                        {restaurant.url && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <a
+                              href={restaurant.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-[#ff5436] transition-colors"
+                            >
+                              Visit Website
+                            </a>
+                          </div>
+                        )}
+
+                        {restaurant.description && (
+                          <p className="text-gray-600 mt-2 border-t border-gray-100 pt-2">
+                            {restaurant.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </Popup>
               </Marker>

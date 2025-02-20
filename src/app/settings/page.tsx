@@ -9,38 +9,77 @@ import Link from 'next/link';
 export default function Settings() {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
-  const { user } = useAuth();
+  const { user, isLoading, isLoggedIn } = useAuth();
   const router = useRouter();
 
+  console.log('🎯 Settings page rendered:', {
+    hasUser: !!user,
+    userId: user?.id,
+    email: user?.email,
+    isLoading,
+    isLoggedIn
+  });
+
   useEffect(() => {
+    // If auth is still loading, wait
+    if (isLoading) return;
+
+    // If auth is done loading and we have no user, redirect
+    if (!isLoading && !isLoggedIn) {
+      console.log('❌ No user found in settings, redirecting to home');
+      router.push('/');
+      return;
+    }
+
     const fetchUserData = async () => {
-      if (!user?.id) {
-        router.push('/');
-        return;
-      }
+      if (!user?.id) return;
 
       try {
+        console.log('🔍 Fetching user data for settings');
         const { data, error } = await supabase
           .from('users')
           .select('name, phone')
           .eq('id', user.id)
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Error fetching user data:', error);
+          setMessage('Error loading user data. Please try again.');
+          return;
+        }
 
         if (data) {
+          console.log('✅ User data fetched:', { name: data.name, phone: data.phone });
           setName(data.name || '');
           setPhone(data.phone || '');
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('❌ Error in settings page:', error);
+        setMessage('An unexpected error occurred. Please try again.');
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUserData();
-  }, [user, router]);
+  }, [user, isLoading, isLoggedIn, router]);
+
+  // Show loading state
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto bg-white rounded-lg shadow-sm p-8">
+          <div className="animate-pulse space-y-4">
+            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+            <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +87,7 @@ export default function Settings() {
     setMessage('');
 
     try {
+      console.log('📝 Updating user settings:', { name, phone });
       const { error } = await supabase
         .from('users')
         .update({
@@ -58,9 +98,10 @@ export default function Settings() {
 
       if (error) throw error;
 
+      console.log('✅ Settings updated successfully');
       setMessage('Profile updated successfully!');
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('❌ Error updating settings:', error);
       setMessage('An error occurred while updating your profile.');
     } finally {
       setLoading(false);
@@ -68,6 +109,7 @@ export default function Settings() {
   };
 
   if (!user) {
+    console.log('❌ No user in settings component, rendering null');
     return null;
   }
 
@@ -154,4 +196,4 @@ export default function Settings() {
       </div>
     </main>
   );
-} 
+}

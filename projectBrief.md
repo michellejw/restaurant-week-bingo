@@ -83,7 +83,7 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [x] Adjust the map markers so that they don't obscure each other when zoomed at the default zoom level. 
 
 ### Coming soon!
-- [ ] Request that users provide a phone number on sign-up to help with prize fulfillment
+- [x] Request that users provide a phone number on sign-up to help with prize fulfillment
 - [x] add a user settings page to allow users to update their name, email, and phone number, or to request a password reset. 
 - [x] remove QR code scanning from the check-in system - codes only.
 - [ ] add restaurant phone number to the restaurant info pop-up
