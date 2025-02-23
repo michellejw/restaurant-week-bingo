@@ -47,7 +47,7 @@ interface Restaurant {
 
 const mapContainerStyle = {
   width: '100%',
-  height: '400px',
+  height: '500px',
   zIndex: 0
 };
 
@@ -282,7 +282,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   ] : [0, 0];
 
   return (
-    <div className="relative w-full h-[400px]">
+    <div className="relative w-full h-[500px]">
       {isClient && icons && (
         <MapContainer
           style={mapContainerStyle}

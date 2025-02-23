@@ -160,7 +160,7 @@ export default function Home() {
         </div>
       ) : (
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 animate-fade-in">
-          <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <header className="flex flex-col gap-4">
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-gray-900">
                 Welcome, {userProfile?.name || user.email?.split('@')[0]}!
@@ -195,17 +195,15 @@ export default function Home() {
             </div>
             <button
               onClick={() => setIsCheckInModalOpen(true)}
-              className="btn btn-primary"
+              className="btn btn-primary w-full"
             >
               Check In
             </button>
           </header>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-6">
-              <div className="card p-4 border-l-4 border-[#ff5436]">
-                <RestaurantMap lastCheckIn={lastVisitTime} />
-              </div>
+          <div className="space-y-8">
+            <div className="card p-4 border-l-4 border-[#ff5436]">
+              <RestaurantMap lastCheckIn={lastVisitTime} />
             </div>
             <div className="card p-6 border-l-4 border-[#ff5436]">
               <BingoCard key={lastVisitTime} />
