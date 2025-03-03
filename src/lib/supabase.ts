@@ -58,6 +58,14 @@ export const signIn = async (email: string, password: string) => {
   });
 };
 
+// Simple sign up
+export const signUp = async (email: string, password: string) => {
+  return supabase.auth.signUp({
+    email,
+    password,
+  });
+};
+
 // Simple sign out
 export const signOut = async () => {
   return supabase.auth.signOut();

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { supabase, signIn } from '@/lib/supabase';
+import { supabase, signIn, signUp } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
 export default function AuthForm() {
@@ -10,6 +10,7 @@ export default function AuthForm() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isResetMode, setIsResetMode] = useState(false);
+  const [isSignUpMode, setIsSignUpMode] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
@@ -35,18 +36,35 @@ export default function AuthForm() {
     }
 
     try {
-      const { error } = await signIn(email, password);
-      if (error) throw error;
-      router.push('/');
+      if (isSignUpMode) {
+        const { error } = await signUp(email, password);
+        if (error) throw error;
+        setMessage('Success! Please check your email to confirm your account.');
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) throw error;
+        router.push('/');
+      }
     } catch (error: any) {
-      console.error('Sign in error:', error);
-      setMessage(error.message || 'Failed to sign in');
+      console.error(isSignUpMode ? 'Sign up error:' : 'Sign in error:', error);
+      setMessage(error.message || `Failed to ${isSignUpMode ? 'sign up' : 'sign in'}`);
     }
     setLoading(false);
   };
 
   const toggleMode = () => {
+    if (isResetMode) {
+      setIsResetMode(false);
+    } else {
+      setIsSignUpMode(!isSignUpMode);
+    }
+    setMessage('');
+    setPassword('');
+  };
+
+  const toggleResetMode = () => {
     setIsResetMode(!isResetMode);
+    setIsSignUpMode(false);
     setMessage('');
     setPassword('');
   };
@@ -80,6 +98,7 @@ export default function AuthForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 className="input pr-10"
                 required={!isResetMode}
+                minLength={6}
               />
               <button
                 type="button"
@@ -106,15 +125,26 @@ export default function AuthForm() {
           disabled={loading}
           className="w-full px-4 py-2 text-white bg-[#ff5436] hover:bg-[#ff5436]/90 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Processing...' : isResetMode ? 'Send Reset Instructions' : 'Log in'}
+          {loading ? 'Processing...' : isResetMode ? 'Send Reset Instructions' : isSignUpMode ? 'Sign up' : 'Log in'}
         </button>
-        <button
-          type="button"
-          onClick={toggleMode}
-          className="w-full text-sm text-gray-600 hover:text-coral-600 transition-colors"
-        >
-          {isResetMode ? 'Back to login' : 'Forgot your password?'}
-        </button>
+        <div className="space-y-2">
+          <button
+            type="button"
+            onClick={toggleMode}
+            className="w-full text-sm text-gray-600 hover:text-coral-600 transition-colors"
+          >
+            {isResetMode ? 'Back to login' : isSignUpMode ? 'Already have an account? Log in' : 'Need an account? Sign up'}
+          </button>
+          {!isSignUpMode && !isResetMode && (
+            <button
+              type="button"
+              onClick={toggleResetMode}
+              className="w-full text-sm text-gray-600 hover:text-coral-600 transition-colors"
+            >
+              Forgot your password?
+            </button>
+          )}
+        </div>
         {message && (
           <p className="mt-2 text-sm text-center text-coral-600 animate-fade-in">{message}</p>
         )}
