@@ -101,10 +101,15 @@ export default function Settings() {
         </h1>
         <div className="text-center mb-8 max-w-xl mx-auto">
           <p className="text-gray-600 mb-3">
-            Thank you for supporting our local restaurants and bars during Restaurant Week! Your participation helps make our community even more vibrant.
+            Thank you for supporting our local eateries and drinkeries during Pleasure Island Restaurant Week and beyond!
+            Your participation helps make our community more vibrant.
+          </p>
+          <p className="text-gray-600 mb-3">
+            Please enter a bit of contact information so we can reach you if you win!
           </p>
           <p className="text-gray-600">
-            Please make sure to provide your contact information below so we can reach you if you win one of our exciting prizes. You can update these details anytime!
+            Let us know if you would like to get the scoop on monthly events in Pleasure Island.
+            You can update these details anytime!
           </p>
         </div>
         <div className="card p-8">

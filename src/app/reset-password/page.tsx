@@ -1,17 +1,20 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+
+interface ResetError {
+  message: string;
+}
 
 export default function ResetPassword() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isTokenValid, setIsTokenValid] = useState(false);
+  const [message, setMessage] = useState('');
+  const [isTokenValid, setIsTokenValid] = useState(true);
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     const validateResetToken = async () => {
@@ -75,9 +78,10 @@ export default function ResetPassword() {
       setTimeout(() => {
         router.push('/');
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset error:', error);
-      setMessage(error.message || 'Failed to reset password. Please try again.');
+      const resetError = error as ResetError;
+      setMessage(resetError.message || 'Failed to reset password. Please try again.');
     }
 
     setLoading(false);

@@ -16,11 +16,11 @@ interface Sponsor {
 const sponsors: Sponsor[] = [
   {
     id: 1,
-    name: "The Salty Seagull's Sandwiches",
+    name: "The Salty Seagull&apos;s Sandwiches",
     address: "123 Beach Drive, Carolina Beach, NC 28428",
     phone: "(910) 555-0123",
     url: "www.saltyseagull.example.com",
-    description: "Home of the famous 'Gull-Wing' sandwich, where every bite tastes like a vacation!",
+    description: "Home of the famous &lsquo;Gull-Wing&rsquo; sandwich, where every bite tastes like a vacation!",
     promoOffer: "Free beach-themed cookie with purchase of any signature sandwich during Restaurant Week"
   },
   {
@@ -34,12 +34,12 @@ const sponsors: Sponsor[] = [
   },
   {
     id: 3,
-    name: "The Mermaid's Munchies",
+    name: "The Mermaid&apos;s Munchies",
     address: "789 Ocean Blvd, Carolina Beach, NC 28428",
     phone: "(910) 555-0789",
     url: "www.mermaidmunchies.example.com",
     description: "Serving whimsical seafood creations that would make Poseidon jealous",
-    promoOffer: "Buy one 'Under the Sea' platter, get a second at half price"
+    promoOffer: "Buy one &lsquo;Under the Sea&rsquo; platter, get a second at half price"
   }
 ]
 
@@ -53,7 +53,8 @@ export default function SponsorsPage() {
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Our Sponsors</h1>
           <p className="text-lg text-gray-600">
-            Thank you to the amazing businesses that make Restaurant Week Bingo possible
+            Restaurant Week Bingo is sponsored by amazing local businesses invested in Pleasure Island&apos;s success.
+            We hope you enjoy your exploration of the hottest dishes and coolest spots in Carolina Beach & Kure Beach
           </p>
         </div>
 

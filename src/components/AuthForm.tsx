@@ -4,6 +4,10 @@ import { useState } from 'react';
 import { supabase, signIn, signUp } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 
+interface AuthError {
+  message: string;
+}
+
 export default function AuthForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,9 +31,10 @@ export default function AuthForm() {
         
         if (error) throw error;
         setMessage('Password reset instructions have been sent to your email!');
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error('Reset error:', error);
-        setMessage(error.message || 'Failed to send reset email');
+        const authError = error as AuthError;
+        setMessage(authError.message || 'Failed to send reset email');
       }
       setLoading(false);
       return;
@@ -45,9 +50,10 @@ export default function AuthForm() {
         if (error) throw error;
         router.push('/');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(isSignUpMode ? 'Sign up error:' : 'Sign in error:', error);
-      setMessage(error.message || `Failed to ${isSignUpMode ? 'sign up' : 'sign in'}`);
+      const authError = error as AuthError;
+      setMessage(authError.message || `Failed to ${isSignUpMode ? 'sign up' : 'sign in'}`);
     }
     setLoading(false);
   };

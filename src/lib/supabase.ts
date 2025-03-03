@@ -23,19 +23,14 @@ if (!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
 }
 
 // Encrypt credentials before storing
-const encryptCredentials = (email: string, password: string): string => {
-  // Simple encryption - in production you'd want stronger encryption
-  return btoa(JSON.stringify({ email, password }));
-};
+// const encryptCredentials = (email: string, password: string) => {
+//   // Implementation
+// };
 
 // Decrypt stored credentials
-const decryptCredentials = (encrypted: string): { email: string; password: string } | null => {
-  try {
-    return JSON.parse(atob(encrypted));
-  } catch {
-    return null;
-  }
-};
+// const decryptCredentials = (encryptedData: string) => {
+//   // Implementation
+// };
 
 export const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

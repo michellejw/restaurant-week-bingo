@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase, signOut } from './supabase';
 import type { User } from '@supabase/supabase-js';
@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (!user?.id) {
       setProfile(null);
       return;
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error fetching profile:', error);
       setProfile(null);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
     // Get initial session
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch profile when user changes
   useEffect(() => {
     refreshProfile();
-  }, [user]);
+  }, [user, refreshProfile]);
 
   const handleSignOut = async () => {
     await signOut();
