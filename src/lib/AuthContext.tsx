@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, signOutAndClear, attemptAutoReLogin } from './supabase';
+import { supabase, signOut } from './supabase';
 import type { User } from '@supabase/supabase-js';
 
 type UserProfile = {
@@ -16,7 +16,6 @@ type AuthContextType = {
   isLoading: boolean;
   isLoggedIn: boolean;
   signOut: () => Promise<void>;
-  refreshSession: () => Promise<void>;
   refreshProfile: () => Promise<void>;
 };
 
@@ -26,7 +25,6 @@ const AuthContext = createContext<AuthContextType>({
   isLoading: true,
   isLoggedIn: false,
   signOut: async () => {},
-  refreshSession: async () => {},
   refreshProfile: async () => {},
 });
 
@@ -57,43 +55,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshSession = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        // Session expired, try auto re-login
-        const { data } = await attemptAutoReLogin();
-        setUser(data?.user ?? null);
-      } else {
-        setUser(session.user);
-      }
-    } catch (error) {
-      console.error('Session refresh error:', error);
-      setUser(null);
-    }
-  };
-
   useEffect(() => {
-    const initialize = async () => {
-      try {
-        await refreshSession();
-      } finally {
-        setIsLoading(false);
-      }
-    };
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setIsLoading(false);
+    });
 
-    initialize();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
       if (event === 'SIGNED_OUT') {
-        setUser(null);
         setProfile(null);
-        localStorage.removeItem('_persist'); // Clean up persisted credentials on sign out
         router.push('/');
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setUser(session?.user ?? null);
-      } else if (event === 'USER_UPDATED') {
-        setUser(session?.user ?? null);
       }
     });
 
@@ -105,10 +79,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Fetch profile when user changes
   useEffect(() => {
     refreshProfile();
-  }, [user, refreshProfile]);
+  }, [user]);
 
-  const signOut = async () => {
-    await signOutAndClear();
+  const handleSignOut = async () => {
+    await signOut();
     setUser(null);
     setProfile(null);
     router.push('/');
@@ -121,8 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         profile,
         isLoading,
         isLoggedIn: !!user,
-        signOut,
-        refreshSession,
+        signOut: handleSignOut,
         refreshProfile,
       }}
     >

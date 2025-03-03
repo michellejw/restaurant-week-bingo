@@ -12,6 +12,7 @@ DROP TABLE IF EXISTS visits;
 DROP TABLE IF EXISTS user_stats;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS restaurants;
+DROP TABLE IF EXISTS sponsors;
 DROP VIEW IF EXISTS raffle_entries;
 
 -- Create tables
@@ -42,6 +43,20 @@ CREATE TABLE restaurants (
     description TEXT,
     phone TEXT,
     specials TEXT,
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE sponsors (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name TEXT NOT NULL,
+    address TEXT NOT NULL,
+    phone TEXT,
+    url TEXT,
+    description TEXT,
+    promo_offer TEXT,
+    latitude FLOAT8 NOT NULL,
+    longitude FLOAT8 NOT NULL,
+    is_retail BOOLEAN DEFAULT false,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -219,6 +234,14 @@ CREATE POLICY "System can manage user stats" ON user_stats
 
 -- Restaurant policies
 CREATE POLICY "Anyone can view restaurants" ON restaurants
+    FOR SELECT TO authenticated
+    USING (true);
+
+-- Sponsor policies
+ALTER TABLE sponsors ENABLE ROW LEVEL SECURITY;
+GRANT SELECT ON sponsors TO authenticated;
+
+CREATE POLICY "Anyone can view sponsors" ON sponsors
     FOR SELECT TO authenticated
     USING (true);
 

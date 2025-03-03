@@ -42,47 +42,24 @@ export const supabase = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   {
     auth: {
-      persistSession: true,
       autoRefreshToken: true,
+      persistSession: true,
       detectSessionInUrl: true,
-      flowType: 'pkce',
-      storage: typeof window !== 'undefined' ? window.localStorage : undefined
-    },
+      flowType: 'pkce'
+    }
   }
 );
 
-// Enhanced sign in with automatic persistence
-export const signInWithPersistence = async (email: string, password: string) => {
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  
-  if (!error && data.user) {
-    // Store encrypted credentials
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('_persist', encryptCredentials(email, password));
-    }
-  }
-  
-  return { data, error };
+// Simple sign in
+export const signIn = async (email: string, password: string) => {
+  return supabase.auth.signInWithPassword({
+    email,
+    password,
+  });
 };
 
-// Auto re-login if session expires
-export const attemptAutoReLogin = async () => {
-  const persistedCreds = typeof window !== 'undefined' ? localStorage.getItem('_persist') : null;
-  
-  if (persistedCreds) {
-    const creds = decryptCredentials(persistedCreds);
-    if (creds) {
-      return supabase.auth.signInWithPassword(creds);
-    }
-  }
-  return { data: null, error: new Error('No persisted credentials') };
-};
-
-// Enhanced sign out that clears persistence
-export const signOutAndClear = async () => {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('_persist');
-  }
+// Simple sign out
+export const signOut = async () => {
   return supabase.auth.signOut();
 };
 

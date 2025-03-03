@@ -3,13 +3,29 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
-  const res = NextResponse.next();
-  const supabase = createMiddlewareClient({ req: request, res });
+  try {
+    const res = NextResponse.next();
+    const supabase = createMiddlewareClient({ req: request, res });
 
-  // Refresh session if expired - required for Server Components
-  await supabase.auth.getSession();
+    // Check if this is a password reset request
+    const requestUrl = new URL(request.url);
+    const type = requestUrl.searchParams.get('type');
+    const code = requestUrl.searchParams.get('code');
 
-  return res;
+    // If this is a password reset request, redirect to the reset password page
+    if (type === 'recovery' && code) {
+      const redirectUrl = new URL('/reset-password', request.url);
+      redirectUrl.searchParams.set('code', code);
+      return NextResponse.redirect(redirectUrl);
+    }
+
+    // For all other requests, refresh the session if needed
+    await supabase.auth.getSession();
+    return res;
+  } catch (error) {
+    console.error('Middleware error:', error);
+    return NextResponse.next();
+  }
 }
 
 // Ensure the middleware is only called for relevant paths.
@@ -20,8 +36,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * Feel free to modify this pattern to include more paths.
+     * - public folder
      */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
   ],
 }; 

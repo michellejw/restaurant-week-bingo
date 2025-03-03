@@ -88,9 +88,8 @@ A restaurant week bingo web application for a local chamber of commerce. Users c
 - [x] add a friendly message to the settings page to encourage users to complete their profile - thank them for supporting local eateries and drinkeries! and remind them that we'll need their contact info in case they win! Also note that they can update their profile at any time.
 
 ### Coming soon!
-- [ ] make the layout a vertical stack. stretch map across the page. Bingo card is below the map. check in button is above the map and should be stretched to the width of the map/page.
-- [ ] create a new table for sponsors (columns should include name, address, phone number, URL, brief description, and promo offer, if available. Also need a column indicating if they are a retail sponsor because if so they will get a special)
-- [ ] use that to populate the sponsors page
+- [x] make the layout a vertical stack. stretch map across the page. Bingo card is below the map. check in button is above the map and should be stretched to the width of the map/page.
+- [ ] add the two sponsors to the sponsors page
 - [ ] add a special icon to the restaurant map for retail sponsors (like a shopping bag) - they should also have a pop up with extra info
 - [ ] make a template for clients to fill in: an excel file with tabs for restaurants and sponsors.
 
