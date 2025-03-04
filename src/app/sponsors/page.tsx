@@ -2,48 +2,77 @@
 
 import { FaHandshake } from 'react-icons/fa'
 import Image from 'next/image'
+import { useEffect, useState } from 'react'
+import { supabase } from '@/lib/supabase'
+import { Database } from '@/types/supabase'
 
-interface Sponsor {
-  id: number
-  name: string
-  address: string
-  phone: string
-  url: string
-  description: string
-  promoOffer: string
-}
-
-const sponsors: Sponsor[] = [
-  {
-    id: 1,
-    name: "The Salty Seagull&apos;s Sandwiches",
-    address: "123 Beach Drive, Carolina Beach, NC 28428",
-    phone: "(910) 555-0123",
-    url: "www.saltyseagull.example.com",
-    description: "Home of the famous &lsquo;Gull-Wing&rsquo; sandwich, where every bite tastes like a vacation!",
-    promoOffer: "Free beach-themed cookie with purchase of any signature sandwich during Restaurant Week"
-  },
-  {
-    id: 2,
-    name: "Flip Flop Fine Dining",
-    address: "456 Boardwalk Way, Carolina Beach, NC 28428",
-    phone: "(910) 555-0456",
-    url: "www.flipflopdining.example.com",
-    description: "Where barefoot luxury meets coastal cuisine. Yes, flip flops are encouraged!",
-    promoOffer: "Complimentary signature mocktail with any entrée purchase"
-  },
-  {
-    id: 3,
-    name: "The Mermaid&apos;s Munchies",
-    address: "789 Ocean Blvd, Carolina Beach, NC 28428",
-    phone: "(910) 555-0789",
-    url: "www.mermaidmunchies.example.com",
-    description: "Serving whimsical seafood creations that would make Poseidon jealous",
-    promoOffer: "Buy one &lsquo;Under the Sea&rsquo; platter, get a second at half price"
-  }
-]
+type Sponsor = Database['public']['Tables']['sponsors']['Row']
 
 export default function SponsorsPage() {
+  const [sponsors, setSponsors] = useState<Sponsor[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function fetchSponsors() {
+      console.log('Starting to fetch sponsors...')
+      try {
+        // Log the current auth state
+        const { data: authData } = await supabase.auth.getSession()
+        console.log('Current auth state:', authData)
+
+        // Simple query to get all sponsors with detailed logging
+        console.log('Executing sponsors query...')
+        const { data, error, status, statusText, count } = await supabase
+          .from('sponsors')
+          .select('*', { count: 'exact' })
+
+        console.log('Complete Supabase response:', {
+          status,
+          statusText,
+          count,
+          data,
+          error,
+          hasData: !!data,
+          dataLength: data?.length
+        })
+
+        if (error) {
+          console.error('Supabase error details:', {
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
+          })
+          throw error
+        }
+
+        if (!data || data.length === 0) {
+          console.log('No sponsors found in the database')
+          setSponsors([])
+        } else {
+          console.log('Successfully fetched sponsors:', JSON.stringify(data, null, 2))
+          setSponsors(data)
+        }
+      } catch (err: any) {
+        console.error('Error details:', {
+          name: err.name,
+          message: err.message,
+          code: err.code,
+          details: err.details
+        })
+        setError(err.message || 'Failed to load sponsors. Please try again later.')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchSponsors()
+  }, [])
+
+  // Add debug output for render state
+  console.log('Render state:', { isLoading, error, sponsorsCount: sponsors.length })
+
   return (
     <div className="min-h-screen pt-20 pb-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
@@ -58,42 +87,59 @@ export default function SponsorsPage() {
           </p>
         </div>
 
-        <div className="card p-8 md:p-12">
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {sponsors.map((sponsor) => (
-              <div
-                key={sponsor.id}
-                className="card p-6 hover:shadow-lg transition-shadow duration-300 border-l-4 border-[#ff5436]"
-              >
-                <div className="relative w-32 h-32 mx-auto mb-4">
-                  <Image
-                    src="/default-sponsor-logo.svg"
-                    alt={`${sponsor.name} logo`}
-                    fill
-                    className="object-contain"
-                  />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">{sponsor.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{sponsor.address}</p>
-                <p className="text-sm text-gray-600 mb-2">{sponsor.phone}</p>
-                <a 
-                  href={`https://${sponsor.url}`} 
-                  className="text-sm text-coral-500 hover:text-coral-600 mb-3 block"
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                >
-                  {sponsor.url}
-                </a>
-                <p className="text-sm text-gray-700 mb-4">{sponsor.description}</p>
-                <div className="bg-coral-50 p-3 rounded-lg">
-                  <p className="text-sm font-medium text-coral-700">
-                    Special Offer: {sponsor.promoOffer}
-                  </p>
-                </div>
-              </div>
-            ))}
+        {isLoading && (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-coral-500 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading sponsors...</p>
           </div>
-        </div>
+        )}
+
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-600">{error}</p>
+          </div>
+        )}
+
+        {!isLoading && !error && (
+          <div className="card p-8 md:p-12">
+            <div className="grid gap-8 md:grid-cols-2">
+              {sponsors.map((sponsor) => (
+                <div
+                  key={sponsor.id}
+                  className="card p-8 hover:shadow-lg transition-shadow duration-300 border-l-4 border-[#ff5436]"
+                >
+                  <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{sponsor.name}</h3>
+                  <div className="space-y-3">
+                    <p className="text-sm text-gray-600">{sponsor.address}</p>
+                    {sponsor.phone && (
+                      <p className="text-sm text-gray-600">{sponsor.phone}</p>
+                    )}
+                    {sponsor.url && (
+                      <a 
+                        href={`https://${sponsor.url}`} 
+                        className="text-sm text-coral-500 hover:text-coral-600 block"
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                      >
+                        {sponsor.url}
+                      </a>
+                    )}
+                    {sponsor.description && (
+                      <p className="text-sm text-gray-700">{sponsor.description}</p>
+                    )}
+                    {sponsor.promo_offer && (
+                      <div className="bg-coral-50 p-4 rounded-lg mt-4">
+                        <p className="text-sm font-medium text-coral-700">
+                          Special Offer: {sponsor.promo_offer}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="mt-12 text-center">
           <p className="text-gray-600">

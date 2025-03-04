@@ -17,6 +17,20 @@ export type Database = {
         Insert: Omit<Database['public']['Tables']['restaurants']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['restaurants']['Insert']>;
       };
+      sponsors: {
+        Row: {
+          id: string;
+          name: string;
+          address: string;
+          phone: string | null;
+          url: string | null;
+          description: string | null;
+          promo_offer: string | null;
+          created_at: string;
+        };
+        Insert: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at'>;
+        Update: Partial<Database['public']['Tables']['sponsors']['Insert']>;
+      };
       visits: {
         Row: {
           id: string;
