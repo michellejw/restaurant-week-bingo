@@ -10,7 +10,18 @@ export default function HowToPlay() {
           <div className="inline-block bg-[#ff5436] p-4 rounded-lg mb-6">
             <FaUtensils className="text-3xl text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Welcome to the Pleasure Island Restaurant Week &lsquo;Top Taster&rsquo; digital BINGO CARD!</h1>
+          <div className="space-y-4 animate-fade-in">
+            <h1 className="text-4xl font-bold tracking-tight">
+              <div className="mb-4">
+                <span className="block text-gray-900 leading-tight">Pleasure Island</span>
+                <span className="block text-gray-900">Restaurant Week</span>
+              </div>
+              <span className="block text-2xl">
+                <span className="text-coral-600 font-bold">Top Taster</span>
+                <span className="text-gray-700"> digital bingo card</span>
+              </span>
+            </h1>
+          </div>
         </div>
         
         <div className="space-y-6">
