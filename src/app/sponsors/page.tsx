@@ -1,12 +1,18 @@
 'use client'
 
 import { FaHandshake } from 'react-icons/fa'
-import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Database } from '@/types/supabase'
 
 type Sponsor = Database['public']['Tables']['sponsors']['Row']
+
+interface SupabaseError {
+  name?: string
+  message: string
+  code?: string
+  details?: string
+}
 
 export default function SponsorsPage() {
   const [sponsors, setSponsors] = useState<Sponsor[]>([])
@@ -54,14 +60,15 @@ export default function SponsorsPage() {
           console.log('Successfully fetched sponsors:', JSON.stringify(data, null, 2))
           setSponsors(data)
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const supabaseError = err as SupabaseError
         console.error('Error details:', {
-          name: err.name,
-          message: err.message,
-          code: err.code,
-          details: err.details
+          name: supabaseError.name,
+          message: supabaseError.message,
+          code: supabaseError.code,
+          details: supabaseError.details
         })
-        setError(err.message || 'Failed to load sponsors. Please try again later.')
+        setError(supabaseError.message || 'Failed to load sponsors. Please try again later.')
       } finally {
         setIsLoading(false)
       }
