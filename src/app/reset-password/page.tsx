@@ -94,9 +94,10 @@ export default function ResetPassword() {
       setTimeout(() => {
         router.push('/');
       }, 2000);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Password reset error:', error);
-      setMessage(error.message || 'Failed to reset password. Please try again.');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to reset password. Please try again.';
+      setMessage(errorMessage);
     }
 
     setLoading(false);
