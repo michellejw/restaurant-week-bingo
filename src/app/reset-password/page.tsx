@@ -13,43 +13,12 @@ export default function ResetPassword() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const [isTokenValid, setIsTokenValid] = useState(true);
   const router = useRouter();
-
-  useEffect(() => {
-    const validateResetToken = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
-        
-        if (!session) {
-          setMessage('Invalid or expired reset token. Please request a new password reset link.');
-          setTimeout(() => router.push('/'), 3000);
-          return;
-        }
-
-        setIsTokenValid(true);
-      } catch (error) {
-        console.error('Token validation error:', error);
-        setMessage('Invalid or expired reset token. Please request a new password reset link.');
-        setTimeout(() => router.push('/'), 3000);
-      }
-    };
-
-    validateResetToken();
-  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMessage('');
-
-    if (!isTokenValid) {
-      setMessage('Invalid reset token. Please request a new password reset link.');
-      setLoading(false);
-      return;
-    }
 
     if (newPassword !== confirmPassword) {
       setMessage('Passwords do not match');
@@ -71,10 +40,6 @@ export default function ResetPassword() {
       if (error) throw error;
 
       setMessage('Password updated successfully! Redirecting to login...');
-      
-      // Sign out to ensure clean state
-      await supabase.auth.signOut();
-      
       setTimeout(() => {
         router.push('/');
       }, 2000);
@@ -86,18 +51,6 @@ export default function ResetPassword() {
 
     setLoading(false);
   };
-
-  if (!isTokenValid) {
-    return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md animate-fade-in">
-          <div className="card p-8 border-l-4 border-[#ff5436]">
-            <p className="text-center text-coral-600">{message}</p>
-          </div>
-        </div>
-      </main>
-    );
-  }
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
