@@ -11,9 +11,54 @@ import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useAuth } from '@/lib/AuthContext';
 import { DatabaseService } from '@/lib/services/database';
 import type { MarkerCluster } from 'leaflet';
+import { supabase } from '@/lib/supabase';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
-const createIcon = (fillColor: string) => {
+const createIcon = (fillColor: string, isRetail: boolean = false) => {
+  if (isRetail) {
+    return L.divIcon({
+      html: `
+        <div style="
+          width: 32px; 
+          height: 42px; 
+          position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        ">
+          <div style="
+            width: 32px;
+            height: 32px;
+            background-color: ${fillColor};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+          ">
+            <span class="material-symbols-outlined" style="
+              font-variation-settings: 'FILL' 1;
+              color: white;
+              font-size: 20px;
+            ">shopping_bag</span>
+          </div>
+          <div style="
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-top: 12px solid ${fillColor};
+            filter: drop-shadow(0 2px 2px rgba(0,0,0,0.3));
+          "></div>
+        </div>
+      `,
+      className: '',
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42]
+    });
+  }
+
   const svgTemplate = encodeURIComponent(`
     <svg width="24" height="32" viewBox="0 0 36 48" fill="none" xmlns="http://www.w3.org/2000/svg">
       <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
@@ -43,6 +88,18 @@ interface Restaurant {
   visited: boolean;
   description?: string | null;
   phone?: string | null;
+}
+
+interface Sponsor {
+  id: string;
+  name: string;
+  address: string;
+  url: string | null;
+  latitude: number;
+  longitude: number;
+  description?: string | null;
+  phone?: string | null;
+  is_retail: boolean;
 }
 
 const mapContainerStyle = {
@@ -185,9 +242,10 @@ function ResetView({ bounds }: { bounds: LatLngBounds }) {
 
 export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
+  const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [bounds, setBounds] = useState<LatLngBounds | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon } | null>(null);
+  const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon; retail: L.DivIcon } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { user, isLoading: authLoading } = useAuth();
 
@@ -195,7 +253,8 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     setIsClient(true);
     setIcons({
       visited: createIcon('#ff5436'),
-      unvisited: createIcon('#94a3b8')
+      unvisited: createIcon('#94a3b8'),
+      retail: createIcon('#F59E0B', true) // Warm amber color for retail sponsors
     });
   }, []);
 
@@ -204,7 +263,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     
     try {
       setIsLoading(true);
-      console.log('Fetching restaurants...');
+      console.log('Fetching restaurants and sponsors...');
       
       // Get all restaurants
       const restaurantsData = await DatabaseService.restaurants.getAll();
@@ -218,10 +277,28 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
         visited: visitedIds.has(restaurant.id)
       }));
 
+      // Fetch retail sponsors
+      const { data: sponsorsData, error: sponsorsError } = await supabase
+        .from('sponsors')
+        .select('*')
+        .eq('is_retail', true);
+
+      if (sponsorsError) {
+        console.error('Error fetching sponsors:', sponsorsError);
+      } else {
+        setSponsors(sponsorsData || []);
+      }
+
       setRestaurants(processedRestaurants);
-      setBounds(calculateBounds(processedRestaurants));
+      
+      // Calculate bounds including both restaurants and retail sponsors
+      const allLocations = [
+        ...processedRestaurants,
+        ...(sponsorsData || [])
+      ];
+      setBounds(calculateBounds(allLocations));
     } catch (error) {
-      console.error('Error fetching restaurants:', error);
+      console.error('Error fetching data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -352,6 +429,61 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
                           </svg>
                           <a
                             href={restaurant.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800"
+                          >
+                            Visit Website
+                          </a>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+            {sponsors.map((sponsor) => (
+              <Marker
+                key={sponsor.id}
+                position={[sponsor.latitude, sponsor.longitude]}
+                icon={icons.retail}
+              >
+                <Popup>
+                  <div className="text-sm">
+                    <h3 className="font-bold text-lg mb-2 text-indigo-600">{sponsor.name}</h3>
+                    <div className="space-y-2">
+                      <p className="flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span>{sponsor.address}</span>
+                      </p>
+                      {sponsor.phone && (
+                        <p className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                          </svg>
+                          <a href={`tel:${sponsor.phone}`} className="text-blue-600 hover:text-blue-800">
+                            {sponsor.phone}
+                          </a>
+                        </p>
+                      )}
+                      {sponsor.description && (
+                        <p className="flex items-start gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mt-1 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <span>{sponsor.description}</span>
+                        </p>
+                      )}
+                      {sponsor.url && (
+                        <p className="flex items-center gap-1">
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                          </svg>
+                          <a
+                            href={sponsor.url}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"
