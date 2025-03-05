@@ -14,13 +14,37 @@ export default function ResetPassword() {
   useEffect(() => {
     const init = async () => {
       try {
+        // Log initial state
+        console.log('Current URL:', window.location.href);
+        console.log('Search params:', window.location.search);
+        console.log('Hash:', window.location.hash);
+
         // Check URL parameters
         const params = new URLSearchParams(window.location.search);
         const code = params.get('code');
+        const token = params.get('token');
+        const type = params.get('type');
         
-        if (code) {
-          // If we have a code, we're in the initial redirect
-          // Exchange the code for a session
+        console.log('URL parameters:', { code, token, type });
+
+        if (token && type === 'recovery') {
+          // Handle PKCE token
+          console.log('Found PKCE token, attempting to verify...');
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: 'recovery'
+          });
+
+          if (error) {
+            console.error('Error verifying token:', error);
+            setMessage('Invalid or expired reset link. Please request a new one.');
+            setTimeout(() => router.push('/'), 2000);
+            return;
+          }
+          console.log('Token verified successfully');
+        } else if (code) {
+          // Handle recovery code
+          console.log('Found recovery code, attempting to exchange...');
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (error) {
             console.error('Error exchanging code:', error);
@@ -28,23 +52,33 @@ export default function ResetPassword() {
             setTimeout(() => router.push('/'), 2000);
             return;
           }
+          console.log('Code exchanged successfully');
+        } else {
+          console.log('No token or code found in URL');
+          setMessage('Invalid reset link. Please request a new one.');
+          setTimeout(() => router.push('/'), 2000);
+          return;
         }
 
         // Listen for password recovery event
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-          console.log('Auth event:', event);
+          console.log('Auth event:', event, 'Session:', session ? 'exists' : 'null');
           if (event === 'PASSWORD_RECOVERY') {
             // We're in a valid password recovery flow
             setMessage('');
           } else if (!session) {
             // If we don't have a session and we're not in recovery, redirect
+            console.log('No session found, redirecting...');
             router.push('/');
           }
         });
 
         // Check current session state
         const { data: { session } } = await supabase.auth.getSession();
+        console.log('Current session:', session ? 'exists' : 'null');
+        
         if (!session) {
+          console.log('No session found after verification');
           setMessage('Invalid or expired reset link. Please request a new one.');
           setTimeout(() => router.push('/'), 2000);
         }
@@ -80,12 +114,14 @@ export default function ResetPassword() {
     }
 
     try {
+      console.log('Attempting to update password...');
       const { error } = await supabase.auth.updateUser({ 
         password: newPassword 
       });
 
       if (error) throw error;
 
+      console.log('Password updated successfully');
       setMessage('Password updated successfully! Redirecting to login...');
       
       // Sign out after successful password change
