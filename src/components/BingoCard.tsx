@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
+import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 
 interface Restaurant {
   id: string;
@@ -11,76 +12,88 @@ interface Restaurant {
   visited: boolean;
 }
 
-export default function BingoCard() {
-  const { user, isLoaded: authLoaded } = useUser();
+interface BingoCardProps {
+  onVisitUpdate?: () => void;
+}
+
+export default function BingoCard({ onVisitUpdate }: BingoCardProps) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { isLoaded: clerkLoaded } = useUser();
+  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
 
-  const fetchRestaurants = useCallback(async () => {
+  const loadVisits = useCallback(async () => {
+    if (!supabaseId) return;
+
     try {
-      if (!user) {
-        setRestaurants([]);
-        return;
-      }
-
       // Get all restaurants
-      const restaurantsData = await DatabaseService.restaurants.getAll();
+      const allRestaurants = await DatabaseService.restaurants.getAll();
       
       // Get user's visits
-      const visits = await DatabaseService.visits.getByUser(user.id);
+      const visits = await DatabaseService.visits.getByUser(supabaseId);
       const visitedRestaurantIds = new Set(visits.map(v => v.restaurant_id));
 
-      // Process restaurants with visit status
-      const processedRestaurants = restaurantsData.map(restaurant => ({
+      // Mark restaurants as visited
+      const restaurantsWithVisits = allRestaurants.map(restaurant => ({
         ...restaurant,
         visited: visitedRestaurantIds.has(restaurant.id)
       }));
-      
-      setRestaurants(processedRestaurants);
+
+      setRestaurants(restaurantsWithVisits);
+      setError(null);
     } catch (err) {
-      console.error('Error fetching restaurants:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load restaurants');
+      console.error('Error loading visits:', err);
+      setError('Failed to load visits');
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [supabaseId]);
 
   useEffect(() => {
-    if (authLoaded) {
-      fetchRestaurants();
+    if (clerkLoaded && !supabaseLoading) {
+      loadVisits();
     }
-  }, [fetchRestaurants, authLoaded]);
+  }, [clerkLoaded, supabaseLoading, loadVisits]);
 
-  if (loading && restaurants.length === 0) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="text-gray-500">Loading bingo card...</div>
-      </div>
-    );
+  if (loading || !clerkLoaded || supabaseLoading) {
+    return <div>Loading...</div>;
   }
 
   if (error) {
-    return (
-      <div className="flex justify-center items-center p-8">
-        <div className="text-red-500">Error: {error}</div>
-      </div>
-    );
+    return <div>Error: {error}</div>;
   }
 
+  // Calculate grid dimensions
+  const gridSize = Math.ceil(Math.sqrt(restaurants.length));
+  const totalCells = gridSize * gridSize;
+  const emptyCells = totalCells - restaurants.length;
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 p-4">
+    <div 
+      className="grid gap-4"
+      style={{
+        gridTemplateColumns: `repeat(${gridSize}, minmax(0, 1fr))`
+      }}
+    >
       {restaurants.map((restaurant) => (
         <div
           key={restaurant.id}
-          className={`aspect-square p-2 sm:p-4 border rounded-lg flex items-center justify-center text-center transition-colors duration-200
-            ${restaurant.visited 
-              ? 'bg-coral-500 text-white border-coral-600' 
-              : 'bg-white hover:bg-coral-50 border-gray-100'
-            }`}
+          className={`aspect-square p-4 rounded-lg border-2 flex items-center justify-center text-center ${
+            restaurant.visited
+              ? 'bg-coral-100 border-coral-500 text-coral-700'
+              : 'bg-white border-gray-200 text-gray-700'
+          }`}
         >
-          <span className="text-xs sm:text-sm font-medium leading-tight">{restaurant.name}</span>
+          <span className="text-sm font-medium">{restaurant.name}</span>
         </div>
+      ))}
+      {/* Add empty cells to complete the grid */}
+      {Array.from({ length: emptyCells }).map((_, i) => (
+        <div
+          key={`empty-${i}`}
+          className="aspect-square p-4 rounded-lg border-2 border-gray-100 bg-gray-50"
+        />
       ))}
     </div>
   );

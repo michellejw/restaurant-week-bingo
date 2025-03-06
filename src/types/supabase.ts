@@ -26,6 +26,9 @@ export type Database = {
           url: string | null;
           description: string | null;
           promo_offer: string | null;
+          latitude: number;
+          longitude: number;
+          is_retail: boolean;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at'>;

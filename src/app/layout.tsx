@@ -7,6 +7,7 @@ import {
 } from '@clerk/nextjs';
 import Link from 'next/link';
 import ProfileBanner from "@/components/ProfileBanner";
+import UserInitializer from "@/components/UserInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,7 +29,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <head>
         <link
           rel="stylesheet"
@@ -38,9 +39,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <ClerkProvider>
-          <ClientNavWrapper />
-          <div className="pt-16">
+        <ClerkProvider
+          appearance={{
+            baseTheme: undefined,
+            elements: {
+              rootBox: "w-full",
+              card: "w-full"
+            }
+          }}
+        >
+          <UserInitializer />
+          <div className="flex flex-col min-h-screen">
+            <ClientNavWrapper />
             <ProfileBanner />
             <main className="flex-grow">
               {children}

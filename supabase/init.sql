@@ -183,76 +183,86 @@ FROM users u
 JOIN user_stats us ON u.id = us.user_id
 LEFT JOIN visits v ON u.id = v.user_id
 LEFT JOIN restaurants r ON v.restaurant_id = r.id
-WHERE auth.uid() = u.id
+WHERE u.id = (auth.uid()::uuid)
 GROUP BY u.id, u.email, u.name, us.visit_count, us.raffle_entries;
-
--- Grant permissions to authenticated users
-GRANT USAGE ON SCHEMA public TO authenticated;
-GRANT SELECT ON raffle_entries TO authenticated;
-GRANT ALL ON users TO authenticated;
-GRANT ALL ON user_stats TO authenticated;
-GRANT ALL ON visits TO authenticated;
-GRANT SELECT ON restaurants TO authenticated;
-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO authenticated;
 
 -- Enable RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_stats ENABLE ROW LEVEL SECURITY;
 ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE sponsors ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies if any
+DROP POLICY IF EXISTS "Users can view their own data" ON users;
+DROP POLICY IF EXISTS "Users can update their own data" ON users;
+DROP POLICY IF EXISTS "Users can insert their own data" ON users;
+DROP POLICY IF EXISTS "Users can view their own stats" ON user_stats;
+DROP POLICY IF EXISTS "Users can update their own stats" ON user_stats;
+DROP POLICY IF EXISTS "Users can insert their own stats" ON user_stats;
+DROP POLICY IF EXISTS "System can manage user stats" ON user_stats;
+DROP POLICY IF EXISTS "Anyone can view restaurants" ON restaurants;
+DROP POLICY IF EXISTS "Anyone can view sponsors" ON sponsors;
+DROP POLICY IF EXISTS "Users can view their own visits" ON visits;
+DROP POLICY IF EXISTS "Users can create their own visits" ON visits;
 
 -- Create RLS policies
-CREATE POLICY "Users can view their own data" ON users
+CREATE POLICY "Enable read for authenticated users" ON users
     FOR SELECT TO authenticated
-    USING (auth.uid() = id);
+    USING (id = auth.uid());
 
-CREATE POLICY "Users can update their own data" ON users
+CREATE POLICY "Enable update for users based on id" ON users
     FOR UPDATE TO authenticated
-    USING (auth.uid() = id);
+    USING (id = auth.uid());
 
-CREATE POLICY "Users can insert their own data" ON users
+CREATE POLICY "Enable insert for authenticated users" ON users
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = id);
+    WITH CHECK (id = auth.uid());
 
 -- User stats policies
-CREATE POLICY "Users can view their own stats" ON user_stats
+CREATE POLICY "Enable read for users based on user_id" ON user_stats
     FOR SELECT TO authenticated
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid());
 
-CREATE POLICY "Users can update their own stats" ON user_stats
+CREATE POLICY "Enable update for users based on user_id" ON user_stats
     FOR UPDATE TO authenticated
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert their own stats" ON user_stats
+CREATE POLICY "Enable insert for users based on user_id" ON user_stats
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "System can manage user stats" ON user_stats
-    FOR ALL TO postgres
-    USING (true)
-    WITH CHECK (true);
-
--- Restaurant policies
-CREATE POLICY "Anyone can view restaurants" ON restaurants
-    FOR SELECT TO authenticated
+-- Restaurant policies - allow public read access
+CREATE POLICY "Enable read access for all users" ON restaurants
+    FOR SELECT
     USING (true);
 
--- Sponsor policies
-ALTER TABLE sponsors ENABLE ROW LEVEL SECURITY;
-GRANT SELECT ON sponsors TO authenticated;
-
-CREATE POLICY "Anyone can view sponsors" ON sponsors
-    FOR SELECT TO authenticated
+-- Sponsor policies - allow public read access
+CREATE POLICY "Enable read access for all users" ON sponsors
+    FOR SELECT
     USING (true);
 
 -- Visit policies
-CREATE POLICY "Users can view their own visits" ON visits
+CREATE POLICY "Enable read for users based on user_id" ON visits
     FOR SELECT TO authenticated
-    USING (auth.uid() = user_id);
+    USING (user_id = auth.uid());
 
-CREATE POLICY "Users can create their own visits" ON visits
+CREATE POLICY "Enable insert for users based on user_id" ON visits
     FOR INSERT TO authenticated
-    WITH CHECK (auth.uid() = user_id);
+    WITH CHECK (user_id = auth.uid());
+
+-- Grant necessary permissions
+GRANT USAGE ON SCHEMA public TO anon;
+GRANT USAGE ON SCHEMA public TO authenticated;
+
+-- Grant SELECT permissions to both anon and authenticated users for public data
+GRANT SELECT ON restaurants TO anon, authenticated;
+GRANT SELECT ON sponsors TO anon, authenticated;
+
+-- Grant necessary permissions to authenticated users for their own data
+GRANT SELECT, INSERT, UPDATE ON users TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON user_stats TO authenticated;
+GRANT SELECT, INSERT ON visits TO authenticated;
 
 -- Insert sample restaurants
 INSERT INTO restaurants (name, address, url, code, latitude, longitude) VALUES
@@ -331,3 +341,57 @@ INSERT INTO restaurants (name, address, url, code, latitude, longitude) VALUES
 
 -- Fix any existing users
 SELECT fix_missing_users();
+
+-- Enable RLS
+alter table restaurants enable row level security;
+alter table sponsors enable row level security;
+alter table users enable row level security;
+alter table visits enable row level security;
+alter table user_stats enable row level security;
+
+-- Drop any existing policies
+drop policy if exists "Public read access to restaurants" on restaurants;
+drop policy if exists "Public read access to sponsors" on sponsors;
+drop policy if exists "Users can read their own data" on users;
+drop policy if exists "Users can read their own visits" on visits;
+drop policy if exists "Users can read their own stats" on user_stats;
+
+-- Create new policies
+create policy "Public read access to restaurants"
+  on restaurants
+  for select
+  to public
+  using (true);
+
+create policy "Public read access to sponsors"
+  on sponsors
+  for select
+  to public
+  using (true);
+
+create policy "Users can read their own data"
+  on users
+  for select
+  using (auth.uid::text = id);
+
+create policy "Users can read their own visits"
+  on visits
+  for select
+  using (auth.uid::text = user_id);
+
+create policy "Users can read their own stats"
+  on user_stats
+  for select
+  using (auth.uid::text = user_id);
+
+-- Allow users to insert their own visits
+create policy "Users can insert their own visits"
+  on visits
+  for insert
+  with check (auth.uid::text = user_id);
+
+-- Allow users to update their own stats
+create policy "Users can update their own stats"
+  on user_stats
+  for update
+  using (auth.uid::text = user_id);

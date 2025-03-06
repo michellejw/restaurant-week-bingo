@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { useSupabaseUser } from '@/hooks/useSupabaseUser';
+import { UserService } from '@/lib/services/user-service';
 
 // Format phone number as (XXX) XXX-XXXX
 const formatPhoneNumber = (value: string) => {
@@ -13,8 +15,10 @@ const formatPhoneNumber = (value: string) => {
   return `(${numbers.slice(0, 3)}) ${numbers.slice(3, 6)}-${numbers.slice(6, 10)}`;
 };
 
-// Remove formatting to store in database
-const unformatPhoneNumber = (value: string) => value.replace(/\D/g, '');
+// Remove formatting from phone number
+const unformatPhoneNumber = (value: string) => {
+  return value.replace(/\D/g, '');
+};
 
 // Validate phone number
 const isValidPhoneNumber = (value: string) => {
@@ -27,12 +31,13 @@ export default function Settings() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded: clerkLoaded } = useUser();
+  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
   const router = useRouter();
   const initialValuesSet = useRef(false);
 
   useEffect(() => {
-    if (isLoaded && !user) {
+    if (clerkLoaded && !user) {
       router.push('/');
       return;
     }
@@ -45,7 +50,7 @@ export default function Settings() {
       setPhone(userPhone ? formatPhoneNumber(userPhone) : '');
       initialValuesSet.current = true;
     }
-  }, [user, isLoaded, router]);
+  }, [user, clerkLoaded, router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedNumber = formatPhoneNumber(e.target.value);
@@ -56,6 +61,8 @@ export default function Settings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user || !supabaseId || supabaseLoading) return;
+
     setLoading(true);
     setMessage('');
 
@@ -68,17 +75,18 @@ export default function Settings() {
 
     try {
       // Update user metadata in Clerk
-      await user?.update({
+      await user.update({
         firstName: name.split(' ')[0] || undefined,
-        lastName: name.split(' ').slice(1).join(' ') || undefined
-      });
-
-      // Update public metadata separately
-      await user?.update({
+        lastName: name.split(' ').slice(1).join(' ') || undefined,
         unsafeMetadata: {
           ...user.unsafeMetadata,
           phone: phone ? unformatPhoneNumber(phone) : null
         }
+      });
+
+      // Update user in Supabase
+      await UserService.updateProfile(supabaseId, {
+        name: name || null
       });
 
       setMessage('Profile updated successfully!');
@@ -90,99 +98,62 @@ export default function Settings() {
     }
   };
 
-  if (!isLoaded || !user) {
+  if (!clerkLoaded || !user) {
     return null;
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 pt-20 p-4">
-      <div className="max-w-2xl mx-auto animate-fade-in">
-        <h1 className="text-3xl font-bold text-gray-900 text-center mb-4">
-          Account Settings
-        </h1>
-        <div className="text-center mb-8 max-w-xl mx-auto">
-          <p className="text-gray-600 mb-3">
-            Thank you for supporting our local eateries and drinkeries during Pleasure Island Restaurant Week and beyond!
-            Your participation helps make our community more vibrant.
-          </p>
-          <p className="text-gray-600 mb-3">
-            Please enter a bit of contact information so we can reach you if you win!
-          </p>
-          <p className="text-gray-600">
-            Let us know if you would like to get the scoop on monthly events in Pleasure Island.
-            You can update these details anytime!
+    <div className="max-w-2xl mx-auto px-4 py-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h1>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+            Full Name
+          </label>
+          <input
+            type="text"
+            id="name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
+            placeholder="Enter your full name"
+          />
+        </div>
+
+        <div>
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            id="phone"
+            value={phone}
+            onChange={handlePhoneChange}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
+            placeholder="(XXX) XXX-XXXX"
+          />
+          <p className="mt-1 text-sm text-gray-500">
+            We'll only use this to contact you if you win a raffle prize.
           </p>
         </div>
-        <div className="card p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={user.emailAddresses[0].emailAddress}
-                disabled
-                className="input bg-gray-100"
-              />
-            </div>
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="input"
-                placeholder="Enter your name"
-              />
-            </div>
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
-                Phone Number
-              </label>
-              <input
-                type="tel"
-                id="phone"
-                value={phone}
-                onChange={handlePhoneChange}
-                className="input"
-                placeholder="(XXX) XXX-XXXX"
-                pattern="\(\d{3}\) \d{3}-\d{4}"
-              />
-            </div>
-            <div className="flex flex-col gap-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <span className="flex items-center justify-center gap-2">
-                    <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Processing...
-                  </span>
-                ) : (
-                  'Update Profile'
-                )}
-              </button>
-            </div>
-            {message && (
-              <p className={`mt-2 text-sm text-center ${
-                message.includes('successfully') ? 'text-green-600' : 'text-coral-600'
-              } animate-fade-in`}>
-                {message}
-              </p>
-            )}
-          </form>
+
+        {message && (
+          <div className={`text-sm ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+            {message}
+          </div>
+        )}
+
+        <div>
+          <button
+            type="submit"
+            disabled={loading || supabaseLoading}
+            className="w-full px-4 py-2 bg-coral-600 text-white rounded-lg hover:bg-coral-700 disabled:opacity-50 transition-colors"
+          >
+            {loading ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
-      </div>
-    </main>
+      </form>
+    </div>
   );
 } 

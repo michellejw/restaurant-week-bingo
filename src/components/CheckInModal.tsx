@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
+import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -10,93 +11,53 @@ interface CheckInModalProps {
   onCheckIn?: () => void;
 }
 
-type DatabaseError = {
-  message?: string;
-  code?: string;
-};
-
 export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModalProps) {
-  const { user } = useUser();
   const [code, setCode] = useState('');
-  const [message, setMessage] = useState('');
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const { isLoaded: clerkLoaded } = useUser();
+  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
 
-  const handleCheckIn = useCallback(async (checkInCode: string) => {
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!supabaseId || !code) return;
+
     setLoading(true);
-    setMessage('');
+    setError(null);
 
     try {
-      if (!checkInCode.trim()) {
-        setMessage('Please enter a restaurant code.');
+      // Get restaurant by code
+      const restaurant = await DatabaseService.restaurants.getByCode(code);
+      
+      // Check if already visited
+      const alreadyVisited = await DatabaseService.visits.checkExists(supabaseId, restaurant.id);
+      if (alreadyVisited) {
+        setError('You have already checked in at this restaurant');
         return;
       }
 
-      try {
-        const restaurant = await DatabaseService.restaurants.getByCode(checkInCode);
-        
-        const alreadyVisited = await DatabaseService.visits.checkExists(user!.id, restaurant.id);
-        if (alreadyVisited) {
-          setMessage('You have already checked in at this restaurant!');
-          return;
-        }
-
-        await DatabaseService.visits.create(user!.id, restaurant.id);
-        setMessage(`Check-in successful at ${restaurant.name}!`);
-        setCode('');
-        onCheckIn?.();
-        
-        // Close modal after successful check-in
-        setTimeout(() => {
-          onClose();
-          setMessage('');
-        }, 2000);
-      } catch (error) {
-        const dbError = error as DatabaseError;
-        if (dbError.message?.includes('No data returned') || dbError.code === 'PGRST116') {
-          setMessage('Invalid restaurant code. Please check the code and try again.');
-        } else if (dbError.code === '23505') { // Unique constraint violation
-          setMessage('You have already checked in at this restaurant!');
-        } else if (dbError.code === '42501') { // RLS policy violation
-          setMessage('You do not have permission to check in. Please log in again.');
-        } else if (dbError.code?.startsWith('23')) { // Other database constraint errors
-          setMessage('Unable to check in. Please try again later.');
-        } else {
-          console.error('Unexpected error during check-in:', dbError);
-          setMessage('An error occurred. Please try again later.');
-        }
-      }
-    } catch (error) {
-      console.error('Error during check-in:', error);
-      setMessage('An error occurred. Please try again later.');
+      // Create visit
+      await DatabaseService.visits.create(supabaseId, restaurant.id);
+      
+      // Close modal and trigger refresh
+      onClose();
+      onCheckIn?.();
+    } catch (err) {
+      console.error('Check-in error:', err);
+      setError('Invalid restaurant code');
     } finally {
       setLoading(false);
     }
-  }, [user, onCheckIn, onClose]);
-
-  const handleManualSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    handleCheckIn(code);
-  };
+  }, [code, supabaseId, onClose, onCheckIn]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Check In</h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-
-        <form onSubmit={handleManualSubmit} className="space-y-4">
-          <div>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">Check In</h2>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
             <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
               Restaurant Code
             </label>
@@ -105,27 +66,32 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
               id="code"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              className="input w-full"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
               placeholder="Enter code"
-              required
+              disabled={loading || !clerkLoaded || supabaseLoading}
             />
           </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full disabled:opacity-50"
-          >
-            {loading ? 'Checking in...' : 'Submit'}
-          </button>
+          {error && (
+            <div className="mb-4 text-sm text-red-600">{error}</div>
+          )}
+          <div className="flex justify-end gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="px-4 py-2 text-sm font-medium text-white bg-coral-600 rounded-md hover:bg-coral-700 disabled:opacity-50"
+              disabled={loading || !code || !clerkLoaded || supabaseLoading}
+            >
+              {loading ? 'Checking in...' : 'Check In'}
+            </button>
+          </div>
         </form>
-
-        {message && (
-          <p className={`mt-4 text-sm text-center ${
-            message.includes('successful') ? 'text-coral-600' : 'text-red-600'
-          }`}>
-            {message}
-          </p>
-        )}
       </div>
     </div>
   );

@@ -10,6 +10,7 @@ import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
+import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 import type { MarkerCluster } from 'leaflet';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
@@ -99,6 +100,13 @@ interface Sponsor {
   description?: string | null;
   phone?: string | null;
   is_retail: boolean;
+  promo_offer?: string | null;
+  created_at: string;
+}
+
+interface ApiResponse {
+  restaurants: Restaurant[];
+  sponsors: Sponsor[];
 }
 
 const mapContainerStyle = {
@@ -271,94 +279,113 @@ const calculateBounds = (locations: Location[]): LatLngBounds | null => {
 };
 
 export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
+  const { user, isSignedIn } = useUser();
+  const { supabaseId, loading: userLoading } = useSupabaseUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
-  const [bounds, setBounds] = useState<LatLngBounds | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [userVisits, setUserVisits] = useState<Set<string>>(new Set());
   const [isClient, setIsClient] = useState(false);
   const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon; retail: L.DivIcon } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, isLoaded: authLoaded } = useUser();
 
   useEffect(() => {
     setIsClient(true);
     setIcons({
       visited: createIcon('#ff5436'),
       unvisited: createIcon('#94a3b8'),
-      retail: createIcon('#F59E0B', true) // Warm amber color for retail sponsors
+      retail: createIcon('#F59E0B', true)
     });
   }, []);
 
-  const fetchRestaurants = useCallback(async () => {
-    if (!user) return;
-    
-    try {
-      setIsLoading(true);
-      console.log('Fetching restaurants and sponsors...');
-      
-      // Get all restaurants
-      const restaurantsData = await DatabaseService.restaurants.getAll();
-      
-      // Get user's visits
-      const visits = await DatabaseService.visits.getByUser(user.id);
-      const visitedIds = new Set(visits.map(v => v.restaurant_id));
-      
-      const processedRestaurants = restaurantsData.map(restaurant => ({
-        ...restaurant,
-        visited: visitedIds.has(restaurant.id)
-      }));
-
-      // Fetch retail sponsors
+  // Fetch restaurants and sponsors
+  useEffect(() => {
+    async function fetchData() {
       try {
-        const sponsorsData = await DatabaseService.sponsors.getRetail();
-        setSponsors(sponsorsData || []);
-      } catch (error) {
-        console.error('Error fetching sponsors:', error);
-        setSponsors([]);
+        const [restaurantsData, sponsorsData] = await Promise.all([
+          DatabaseService.restaurants.getAll(),
+          DatabaseService.sponsors.getAll()
+        ]);
+        
+        // Add visited property to restaurants
+        const restaurantsWithVisited = restaurantsData.map(r => ({
+          ...r,
+          visited: false // Will be updated when user visits are fetched
+        }));
+        
+        setRestaurants(restaurantsWithVisited);
+        setSponsors(sponsorsData);
+        setError(null);
+      } catch (e) {
+        console.error('Error fetching data:', e);
+        setError('Failed to load restaurants and sponsors');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchData();
+  }, []);
+
+  // Fetch user visits when user is available
+  useEffect(() => {
+    async function fetchUserVisits() {
+      if (!supabaseId || !isSignedIn) {
+        setUserVisits(new Set());
+        return;
       }
 
-      setRestaurants(processedRestaurants);
-      
-      // Calculate bounds including both restaurants and retail sponsors
-      const allLocations = [
-        ...processedRestaurants,
-        ...sponsors
-      ];
-      setBounds(calculateBounds(allLocations));
-    } catch (error) {
-      console.error('Error fetching data:', error);
-    } finally {
-      setIsLoading(false);
+      try {
+        const visits = await DatabaseService.visits.getByUser(supabaseId);
+        const visitedIds = new Set(visits.map(v => v.restaurant_id));
+        
+        // Update restaurants with visited status
+        setRestaurants(current => 
+          current.map(r => ({
+            ...r,
+            visited: visitedIds.has(r.id)
+          }))
+        );
+        
+        setUserVisits(visitedIds);
+        setError(null);
+      } catch (e) {
+        console.error('Error fetching user visits:', e);
+        setError('Failed to load visit history');
+      }
     }
-  }, [user, sponsors]);
 
-  // Fetch on mount and when lastCheckIn changes
-  useEffect(() => {
-    if (isClient && !authLoaded) {
-      console.log('Fetching due to lastCheckIn update:', lastCheckIn);
-      fetchRestaurants();
+    if (!userLoading && supabaseId) {
+      fetchUserVisits();
     }
-  }, [fetchRestaurants, isClient, lastCheckIn, authLoaded]);
+  }, [supabaseId, userLoading, isSignedIn, lastCheckIn]);
+
+  // Early return for loading state
+  if (loading || userLoading) {
+    return <div>Loading...</div>;
+  }
+
+  // Early return for error state
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  // Calculate map bounds from all locations
+  const allLocations = [...restaurants, ...sponsors];
+  const mapBounds = calculateBounds(allLocations);
+
+  if (!mapBounds) {
+    return <div>No locations available</div>;
+  }
 
   if (!isClient || !icons) {
     return <div>Loading map...</div>;
   }
 
-  if (isLoading) {
-    return <div>Loading restaurants...</div>;
-  }
-
-  if (!user) {
-    return <div>Please sign in to view the restaurant map.</div>;
-  }
-
-  if (!bounds && restaurants.length > 0) {
-    return <div>Error loading map bounds.</div>;
-  }
-
-  const center: [number, number] = bounds ? [
-    (bounds[0][0] + bounds[1][0]) / 2,
-    (bounds[0][1] + bounds[1][1]) / 2
-  ] : [0, 0];
+  const center: [number, number] = mapBounds ? [
+    (mapBounds[0][0] + mapBounds[1][0]) / 2,
+    (mapBounds[0][1] + mapBounds[1][1]) / 2
+  ] : [37.7749, -122.4194]; // Default to SF
 
   return (
     <div className="relative w-full h-[500px]">
@@ -366,7 +393,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
         <MapContainer
           style={mapContainerStyle}
           center={center}
-          zoom={bounds ? undefined : 14}
+          zoom={mapBounds ? undefined : 14}
           minZoom={11}
           maxZoom={18}
           scrollWheelZoom={false}
@@ -375,8 +402,8 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           />
-          {bounds && <FitBounds bounds={bounds} />}
-          {bounds && <ResetView bounds={bounds} />}
+          {mapBounds && <FitBounds bounds={mapBounds} />}
+          {mapBounds && <ResetView bounds={mapBounds} />}
           <MarkerClusterGroup
             chunkedLoading
             iconCreateFunction={createClusterIcon}
@@ -501,11 +528,6 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
             ))}
           </MarkerClusterGroup>
         </MapContainer>
-      )}
-      {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
-        </div>
       )}
     </div>
   );

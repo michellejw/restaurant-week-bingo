@@ -29,4 +29,4 @@ export function checkError<T>(
     throw result.error
   }
   return result.data
-} 
+}
