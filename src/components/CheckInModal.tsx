@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { useAuth } from '@/lib/AuthContext';
+import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
 
 interface CheckInModalProps {
@@ -16,7 +16,7 @@ type DatabaseError = {
 };
 
 export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModalProps) {
-  const { user } = useAuth();
+  const { user } = useUser();
   const [code, setCode] = useState('');
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
@@ -26,11 +26,6 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
     setMessage('');
 
     try {
-      if (!user) {
-        setMessage('Please log in to check in.');
-        return;
-      }
-
       if (!checkInCode.trim()) {
         setMessage('Please enter a restaurant code.');
         return;
@@ -39,13 +34,13 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
       try {
         const restaurant = await DatabaseService.restaurants.getByCode(checkInCode);
         
-        const alreadyVisited = await DatabaseService.visits.checkExists(user.id, restaurant.id);
+        const alreadyVisited = await DatabaseService.visits.checkExists(user!.id, restaurant.id);
         if (alreadyVisited) {
           setMessage('You have already checked in at this restaurant!');
           return;
         }
 
-        await DatabaseService.visits.create(user.id, restaurant.id);
+        await DatabaseService.visits.create(user!.id, restaurant.id);
         setMessage(`Check-in successful at ${restaurant.name}!`);
         setCode('');
         onCheckIn?.();

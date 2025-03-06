@@ -154,7 +154,18 @@ export default function Home() {
                 Learn How to Play
               </Link>
             </div>
-            <SignIn />
+            <SignIn appearance={{
+              elements: {
+                formButtonPrimary: 
+                  "bg-coral-600 hover:bg-coral-700 text-sm normal-case",
+                footerActionLink: 
+                  "text-coral-600 hover:text-coral-700",
+              },
+              layout: {
+                socialButtonsPlacement: "bottom",
+                showOptionalFields: false,
+              }
+            }} />
           </div>
         </div>
       </SignedOut>

@@ -2,9 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabase';
-import Link from 'next/link';
+import { useUser } from '@clerk/nextjs';
 
 // Format phone number as (XXX) XXX-XXXX
 const formatPhoneNumber = (value: string) => {
@@ -29,24 +27,25 @@ export default function Settings() {
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
   const initialValuesSet = useRef(false);
 
   useEffect(() => {
-    if (!user?.id) {
+    if (isLoaded && !user) {
       router.push('/');
       return;
     }
 
     // Only set initial values once
-    if (profile && !initialValuesSet.current) {
-      setName(profile.name || '');
-      // Format phone number from database
-      setPhone(profile.phone ? formatPhoneNumber(profile.phone) : '');
+    if (user && !initialValuesSet.current) {
+      setName(user.fullName || '');
+      // Format phone number if it exists in user metadata
+      const userPhone = user.unsafeMetadata.phone as string;
+      setPhone(userPhone ? formatPhoneNumber(userPhone) : '');
       initialValuesSet.current = true;
     }
-  }, [user, profile, router]);
+  }, [user, isLoaded, router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formattedNumber = formatPhoneNumber(e.target.value);
@@ -68,18 +67,20 @@ export default function Settings() {
     }
 
     try {
-      const { error } = await supabase
-        .from('users')
-        .update({
-          name,
+      // Update user metadata in Clerk
+      await user?.update({
+        firstName: name.split(' ')[0] || undefined,
+        lastName: name.split(' ').slice(1).join(' ') || undefined
+      });
+
+      // Update public metadata separately
+      await user?.update({
+        unsafeMetadata: {
+          ...user.unsafeMetadata,
           phone: phone ? unformatPhoneNumber(phone) : null
-        })
-        .eq('id', user?.id);
+        }
+      });
 
-      if (error) throw error;
-
-      // Refresh the profile in the context
-      await refreshProfile();
       setMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -89,7 +90,7 @@ export default function Settings() {
     }
   };
 
-  if (!user) {
+  if (!isLoaded || !user) {
     return null;
   }
 
@@ -121,7 +122,7 @@ export default function Settings() {
               <input
                 type="email"
                 id="email"
-                value={user.email}
+                value={user.emailAddresses[0].emailAddress}
                 disabled
                 className="input bg-gray-100"
               />
@@ -171,12 +172,6 @@ export default function Settings() {
                   'Update Profile'
                 )}
               </button>
-              <Link
-                href="/reset-password"
-                className="btn btn-secondary w-full text-center"
-              >
-                Reset Password
-              </Link>
             </div>
             {message && (
               <p className={`mt-2 text-sm text-center ${

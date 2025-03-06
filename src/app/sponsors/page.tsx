@@ -23,10 +23,6 @@ export default function SponsorsPage() {
     async function fetchSponsors() {
       console.log('Starting to fetch sponsors...')
       try {
-        // Log the current auth state
-        const { data: authData } = await supabase.auth.getSession()
-        console.log('Current auth state:', authData)
-
         // Simple query to get all sponsors with detailed logging
         console.log('Executing sponsors query...')
         const { data, error, status, statusText, count } = await supabase
