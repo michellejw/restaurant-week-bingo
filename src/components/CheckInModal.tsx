@@ -26,6 +26,10 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
     try {
       // Get restaurant by code
       const restaurant = await DatabaseService.restaurants.getByCode(code);
+      if (!restaurant || !restaurant.id) {
+        setError('Invalid restaurant code');
+        return;
+      }
       
       // Check if already visited
       const alreadyVisited = await DatabaseService.visits.checkExists(user.id, restaurant.id);
@@ -34,8 +38,11 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         return;
       }
 
-      // Create visit
+      // Create visit using the restaurant's UUID
       await DatabaseService.visits.create(user.id, restaurant.id);
+      
+      // Increment visit count
+      await DatabaseService.userStats.incrementVisits(user.id);
       
       // Close modal and trigger refresh
       onClose();

@@ -70,7 +70,30 @@ interface RestaurantMapProps {
   lastCheckIn?: number;
 }
 
-// Keep existing helper components (FitBounds, ResetView, etc.)
+// Helper components for map functionality
+function FitBounds({ bounds }: { bounds: LatLngBounds }) {
+  const map = useMap();
+  useEffect(() => {
+    if (bounds) {
+      map.fitBounds(bounds);
+    }
+  }, [map, bounds]);
+  return null;
+}
+
+function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
+  if (!restaurants.length) return null;
+
+  // Calculate bounds from restaurant locations
+  const lats = restaurants.map(r => r.latitude);
+  const lngs = restaurants.map(r => r.longitude);
+  const bounds: LatLngBounds = [
+    [Math.min(...lats), Math.min(...lngs)],
+    [Math.max(...lats), Math.max(...lngs)]
+  ];
+
+  return <FitBounds bounds={bounds} />;
+}
 
 export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const { user, isLoaded } = useUser();
@@ -150,7 +173,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     return <div>Loading map...</div>;
   }
 
-  const center = { lat: 34.2334, lng: -77.9483 }; // Wilmington, NC
+  const center = { lat: 34.035, lng: -77.893 }; // Carolina Beach, NC
 
   return (
     <MapContainer
@@ -162,6 +185,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+      <ResetView restaurants={restaurants} />
       <MarkerClusterGroup>
         {restaurants.map((restaurant) => (
           <Marker

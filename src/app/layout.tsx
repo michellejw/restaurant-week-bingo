@@ -7,7 +7,7 @@ import {
 } from '@clerk/nextjs';
 import Link from 'next/link';
 import ProfileBanner from "@/components/ProfileBanner";
-import UserInitializer from "@/components/UserInitializer";
+import { UserInitializer } from "@/components/UserInitializer";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

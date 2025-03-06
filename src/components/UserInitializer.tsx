@@ -2,7 +2,6 @@
 import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
-import { UserService } from '@/lib/services/user-service';
 
 export function UserInitializer() {
   const { user, isLoaded } = useUser();
@@ -12,9 +11,7 @@ export function UserInitializer() {
 
     const initializeUser = async () => {
       try {
-        // First ensure user exists in our database
-        await UserService.ensureUserExists(user.id);
-        // Then initialize their stats
+        // Initialize user stats if they don't exist
         await DatabaseService.userStats.getOrCreate(user.id);
       } catch (error) {
         console.error('Error initializing user:', error);

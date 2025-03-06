@@ -42,12 +42,30 @@ export const DatabaseService = {
 
   visits: {
     async create(userId: string, restaurantId: string): Promise<Visit> {
-      const response = await supabase
-        .from('visits')
-        .insert([{ user_id: userId, restaurant_id: restaurantId }])
-        .select()
-        .single();
-      return checkError(response) as Visit;
+      try {
+        const response = await supabase
+          .from('visits')
+          .insert([{ 
+            user_id: userId, 
+            restaurant_id: restaurantId,
+            created_at: new Date().toISOString()
+          }])
+          .select()
+          .single();
+        return checkError(response) as Visit;
+      } catch (error: any) {
+        // If it's a unique violation (23505), the visit already exists
+        if (error.code === '23505') {
+          const response = await supabase
+            .from('visits')
+            .select()
+            .eq('user_id', userId)
+            .eq('restaurant_id', restaurantId)
+            .single();
+          return checkError(response) as Visit;
+        }
+        throw error;
+      }
     },
 
     async getByUser(userId: string): Promise<VisitWithRestaurant[]> {
@@ -68,18 +86,38 @@ export const DatabaseService = {
     },
   },
 
+  users: {
+    async createIfNotExists(userId: string) {
+      const { error } = await supabase
+        .from('users')
+        .insert([{ id: userId }])
+        .select()
+        .single();
+      
+      // Ignore if user already exists
+      if (error?.code === '23505') return; // Unique violation error
+      if (error) throw error;
+    }
+  },
+
   userStats: {
     async getOrCreate(userId: string): Promise<UserStats> {
-      // Try to get existing stats
-      const { data, error } = await supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      try {
+        // Try to get existing stats first
+        const { data: existingStats, error: getError } = await supabase
+          .from('user_stats')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
 
-      // If no stats exist, create them
-      if (error?.code === 'PGRST116') {
-        const response = await supabase
+        // If stats exist, return them
+        if (existingStats) return existingStats;
+
+        // If no stats exist, ensure user exists first
+        await DatabaseService.users.createIfNotExists(userId);
+
+        // Then create stats
+        const { data: newStats, error: createError } = await supabase
           .from('user_stats')
           .insert([{ 
             user_id: userId,
@@ -88,26 +126,54 @@ export const DatabaseService = {
           }])
           .select()
           .single();
-        return checkError(response);
+
+        if (createError) {
+          // If stats were created by another request, try to get them again
+          if (createError.code === '23505') { // Unique violation
+            const { data: retryStats, error: retryError } = await supabase
+              .from('user_stats')
+              .select('*')
+              .eq('user_id', userId)
+              .single();
+            
+            if (retryError) throw retryError;
+            if (retryStats) return retryStats;
+          }
+          throw createError;
+        }
+
+        return newStats;
+      } catch (error) {
+        console.error('Error in getOrCreate:', error);
+        throw error;
       }
-
-      // If there was a different error, throw it
-      if (error) throw error;
-
-      // Otherwise return the existing stats
-      return data;
     },
 
     async incrementVisits(userId: string): Promise<UserStats> {
+      // First get current stats
+      const { data: currentStats } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+
+      if (!currentStats) throw new Error('User stats not found');
+
+      // Calculate new values
+      const newVisitCount = currentStats.visit_count + 1;
+      const newRaffleEntries = Math.floor(newVisitCount / 5);
+
+      // Update with new values
       const response = await supabase
         .from('user_stats')
         .update({ 
-          visit_count: supabase.rpc('increment'),
-          raffle_entries: supabase.rpc('calculate_raffle_entries')
+          visit_count: newVisitCount,
+          raffle_entries: newRaffleEntries
         })
         .eq('user_id', userId)
         .select()
         .single();
+        
       return checkError(response);
     },
   },

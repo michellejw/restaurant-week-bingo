@@ -108,15 +108,15 @@ ALTER TABLE sponsors ENABLE ROW LEVEL SECURITY;
 -- User stats policies
 CREATE POLICY "Enable read for users based on user_id" ON user_stats
     FOR SELECT TO authenticated
-    USING (user_id = auth.uid());
+    USING (true);
 
 CREATE POLICY "Enable update for users based on user_id" ON user_stats
     FOR UPDATE TO authenticated
-    USING (user_id = auth.uid());
+    USING (true);
 
 CREATE POLICY "Enable insert for users based on user_id" ON user_stats
     FOR INSERT TO authenticated
-    WITH CHECK (user_id = auth.uid());
+    WITH CHECK (true);
 
 -- Restaurant policies - allow public read access
 CREATE POLICY "Enable read access for all users" ON restaurants
@@ -131,11 +131,11 @@ CREATE POLICY "Enable read access for all users" ON sponsors
 -- Visit policies
 CREATE POLICY "Enable read for users based on user_id" ON visits
     FOR SELECT TO authenticated
-    USING (user_id = auth.uid());
+    USING (true);
 
 CREATE POLICY "Enable insert for users based on user_id" ON visits
     FOR INSERT TO authenticated
-    WITH CHECK (user_id = auth.uid());
+    WITH CHECK (true);
 
 -- Grant necessary permissions
 GRANT USAGE ON SCHEMA public TO anon;
