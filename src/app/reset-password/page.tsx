@@ -19,13 +19,28 @@ export default function ResetPassword() {
         console.log('Search params:', window.location.search);
         console.log('Hash:', window.location.hash);
 
-        // Check URL parameters
+        // First try to get the token from the URL
         const params = new URLSearchParams(window.location.search);
-        const code = params.get('code');
         const token = params.get('token');
         const type = params.get('type');
         
-        console.log('URL parameters:', { code, token, type });
+        // Also check the hash for any auth fragments
+        const hashParams = new URLSearchParams(window.location.hash.replace('#', ''));
+        const accessToken = hashParams.get('access_token');
+        
+        console.log('URL parameters:', { token, type, accessToken });
+
+        if (accessToken) {
+          // If we have an access token in the hash, try to set the session
+          console.log('Found access token in hash, setting session...');
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: '',
+          });
+          if (sessionError) {
+            console.error('Error setting session:', sessionError);
+          }
+        }
 
         if (token && type === 'recovery') {
           // Handle PKCE token
@@ -42,22 +57,6 @@ export default function ResetPassword() {
             return;
           }
           console.log('Token verified successfully');
-        } else if (code) {
-          // Handle recovery code
-          console.log('Found recovery code, attempting to exchange...');
-          const { error } = await supabase.auth.exchangeCodeForSession(code);
-          if (error) {
-            console.error('Error exchanging code:', error);
-            setMessage('Invalid or expired reset link. Please request a new one.');
-            setTimeout(() => router.push('/'), 2000);
-            return;
-          }
-          console.log('Code exchanged successfully');
-        } else {
-          console.log('No token or code found in URL');
-          setMessage('Invalid reset link. Please request a new one.');
-          setTimeout(() => router.push('/'), 2000);
-          return;
         }
 
         // Listen for password recovery event
@@ -66,9 +65,8 @@ export default function ResetPassword() {
           if (event === 'PASSWORD_RECOVERY') {
             // We're in a valid password recovery flow
             setMessage('');
-          } else if (!session) {
-            // If we don't have a session and we're not in recovery, redirect
-            console.log('No session found, redirecting...');
+          } else if (event === 'SIGNED_OUT') {
+            // Handle sign out
             router.push('/');
           }
         });
