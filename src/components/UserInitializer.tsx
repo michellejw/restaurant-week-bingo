@@ -1,46 +1,24 @@
 "use client"
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useSupabaseUser } from '@/hooks/useSupabaseUser';
+import { DatabaseService } from '@/lib/services/database';
 
-export default function UserInitializer() {
-  const { user: clerkUser, isLoaded: clerkLoaded, isSignedIn } = useUser();
-  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
-  const [isInitialized, setIsInitialized] = useState(false);
-  const [isInitializing, setIsInitializing] = useState(false);
+export function UserInitializer() {
+  const { user, isLoaded } = useUser();
 
   useEffect(() => {
-    async function initializeUser() {
-      if (!clerkUser || isInitializing || !isSignedIn || isInitialized) return;
+    if (!isLoaded || !user) return;
 
+    const initializeUserStats = async () => {
       try {
-        setIsInitializing(true);
-        
-        // Call the initialization API
-        const response = await fetch('/api/user/initialize', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to initialize user');
-        }
-        
-        setIsInitialized(true);
+        await DatabaseService.userStats.getOrCreate(user.id);
       } catch (error) {
-        console.error('Error initializing user:', error);
-      } finally {
-        setIsInitializing(false);
+        console.error('Error initializing user stats:', error);
       }
-    }
+    };
 
-    // Only run initialization if Clerk is fully loaded and user is signed in
-    if (clerkLoaded && isSignedIn && !isInitializing) {
-      initializeUser();
-    }
-  }, [clerkUser, clerkLoaded, isSignedIn, isInitializing, isInitialized]);
+    initializeUserStats();
+  }, [isLoaded, user]);
 
   return null;
 }
