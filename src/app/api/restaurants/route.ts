@@ -1,10 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
-import { v5 as uuidv5 } from 'uuid';
-
-// Use a consistent namespace UUID for converting Clerk IDs to Supabase UUIDs
-const NAMESPACE = '0da4e8d4-8a5e-4bfa-941c-226c4b9d8ac9';
 
 interface Visit {
   restaurant_id: string;
@@ -39,9 +35,6 @@ export async function GET() {
     let visits: Visit[] = [];
     
     if (userId) {
-      // Convert Clerk user ID to Supabase UUID
-      const supabaseUserId = uuidv5(userId, NAMESPACE);
-
       // Use service role key for accessing user data
       const adminSupabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,7 +44,7 @@ export async function GET() {
       const { data: userVisits, error: visitsError } = await adminSupabase
         .from('visits')
         .select('restaurant_id')
-        .eq('user_id', supabaseUserId);
+        .eq('user_id', userId);
 
       if (visitsError) {
         console.error('Visits error:', visitsError);

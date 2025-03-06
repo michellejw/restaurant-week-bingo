@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
-import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -15,12 +14,11 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   const [code, setCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { isLoaded: clerkLoaded } = useUser();
-  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
+  const { user, isLoaded } = useUser();
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!supabaseId || !code) return;
+    if (!user?.id || !code) return;
 
     setLoading(true);
     setError(null);
@@ -30,14 +28,14 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
       const restaurant = await DatabaseService.restaurants.getByCode(code);
       
       // Check if already visited
-      const alreadyVisited = await DatabaseService.visits.checkExists(supabaseId, restaurant.id);
+      const alreadyVisited = await DatabaseService.visits.checkExists(user.id, restaurant.id);
       if (alreadyVisited) {
         setError('You have already checked in at this restaurant');
         return;
       }
 
       // Create visit
-      await DatabaseService.visits.create(supabaseId, restaurant.id);
+      await DatabaseService.visits.create(user.id, restaurant.id);
       
       // Close modal and trigger refresh
       onClose();
@@ -48,7 +46,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
     } finally {
       setLoading(false);
     }
-  }, [code, supabaseId, onClose, onCheckIn]);
+  }, [code, user?.id, onClose, onCheckIn]);
 
   if (!isOpen) return null;
 
@@ -68,7 +66,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
               placeholder="Enter code"
-              disabled={loading || !clerkLoaded || supabaseLoading}
+              disabled={loading || !isLoaded}
             />
           </div>
           {error && (
@@ -86,7 +84,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
             <button
               type="submit"
               className="px-4 py-2 text-sm font-medium text-white bg-coral-600 rounded-md hover:bg-coral-700 disabled:opacity-50"
-              disabled={loading || !code || !clerkLoaded || supabaseLoading}
+              disabled={loading || !code || !isLoaded}
             >
               {loading ? 'Checking in...' : 'Check In'}
             </button>

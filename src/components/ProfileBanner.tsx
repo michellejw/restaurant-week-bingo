@@ -2,14 +2,12 @@
 
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 
 export default function ProfileBanner() {
   const { user } = useUser();
-  const { loading: supabaseLoading } = useSupabaseUser();
 
   // Only show banner if user is logged in and profile is incomplete
-  if (!user || supabaseLoading || (user.firstName && user.phoneNumbers.length > 0)) {
+  if (!user || (user.firstName && user.phoneNumbers.length > 0)) {
     return null;
   }
 

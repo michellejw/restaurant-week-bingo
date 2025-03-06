@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useUser, SignIn, SignedIn, SignedOut } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
-import { useSupabaseUser } from '@/hooks/useSupabaseUser';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
@@ -22,8 +21,7 @@ interface UserStats {
 }
 
 export default function Home() {
-  const { isLoaded: clerkLoaded } = useUser();
-  const { supabaseId, loading: supabaseLoading, initialized } = useSupabaseUser();
+  const { user, isLoaded } = useUser();
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -36,24 +34,15 @@ export default function Home() {
     let retryTimeout: NodeJS.Timeout;
 
     const initialize = async () => {
-      console.log('🔍 Page initialize called with:', {
-        clerkLoaded,
-        supabaseId,
-        supabaseLoading,
-        initialized,
-        mounted,
-        retryCount
-      });
+      if (!user?.id) {
+        console.log('⏳ Waiting for user...');
+        return;
+      }
 
       try {
-        if (!supabaseId || !initialized) {
-          console.log('⏳ Waiting for initialization...', { supabaseId, initialized });
-          return;
-        }
-
-        console.log('🚀 Fetching user stats for ID:', supabaseId);
+        console.log('🚀 Fetching user stats for ID:', user.id);
         // Fetch initial stats
-        const stats = await DatabaseService.userStats.get(supabaseId);
+        const stats = await DatabaseService.userStats.getOrCreate(user.id);
         console.log('📊 Received user stats:', stats);
         
         if (mounted) {
@@ -85,11 +74,11 @@ export default function Home() {
       }
     };
 
-    if (clerkLoaded && !supabaseLoading) {
+    if (isLoaded) {
       console.log('🔄 Conditions met, running initialize');
       initialize();
     } else {
-      console.log('⏳ Waiting for conditions:', { clerkLoaded, supabaseLoading });
+      console.log('⏳ Waiting for conditions:', { isLoaded });
     }
 
     return () => {
@@ -99,17 +88,17 @@ export default function Home() {
       }
       console.log('🧹 Cleanup: component unmounted');
     };
-  }, [supabaseId, clerkLoaded, supabaseLoading, initialized, retryCount]);
+  }, [user?.id, isLoaded, retryCount]);
 
   const handleCheckIn = async () => {
-    if (!supabaseId) {
-      console.log('❌ Cannot check in: no supabaseId');
+    if (!user?.id) {
+      console.log('❌ Cannot check in: no user');
       return;
     }
 
     try {
       console.log('🔄 Fetching updated stats after check-in');
-      const stats = await DatabaseService.userStats.get(supabaseId);
+      const stats = await DatabaseService.userStats.getOrCreate(user.id);
       console.log('📊 Received updated stats:', stats);
       setUserStats(stats);
     } catch (err) {
@@ -194,7 +183,6 @@ export default function Home() {
           </p>
           <SignIn
             routing="hash"
-            signUpUrl="https://relative-minnow-54.accounts.dev/sign-up"
             appearance={{
               elements: {
                 rootBox: "w-full",

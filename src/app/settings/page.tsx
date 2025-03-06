@@ -3,8 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { useSupabaseUser } from '@/hooks/useSupabaseUser';
-import { UserService } from '@/lib/services/user-service';
 
 // Format phone number as (XXX) XXX-XXXX
 const formatPhoneNumber = (value: string) => {
@@ -16,9 +14,7 @@ const formatPhoneNumber = (value: string) => {
 };
 
 // Remove formatting from phone number
-const unformatPhoneNumber = (value: string) => {
-  return value.replace(/\D/g, '');
-};
+const unformatPhoneNumber = (value: string) => value.replace(/\D/g, '');
 
 // Validate phone number
 const isValidPhoneNumber = (value: string) => {
@@ -32,7 +28,6 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const { user, isLoaded: clerkLoaded } = useUser();
-  const { supabaseId, loading: supabaseLoading } = useSupabaseUser();
   const router = useRouter();
   const initialValuesSet = useRef(false);
 
@@ -61,7 +56,7 @@ export default function Settings() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !supabaseId || supabaseLoading) return;
+    if (!user) return;
 
     setLoading(true);
     setMessage('');
@@ -84,11 +79,6 @@ export default function Settings() {
         }
       });
 
-      // Update user in Supabase
-      await UserService.updateProfile(supabaseId, {
-        name: name || null
-      });
-
       setMessage('Profile updated successfully!');
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -105,10 +95,9 @@ export default function Settings() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h1>
-      
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
             Full Name
           </label>
           <input
@@ -116,13 +105,13 @@ export default function Settings() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
-            placeholder="Enter your full name"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-coral-500 focus:ring-coral-500"
+            disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
             Phone Number
           </label>
           <input
@@ -130,29 +119,28 @@ export default function Settings() {
             id="phone"
             value={phone}
             onChange={handlePhoneChange}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
+            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-coral-500 focus:ring-coral-500"
             placeholder="(XXX) XXX-XXXX"
+            disabled={loading}
           />
           <p className="mt-1 text-sm text-gray-500">
-            We'll only use this to contact you if you win a raffle prize.
+            We'll only use this to contact you if you win a prize!
           </p>
         </div>
 
         {message && (
-          <div className={`text-sm ${message.includes('successfully') ? 'text-green-600' : 'text-red-600'}`}>
+          <div className={`text-sm ${message.includes('error') ? 'text-red-600' : 'text-green-600'}`}>
             {message}
           </div>
         )}
 
-        <div>
-          <button
-            type="submit"
-            disabled={loading || supabaseLoading}
-            className="w-full px-4 py-2 bg-coral-600 text-white rounded-lg hover:bg-coral-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Saving...' : 'Save Changes'}
-          </button>
-        </div>
+        <button
+          type="submit"
+          className="w-full px-4 py-2 text-sm font-medium text-white bg-coral-600 rounded-md hover:bg-coral-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-coral-500 disabled:opacity-50"
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : 'Save Changes'}
+        </button>
       </form>
     </div>
   );
