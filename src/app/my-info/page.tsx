@@ -131,7 +131,7 @@ export default function Settings() {
             disabled={loading}
           />
           <p className="mt-1 text-sm text-gray-500">
-            We'll only use this to contact you if you win a prize during Restaurant Week Bingo!
+            We&apos;ll only use this to contact you if you win a prize during Restaurant Week Bingo!
           </p>
         </div>
 
