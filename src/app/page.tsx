@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAuth } from '@/lib/AuthContext';
+import { useUser, SignIn, SignedIn, SignedOut } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
-import AuthForm from '@/components/AuthForm';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
@@ -31,7 +30,7 @@ type DatabaseError = {
 };
 
 export default function Home() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoaded: authLoaded } = useUser();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
   const [loading, setLoading] = useState(true);
@@ -86,14 +85,14 @@ export default function Home() {
       }
     };
 
-    if (!authLoading) {
+    if (authLoaded) {
       initialize();
     }
 
     return () => {
       mounted = false;
     };
-  }, [user, authLoading]);
+  }, [user, authLoaded]);
 
   // Handle new visits
   const handleCheckIn = async () => {
@@ -109,7 +108,7 @@ export default function Home() {
     setLastVisitTime(Date.now());
   };
 
-  if (loading && authLoading) {
+  if (loading && !authLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -126,7 +125,7 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-gray-50">
-      {!user ? (
+      <SignedOut>
         <div className="flex min-h-screen items-center justify-center p-4">
           <div className="w-full max-w-md animate-fade-in">
             <div className="mb-8 text-center">
@@ -155,15 +154,17 @@ export default function Home() {
                 Learn How to Play
               </Link>
             </div>
-            <AuthForm />
+            <SignIn />
           </div>
         </div>
-      ) : (
+      </SignedOut>
+
+      <SignedIn>
         <div className="mx-auto max-w-7xl px-4 py-8 space-y-8 animate-fade-in">
           <header className="flex flex-col gap-4">
             <div className="space-y-2">
               <h2 className="text-xl font-medium text-gray-900">
-                Welcome, {userProfile?.name || user.email?.split('@')[0]}!
+                Welcome, {userProfile?.name || user?.emailAddresses[0].emailAddress.split('@')[0]}!
               </h2>
               <div className="flex gap-4 items-center text-sm">
                 <div className="flex items-center gap-2 group">
@@ -216,7 +217,7 @@ export default function Home() {
             onCheckIn={handleCheckIn}
           />
         </div>
-      )}
+      </SignedIn>
     </main>
   );
 }

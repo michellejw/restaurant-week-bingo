@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/lib/AuthContext';
+import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
 
 interface Restaurant {
@@ -12,7 +12,7 @@ interface Restaurant {
 }
 
 export default function BingoCard() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoaded: authLoaded } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,10 +47,10 @@ export default function BingoCard() {
   }, [user]);
 
   useEffect(() => {
-    if (!authLoading) {
+    if (authLoaded) {
       fetchRestaurants();
     }
-  }, [fetchRestaurants, authLoading]);
+  }, [fetchRestaurants, authLoaded]);
 
   if (loading && restaurants.length === 0) {
     return (

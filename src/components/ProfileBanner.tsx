@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { useAuth } from '@/lib/AuthContext';
+import { useUser } from '@clerk/nextjs';
 
 export default function ProfileBanner() {
-  const { user, profile } = useAuth();
+  const { user } = useUser();
 
   // Only show banner if user is logged in and profile is incomplete
-  if (!user || !profile || (profile.name && profile.phone)) {
+  if (!user || (user.firstName && user.phoneNumbers.length > 0)) {
     return null;
   }
 

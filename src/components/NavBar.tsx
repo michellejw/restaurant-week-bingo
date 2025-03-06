@@ -2,21 +2,17 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/lib/AuthContext'
+import { useUser, SignInButton, UserButton } from '@clerk/nextjs'
 import { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
 
 export default function NavBar() {
-  const { isLoggedIn, signOut } = useAuth()
+  const { user, isLoaded } = useUser()
   const router = useRouter()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-  const handleAuthClick = async () => {
-    if (isLoggedIn) {
-      await signOut()
-    } else {
-      router.push('/')
-    }
+  const handleSignOut = () => {
+    router.push('/')
   }
 
   const toggleMenu = () => {
@@ -44,17 +40,27 @@ export default function NavBar() {
             <Link href="/contact" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
               Contact Us
             </Link>
-            {isLoggedIn && (
+            {user && (
               <Link href="/settings" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
                 Settings
               </Link>
             )}
-            <button
-              onClick={handleAuthClick}
-              className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors"
-            >
-              {isLoggedIn ? 'Sign Out' : 'Sign In'}
-            </button>
+            {!user && (
+              <SignInButton mode="modal">
+                <button className="ml-4 px-4 py-2 text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
+                  Sign In
+                </button>
+              </SignInButton>
+            )}
+            {user && (
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8"
+                  }
+                }}
+              />
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -94,7 +100,7 @@ export default function NavBar() {
           >
             Contact Us
           </Link>
-          {isLoggedIn && (
+          {user && (
             <Link
               href="/settings"
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
@@ -103,15 +109,27 @@ export default function NavBar() {
               Settings
             </Link>
           )}
-          <button
-            onClick={() => {
-              handleAuthClick()
-              setIsMenuOpen(false)
-            }}
-            className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
-          >
-            {isLoggedIn ? 'Sign Out' : 'Sign In'}
-          </button>
+          {!user && (
+            <SignInButton mode="modal">
+              <button
+                className="block w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                Sign In
+              </button>
+            </SignInButton>
+          )}
+          {user && (
+            <div className="px-3 py-2">
+              <UserButton 
+                appearance={{
+                  elements: {
+                    avatarBox: "w-8 h-8"
+                  }
+                }}
+              />
+            </div>
+          )}
         </div>
       </div>
     </nav>

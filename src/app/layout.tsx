@@ -2,7 +2,9 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientNavWrapper from "@/components/ClientNavWrapper";
 import { metadata } from "./metadata";
-import { AuthProvider } from '@/lib/AuthContext';
+import {
+  ClerkProvider,
+} from '@clerk/nextjs';
 import Link from 'next/link';
 import ProfileBanner from "@/components/ProfileBanner";
 
@@ -36,7 +38,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col`}
       >
-        <AuthProvider>
+        <ClerkProvider>
           <ClientNavWrapper />
           <div className="pt-16">
             <ProfileBanner />
@@ -59,7 +61,7 @@ export default function RootLayout({
               </p>
             </div>
           </footer>
-        </AuthProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

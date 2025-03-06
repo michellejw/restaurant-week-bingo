@@ -8,10 +8,9 @@ import L from 'leaflet';
 import 'leaflet.markercluster/dist/leaflet.markercluster';
 import 'leaflet.markercluster/dist/MarkerCluster.css';
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
-import { useAuth } from '@/lib/AuthContext';
+import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
 import type { MarkerCluster } from 'leaflet';
-import { supabase } from '@/lib/supabase';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string, isRetail: boolean = false) => {
@@ -240,6 +239,37 @@ function ResetView({ bounds }: { bounds: LatLngBounds }) {
   );
 }
 
+// Add a type for any location with lat/lng
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+const calculateBounds = (locations: Location[]): LatLngBounds | null => {
+  if (locations.length === 0) return null;
+  
+  let minLat = locations[0].latitude;
+  let maxLat = locations[0].latitude;
+  let minLng = locations[0].longitude;
+  let maxLng = locations[0].longitude;
+
+  locations.forEach(location => {
+    minLat = Math.min(minLat, location.latitude);
+    maxLat = Math.max(maxLat, location.latitude);
+    minLng = Math.min(minLng, location.longitude);
+    maxLng = Math.max(maxLng, location.longitude);
+  });
+
+  // Increase padding to 10% for better visibility
+  const latPadding = (maxLat - minLat) * 0.1;
+  const lngPadding = (maxLng - minLng) * 0.1;
+
+  return [
+    [minLat - latPadding, minLng - lngPadding],
+    [maxLat + latPadding, maxLng + lngPadding]
+  ];
+};
+
 export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
@@ -247,7 +277,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
   const [isClient, setIsClient] = useState(false);
   const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon; retail: L.DivIcon } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoaded: authLoaded } = useUser();
 
   useEffect(() => {
     setIsClient(true);
@@ -278,15 +308,12 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
       }));
 
       // Fetch retail sponsors
-      const { data: sponsorsData, error: sponsorsError } = await supabase
-        .from('sponsors')
-        .select('*')
-        .eq('is_retail', true);
-
-      if (sponsorsError) {
-        console.error('Error fetching sponsors:', sponsorsError);
-      } else {
+      try {
+        const sponsorsData = await DatabaseService.sponsors.getRetail();
         setSponsors(sponsorsData || []);
+      } catch (error) {
+        console.error('Error fetching sponsors:', error);
+        setSponsors([]);
       }
 
       setRestaurants(processedRestaurants);
@@ -294,7 +321,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
       // Calculate bounds including both restaurants and retail sponsors
       const allLocations = [
         ...processedRestaurants,
-        ...(sponsorsData || [])
+        ...sponsors
       ];
       setBounds(calculateBounds(allLocations));
     } catch (error) {
@@ -302,40 +329,15 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [user]);
+  }, [user, sponsors]);
 
   // Fetch on mount and when lastCheckIn changes
   useEffect(() => {
-    if (isClient && !authLoading) {
+    if (isClient && !authLoaded) {
       console.log('Fetching due to lastCheckIn update:', lastCheckIn);
       fetchRestaurants();
     }
-  }, [fetchRestaurants, isClient, lastCheckIn, authLoading]);
-
-  const calculateBounds = (locations: Restaurant[]): LatLngBounds | null => {
-    if (locations.length === 0) return null;
-    
-    let minLat = locations[0].latitude;
-    let maxLat = locations[0].latitude;
-    let minLng = locations[0].longitude;
-    let maxLng = locations[0].longitude;
-
-    locations.forEach(location => {
-      minLat = Math.min(minLat, location.latitude);
-      maxLat = Math.max(maxLat, location.latitude);
-      minLng = Math.min(minLng, location.longitude);
-      maxLng = Math.max(maxLng, location.longitude);
-    });
-
-    // Increase padding to 10% for better visibility
-    const latPadding = (maxLat - minLat) * 0.1;
-    const lngPadding = (maxLng - minLng) * 0.1;
-
-    return [
-      [minLat - latPadding, minLng - lngPadding],
-      [maxLat + latPadding, maxLng + lngPadding]
-    ];
-  };
+  }, [fetchRestaurants, isClient, lastCheckIn, authLoaded]);
 
   if (!isClient || !icons) {
     return <div>Loading map...</div>;
