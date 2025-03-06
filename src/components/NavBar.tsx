@@ -35,8 +35,8 @@ export default function NavBar() {
               Contact Us
             </Link>
             {user && (
-              <Link href="/settings" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
-                Settings
+              <Link href="/my-info" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors">
+                My Info
               </Link>
             )}
             {!user && (
@@ -96,11 +96,11 @@ export default function NavBar() {
           </Link>
           {user && (
             <Link
-              href="/settings"
+              href="/my-info"
               className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
-              Settings
+              My Info
             </Link>
           )}
           {!user && (

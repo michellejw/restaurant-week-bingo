@@ -63,12 +63,11 @@ export type Database = {
       users: {
         Row: {
           id: string;
-          email: string;
           name: string | null;
+          phone: string | null;
           created_at: string;
-          last_login: string;
         };
-        Insert: Omit<Database['public']['Tables']['users']['Row'], 'created_at' | 'last_login'>;
+        Insert: Omit<Database['public']['Tables']['users']['Row'], 'created_at'>;
         Update: Partial<Database['public']['Tables']['users']['Insert']>;
       };
     };

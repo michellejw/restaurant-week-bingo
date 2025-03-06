@@ -1,7 +1,7 @@
 please use the projectBrief.md file as a guide for the project.
 
-I am not trying to make something weird! I want to use patterns and approaches that are tried, tested and true. 
+I am not trying to make something weird! I want to use patterns and approaches that are tried, tested and true. please don't go into an infinite loop doing this though. 
 
-Avoid over complicated solutions - if it seems complicated, back up and consider whether a simpler approach is better.
+Avoid over complicated solutions - if it seems complicated, back up and consider whether a simpler approach is better. but please don't do endless back and forth if possible. Aim for a straightforward solution that doesn't add bloat or extra complexity.
 
 please don't make changes to design or function if they're not needed (only do if specifically requested) - I worked hard to get it to look like it does! 

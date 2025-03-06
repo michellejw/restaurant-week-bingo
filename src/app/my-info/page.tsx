@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
+import { DatabaseService } from '@/lib/services/database';
 
 // Format phone number as (XXX) XXX-XXXX
 const formatPhoneNumber = (value: string) => {
@@ -37,14 +38,23 @@ export default function Settings() {
       return;
     }
 
-    // Only set initial values once
-    if (user && !initialValuesSet.current) {
-      setName(user.fullName || '');
-      // Format phone number if it exists in user metadata
-      const userPhone = user.unsafeMetadata.phone as string;
-      setPhone(userPhone ? formatPhoneNumber(userPhone) : '');
-      initialValuesSet.current = true;
-    }
+    // Only load contact info once
+    const loadContactInfo = async () => {
+      if (user && !initialValuesSet.current) {
+        try {
+          const data = await DatabaseService.users.getContactInfo(user.id);
+          if (data) {
+            setName(data.name || '');
+            setPhone(data.phone ? formatPhoneNumber(data.phone) : '');
+          }
+        } catch (error) {
+          console.error('Error loading contact info:', error);
+        }
+        initialValuesSet.current = true;
+      }
+    };
+
+    loadContactInfo();
   }, [user, clerkLoaded, router]);
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,15 +79,12 @@ export default function Settings() {
     }
 
     try {
-      // Update user metadata in Clerk
-      await user.update({
-        firstName: name.split(' ')[0] || undefined,
-        lastName: name.split(' ').slice(1).join(' ') || undefined,
-        unsafeMetadata: {
-          ...user.unsafeMetadata,
-          phone: phone ? unformatPhoneNumber(phone) : null
-        }
-      });
+      // Update contact info in Supabase only
+      await DatabaseService.users.updateContactInfo(
+        user.id,
+        name || null,
+        phone ? unformatPhoneNumber(phone) : null
+      );
 
       setMessage('Profile updated successfully!');
     } catch (error) {
@@ -94,7 +101,7 @@ export default function Settings() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Profile Settings</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h1>
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -124,7 +131,7 @@ export default function Settings() {
             disabled={loading}
           />
           <p className="mt-1 text-sm text-gray-500">
-            We&apos;ll only use this to contact you if you win a prize!
+            We'll only use this to contact you if you win a prize during Restaurant Week Bingo!
           </p>
         </div>
 
@@ -142,12 +149,6 @@ export default function Settings() {
           {loading ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
-      <p className="text-gray-600">
-        You&apos;ll be signed out and won&apos;t be able to participate in Restaurant Week Bingo.
-      </p>
-      <p className="text-gray-600">
-        We&apos;ll miss you! You&apos;ll need to create a new account to participate again.
-      </p>
     </div>
   );
-} 
+}

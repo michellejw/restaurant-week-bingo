@@ -97,6 +97,30 @@ export const DatabaseService = {
       // Ignore if user already exists
       if (error?.code === '23505') return; // Unique violation error
       if (error) throw error;
+    },
+
+    async getContactInfo(userId: string) {
+      const { data, error } = await supabase
+        .from('users')
+        .select('name, phone')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      return data;
+    },
+
+    async updateContactInfo(userId: string, name: string | null, phone: string | null) {
+      // Simple upsert - will create if not exists, update if exists
+      const { error } = await supabase
+        .from('users')
+        .upsert({ 
+          id: userId,
+          name,
+          phone
+        });
+      
+      if (error) throw error;
     }
   },
 
