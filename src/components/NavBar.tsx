@@ -1,19 +1,13 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useUser, SignInButton, UserButton } from '@clerk/nextjs'
 import { useState } from 'react'
 import { FaBars, FaTimes } from 'react-icons/fa'
 
 export default function NavBar() {
-  const { user, isLoaded } = useUser()
-  const router = useRouter()
+  const { user } = useUser()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-
-  const handleSignOut = () => {
-    router.push('/')
-  }
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen)

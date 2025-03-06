@@ -14,9 +14,9 @@ const ResetPasswordPage: NextPage = () => {
   const [complete, setComplete] = useState(false)
 
   const router = useRouter()
-  const { isLoaded, signIn, setActive } = useSignIn()
+  const { signIn } = useSignIn()
 
-  if (!isLoaded) {
+  if (!signIn) {
     return null
   }
 
@@ -28,7 +28,7 @@ const ResetPasswordPage: NextPage = () => {
         strategy: 'reset_password_email_code',
         identifier: email,
       })
-      .then((_) => {
+      .then(() => {
         setSuccessfulCreation(true)
         setError('')
       })

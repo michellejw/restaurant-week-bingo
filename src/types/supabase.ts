@@ -1,3 +1,9 @@
+export type Restaurant = Database['public']['Tables']['restaurants']['Row'] & {
+  visited?: boolean;
+};
+
+export type Sponsor = Database['public']['Tables']['sponsors']['Row'];
+
 export type Database = {
   public: {
     Tables: {

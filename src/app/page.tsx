@@ -6,8 +6,6 @@ import { DatabaseService } from '@/lib/services/database';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
-import Image from 'next/image';
-import Link from 'next/link';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -23,8 +21,6 @@ interface UserStats {
 export default function Home() {
   const { user, isLoaded } = useUser();
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -47,15 +43,12 @@ export default function Home() {
         
         if (mounted) {
           setUserStats(stats);
-          setError(null);
           setRetryCount(0);
           console.log('✅ Updated user stats in state');
         }
       } catch (err) {
         console.error('❌ Initialization error:', err);
         if (mounted) {
-          setError(err instanceof Error ? err.message : 'An error occurred');
-          
           // If we haven't retried too many times, try again after a delay
           if (retryCount < 3) {
             console.log(`🔄 Will retry in ${(retryCount + 1) * 1000}ms (attempt ${retryCount + 1}/3)`);
@@ -68,7 +61,6 @@ export default function Home() {
         }
       } finally {
         if (mounted) {
-          setLoading(false);
           console.log('✅ Loading complete');
         }
       }
@@ -144,7 +136,7 @@ export default function Home() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">How It Works</h2>
               <ul className="space-y-2 text-gray-600">
                 <li>• Visit participating restaurants during Restaurant Week</li>
-                <li>• Ask your server for the restaurant's unique code</li>
+                <li>• Ask your server for the restaurant&apos;s unique code</li>
                 <li>• Enter the code to check in and mark your bingo card</li>
                 <li>• Earn 1 raffle entry for every 5 restaurants visited</li>
               </ul>
@@ -190,6 +182,7 @@ export default function Home() {
               }
             }}
           />
+          <p>Don&apos;t have an account?</p>
         </div>
       </SignedOut>
     </div>

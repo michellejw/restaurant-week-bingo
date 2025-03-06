@@ -124,7 +124,7 @@ export default function Settings() {
             disabled={loading}
           />
           <p className="mt-1 text-sm text-gray-500">
-            We'll only use this to contact you if you win a prize!
+            We&apos;ll only use this to contact you if you win a prize!
           </p>
         </div>
 
@@ -142,6 +142,12 @@ export default function Settings() {
           {loading ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
+      <p className="text-gray-600">
+        You&apos;ll be signed out and won&apos;t be able to participate in Restaurant Week Bingo.
+      </p>
+      <p className="text-gray-600">
+        We&apos;ll miss you! You&apos;ll need to create a new account to participate again.
+      </p>
     </div>
   );
 } 

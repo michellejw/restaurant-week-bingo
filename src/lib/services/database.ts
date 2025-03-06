@@ -53,9 +53,9 @@ export const DatabaseService = {
           .select()
           .single();
         return checkError(response) as Visit;
-      } catch (error: any) {
+      } catch (error: unknown) {
         // If it's a unique violation (23505), the visit already exists
-        if (error.code === '23505') {
+        if (error && typeof error === 'object' && 'code' in error && error.code === '23505') {
           const response = await supabase
             .from('visits')
             .select()
@@ -104,7 +104,7 @@ export const DatabaseService = {
     async getOrCreate(userId: string): Promise<UserStats> {
       try {
         // Try to get existing stats first
-        const { data: existingStats, error: getError } = await supabase
+        const { data: existingStats } = await supabase
           .from('user_stats')
           .select('*')
           .eq('user_id', userId)

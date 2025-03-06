@@ -1,16 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import MarkerClusterGroup from 'react-leaflet-cluster';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
-import 'leaflet.markercluster/dist/leaflet.markercluster';
-import 'leaflet.markercluster/dist/MarkerCluster.css';
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
-import type { MarkerCluster } from 'leaflet';
+import type { Restaurant, Sponsor } from '@/types/supabase';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
 const createIcon = (fillColor: string, isRetail: boolean = false) => {
@@ -28,47 +25,7 @@ const createIcon = (fillColor: string, isRetail: boolean = false) => {
   });
 };
 
-interface Restaurant {
-  id: string;
-  name: string;
-  address: string;
-  url: string | null;
-  latitude: number;
-  longitude: number;
-  visited: boolean;
-  description?: string | null;
-  phone?: string | null;
-}
-
-interface Sponsor {
-  id: string;
-  name: string;
-  address: string;
-  phone: string | null;
-  url: string | null;
-  description: string | null;
-  promo_offer: string | null;
-  latitude: number;
-  longitude: number;
-  is_retail: boolean;
-}
-
-interface ApiResponse {
-  restaurants: Restaurant[];
-  sponsors: Sponsor[];
-}
-
-const mapContainerStyle = {
-  width: '100%',
-  height: '500px',
-  zIndex: 0
-};
-
 type LatLngBounds = [[number, number], [number, number]];
-
-interface RestaurantMapProps {
-  lastCheckIn?: number;
-}
 
 // Helper components for map functionality
 function FitBounds({ bounds }: { bounds: LatLngBounds }) {
@@ -95,17 +52,14 @@ function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
   return <FitBounds bounds={bounds} />;
 }
 
-export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
-  const { user, isLoaded } = useUser();
+export default function RestaurantMap() {
+  const { user } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isClient, setIsClient] = useState(false);
   const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon; retail: L.DivIcon } | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
     setIcons({
       visited: createIcon('#ff5436'),
       unvisited: createIcon('#94a3b8'),
@@ -115,7 +69,7 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
 
   // Fetch restaurants and sponsors
   useEffect(() => {
-    async function fetchData() {
+    const fetchRestaurants = async () => {
       try {
         const [restaurantsData, sponsorsData] = await Promise.all([
           DatabaseService.restaurants.getAll(),
@@ -127,21 +81,21 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
           visited: false
         })));
         setSponsors(sponsorsData);
-        setError(null);
       } catch (e) {
         console.error('Error fetching data:', e);
-        setError('Failed to load restaurants and sponsors');
       } finally {
         setLoading(false);
       }
-    }
+    };
 
-    fetchData();
-  }, []);
+    if (user) {
+      fetchRestaurants();
+    }
+  }, [user]);
 
   // Fetch user visits when user is available
   useEffect(() => {
-    async function fetchUserVisits() {
+    const fetchUserVisits = async () => {
       if (!user?.id) {
         return;
       }
@@ -156,20 +110,17 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
             visited: visitedIds.has(r.id)
           }))
         );
-        
-        setError(null);
       } catch (e) {
         console.error('Error fetching user visits:', e);
-        setError('Failed to load visit history');
       }
-    }
+    };
 
-    if (isLoaded && user) {
+    if (user) {
       fetchUserVisits();
     }
-  }, [user?.id, isLoaded, lastCheckIn]);
+  }, [user]);
 
-  if (loading || !isLoaded) {
+  if (loading) {
     return <div>Loading map...</div>;
   }
 
@@ -224,4 +175,4 @@ export default function RestaurantMap({ lastCheckIn }: RestaurantMapProps) {
       </MarkerClusterGroup>
     </MapContainer>
   );
-} 
+}

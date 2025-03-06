@@ -22,11 +22,12 @@ export const supabase = createClient<Database>(
 )
 
 // Helper function to check and throw database errors
-export function checkError<T>(
-  result: { error: any; data: T }
-): T {
-  if (result.error) {
-    throw result.error
+export function checkError<T>(response: { data: T | null; error: Error | null }): T {
+  if (response.error) {
+    throw response.error;
   }
-  return result.data
+  if (!response.data) {
+    throw new Error('No data returned from query');
+  }
+  return response.data;
 }
