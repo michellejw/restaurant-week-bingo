@@ -73,7 +73,7 @@ BEGIN
     UPDATE user_stats
     SET 
         visit_count = visit_count_val,
-        raffle_entries = FLOOR(visit_count_val/5),
+        raffle_entries = FLOOR(visit_count_val/4),
         last_updated = NOW()
     WHERE user_id = NEW.user_id;
     

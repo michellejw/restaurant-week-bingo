@@ -51,10 +51,12 @@ export default function RootLayout({
           <UserInitializer />
           <div className="flex flex-col min-h-screen">
             <ClientNavWrapper />
-            <ProfileBanner />
-            <main className="flex-grow">
-              {children}
-            </main>
+            <div className="pt-16">
+              <ProfileBanner />
+              <main className="flex-grow">
+                {children}
+              </main>
+            </div>
           </div>
           <footer className="py-6 px-4 mt-auto border-t border-gray-100">
             <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">

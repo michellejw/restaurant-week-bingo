@@ -8,7 +8,7 @@ A web application for the local chamber of commerce that gamifies restaurant wee
 - Interactive bingo card that updates as users visit restaurants
 - Interactive map using OpenStreetMap and Leaflet
 - Check-in system with unique restaurant codes
-- Automatic raffle entry tracking (1 entry per 5 restaurants visited)
+- Automatic raffle entry tracking (1 entry per 4 restaurants visited)
 - Real-time visit statistics
 - Responsive design for both mobile and desktop
 

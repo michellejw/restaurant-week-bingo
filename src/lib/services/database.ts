@@ -185,7 +185,7 @@ export const DatabaseService = {
 
       // Calculate new values
       const newVisitCount = currentStats.visit_count + 1;
-      const newRaffleEntries = Math.floor(newVisitCount / 5);
+      const newRaffleEntries = Math.floor(newVisitCount / 4);
 
       // Update with new values
       const response = await supabase

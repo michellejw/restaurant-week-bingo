@@ -99,62 +99,37 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 py-6">
       <SignedIn>
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2">Restaurant Week Bingo</h1>
-              <p className="text-gray-600">
-                Visit restaurants to fill your card and earn raffle entries!
-              </p>
+        <div className="space-y-6">
+          {/* Stats display */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+              <div className="text-2xl font-bold text-gray-900 mb-1">{userStats.visit_count}</div>
+              <div className="text-sm text-gray-600">restaurants visited</div>
             </div>
-            <button
-              onClick={() => setIsCheckInModalOpen(true)}
-              className="px-4 py-2 bg-coral-600 text-white rounded-lg hover:bg-coral-700 transition-colors"
-            >
-              Check In
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Your Progress</h2>
-              <div className="space-y-4">
-                <div>
-                  <p className="text-sm text-gray-600">Restaurants Visited</p>
-                  <p className="text-2xl font-bold text-gray-900">{userStats.visit_count}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Raffle Entries Earned</p>
-                  <p className="text-2xl font-bold text-coral-600">{userStats.raffle_entries}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white p-6 rounded-lg border border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">How It Works</h2>
-              <ul className="space-y-2 text-gray-600">
-                <li>• Visit participating restaurants during Restaurant Week</li>
-                <li>• Ask your server for the restaurant&apos;s unique code</li>
-                <li>• Enter the code to check in and mark your bingo card</li>
-                <li>• Earn 1 raffle entry for every 5 restaurants visited</li>
-              </ul>
+            <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
+              <div className="text-2xl font-bold text-coral-600 mb-1">{Math.floor(userStats.visit_count / 4)}</div>
+              <div className="text-sm text-gray-600">raffle entries</div>
             </div>
           </div>
 
-          <div className="space-y-8">
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Your Bingo Card</h2>
-              <BingoCard onVisitUpdate={handleCheckIn} />
-            </section>
+          {/* Wide check-in button */}
+          <button
+            onClick={() => setIsCheckInModalOpen(true)}
+            className="w-full py-3 px-4 bg-coral-600 text-white text-lg font-medium rounded-lg hover:bg-coral-700 transition-colors"
+          >
+            Check In
+          </button>
 
-            <section>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Restaurant Map</h2>
-              <div className="h-[400px] bg-gray-100 rounded-lg overflow-hidden">
-                <RestaurantMap />
-              </div>
-            </section>
+          {/* Full-width map */}
+          <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <RestaurantMap />
+          </div>
+
+          {/* Bingo card */}
+          <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
+            <BingoCard onVisitUpdate={handleCheckIn} />
           </div>
         </div>
 
