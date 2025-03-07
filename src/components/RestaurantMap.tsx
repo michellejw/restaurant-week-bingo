@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
 import type { Restaurant, Sponsor } from '@/types/supabase';
@@ -131,9 +131,10 @@ export default function RestaurantMap() {
       center={[center.lat, center.lng]}
       zoom={13}
       style={{ height: '100%', width: '100%' }}
+      zoomControl={false}
+      attributionControl={false}
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ResetView restaurants={restaurants} />

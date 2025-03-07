@@ -93,6 +93,9 @@ export default function Home() {
       const stats = await DatabaseService.userStats.getOrCreate(user.id);
       console.log('📊 Received updated stats:', stats);
       setUserStats(stats);
+      
+      // Force a re-render of child components by creating a new function reference
+      setIsCheckInModalOpen(false); // Close the modal
     } catch (err) {
       console.error('❌ Error updating stats:', err);
     }

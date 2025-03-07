@@ -44,7 +44,8 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
       // Increment visit count
       await DatabaseService.userStats.incrementVisits(user.id);
       
-      // Close modal and trigger refresh
+      // Reset code, close modal and trigger refresh
+      setCode('');
       onClose();
       onCheckIn?.();
     } catch (err) {
@@ -58,7 +59,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[2000]">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Check In</h2>
         <form onSubmit={handleSubmit}>

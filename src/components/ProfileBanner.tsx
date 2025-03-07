@@ -26,14 +26,14 @@ export default function ProfileBanner() {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <p className="text-sm font-medium text-coral-700">
-              Please add your phone number so we can contact you if you win!
+              Please add your contact info so we can let you know if you win!
             </p>
           </div>
           <Link
             href="/my-info"
             className="ml-4 px-4 py-1.5 text-sm font-medium text-coral-600 bg-white rounded-lg border border-coral-200 hover:bg-coral-50 hover:text-coral-700 hover:border-coral-300 transition-colors"
           >
-            Add Phone Number
+            Add Contact Info
           </Link>
         </div>
       </div>
