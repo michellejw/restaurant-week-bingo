@@ -61,18 +61,18 @@ export default function BingoCard({ onVisitUpdate }: BingoCardProps) {
   );
 
   return (
-    <div className="grid grid-cols-5 gap-2 bg-white p-4 rounded-lg border border-gray-200">
+    <div className="grid grid-cols-3 lg:grid-cols-5 gap-[1px] bg-white rounded border-[0.5px] border-gray-100">
       {grid.map((row, i) => (
         row.map((restaurant, j) => (
           <div
             key={`${i}-${j}`}
-            className={`aspect-square p-2 flex items-center justify-center text-center border ${
+            className={`aspect-square flex items-center justify-center text-center border-[0.5px] ${
               restaurant?.visited
-                ? 'bg-coral-100 border-coral-300'
-                : 'bg-gray-50 border-gray-200'
+                ? 'bg-coral-100 border-coral-200'
+                : 'bg-gray-50 border-gray-100'
             }`}
           >
-            <span className="text-sm">
+            <span className="text-xs leading-tight px-0.5">
               {restaurant?.name || 'Coming Soon'}
             </span>
           </div>

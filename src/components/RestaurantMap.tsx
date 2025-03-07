@@ -146,12 +146,51 @@ export default function RestaurantMap() {
             icon={restaurant.visited ? icons?.visited : icons?.unvisited}
           >
             <Popup>
-              <div className="text-sm">
-                <h3 className="font-semibold mb-1">{restaurant.name}</h3>
-                <p className="text-gray-600">{restaurant.address}</p>
-                {restaurant.visited && (
-                  <p className="text-coral-600 mt-1">✓ Visited</p>
-                )}
+              <div className="text-sm max-w-[250px]">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">{restaurant.name}</h3>
+                <div className="space-y-2">
+                  <p className="text-gray-600 flex items-start">
+                    <svg className="w-4 h-4 mr-1 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {restaurant.address}
+                  </p>
+                  {restaurant.phone && (
+                    <p className="text-gray-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      {restaurant.phone}
+                    </p>
+                  )}
+                  {restaurant.url && (
+                    <a 
+                      href={restaurant.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer" 
+                      className="text-coral-600 hover:text-coral-700 flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                      Visit Website
+                    </a>
+                  )}
+                  {restaurant.description && (
+                    <p className="text-gray-600 mt-2 border-t pt-2">
+                      {restaurant.description}
+                    </p>
+                  )}
+                  {restaurant.visited && (
+                    <p className="text-coral-600 flex items-center mt-2">
+                      <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                      Visited
+                    </p>
+                  )}
+                </div>
               </div>
             </Popup>
           </Marker>
@@ -163,12 +202,33 @@ export default function RestaurantMap() {
             icon={icons?.retail}
           >
             <Popup>
-              <div className="text-sm">
-                <h3 className="font-semibold mb-1">{sponsor.name}</h3>
-                <p className="text-gray-600">{sponsor.address}</p>
-                {sponsor.promo_offer && (
-                  <p className="text-amber-600 mt-1">🎁 {sponsor.promo_offer}</p>
-                )}
+              <div className="text-sm max-w-[250px]">
+                <h3 className="font-semibold text-lg text-gray-900 mb-2">{sponsor.name}</h3>
+                <div className="space-y-2">
+                  <p className="text-gray-600 flex items-start">
+                    <svg className="w-4 h-4 mr-1 mt-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {sponsor.address}
+                  </p>
+                  {sponsor.phone && (
+                    <p className="text-gray-600 flex items-center">
+                      <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                      </svg>
+                      {sponsor.phone}
+                    </p>
+                  )}
+                  {sponsor.promo_offer && (
+                    <p className="text-amber-600 flex items-center mt-2">
+                      <svg className="w-4 h-4 mr-1 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+                      </svg>
+                      {sponsor.promo_offer}
+                    </p>
+                  )}
+                </div>
               </div>
             </Popup>
           </Marker>
