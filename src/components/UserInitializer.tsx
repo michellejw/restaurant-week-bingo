@@ -11,8 +11,11 @@ export function UserInitializer() {
 
     const initializeUser = async () => {
       try {
+        // Get primary email from Clerk user
+        const primaryEmail = user.primaryEmailAddress?.emailAddress;
+        
         // Initialize user stats if they don't exist
-        await DatabaseService.userStats.getOrCreate(user.id);
+        await DatabaseService.userStats.getOrCreate(user.id, primaryEmail);
       } catch (error) {
         console.error('Error initializing user:', error);
       }

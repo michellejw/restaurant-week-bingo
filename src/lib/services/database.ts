@@ -87,10 +87,10 @@ export const DatabaseService = {
   },
 
   users: {
-    async createIfNotExists(userId: string) {
+    async createIfNotExists(userId: string, email?: string | null) {
       const { error } = await supabase
         .from('users')
-        .insert([{ id: userId }])
+        .insert([{ id: userId, email }])
         .select()
         .single();
       
@@ -125,7 +125,7 @@ export const DatabaseService = {
   },
 
   userStats: {
-    async getOrCreate(userId: string): Promise<UserStats> {
+    async getOrCreate(userId: string, email?: string | null): Promise<UserStats> {
       try {
         // Try to get existing stats first
         const { data: existingStats } = await supabase
@@ -137,8 +137,8 @@ export const DatabaseService = {
         // If stats exist, return them
         if (existingStats) return existingStats;
 
-        // If no stats exist, ensure user exists first
-        await DatabaseService.users.createIfNotExists(userId);
+        // If no stats exist, ensure user exists first with email
+        await DatabaseService.users.createIfNotExists(userId, email);
 
         // Then create stats
         const { data: newStats, error: createError } = await supabase
