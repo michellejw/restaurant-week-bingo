@@ -20,11 +20,6 @@ export default function NavBar() {
   const closeMenu = () => setIsMenuOpen(false)
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
 
-  const handleSignOut = async () => {
-    await signOut()
-    closeMenu()
-  }
-
   return (
     <>
       <nav className="bg-white/80 backdrop-blur-sm border-b border-gray-100 fixed w-full top-0 z-[55]">
@@ -70,7 +65,6 @@ export default function NavBar() {
                     afterMultiSessionSingleSignOutUrl="/"
                     userProfileMode="navigation"
                     userProfileUrl="/user-profile"
-                    onSignOutCallback={closeMenu}
                   />
                 </div>
               )}
@@ -149,7 +143,6 @@ export default function NavBar() {
                     afterMultiSessionSingleSignOutUrl="/"
                     userProfileMode="navigation"
                     userProfileUrl="/user-profile"
-                    onSignOutCallback={closeMenu}
                   />
                 </div>
               )}

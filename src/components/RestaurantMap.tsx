@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
 import type { Restaurant, Sponsor } from '@/types/supabase';

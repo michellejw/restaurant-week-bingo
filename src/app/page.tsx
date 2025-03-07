@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useUser, SignIn, SignedIn, SignedOut } from '@clerk/nextjs';
+import Image from 'next/image';
 import { DatabaseService } from '@/lib/services/database';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
@@ -145,10 +146,13 @@ export default function Home() {
 
       <SignedOut>
         <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto text-center py-12">
-          <img
+          <Image
             src="/rest-week-logo.png"
             alt="Restaurant Week Logo"
-            className="h-80 mb-8"
+            width={320}
+            height={320}
+            className="h-80 w-auto mb-8"
+            priority
           />
           <h1 className="text-4xl font-bold text-gray-900 mb-6">
             Welcome to Restaurant Week Bingo!

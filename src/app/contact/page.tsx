@@ -1,16 +1,20 @@
 'use client'
 
 import { FaMapMarkerAlt, FaPhone } from 'react-icons/fa'
+import Image from 'next/image'
 
 export default function ContactPage() {
   return (
     <div className="min-h-screen px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto pt-3 pb-6">
         <div className="text-center mb-12">
-          <img
+          <Image
             src="/PICC-logo.png"
             alt="PICC Logo"
-            className="h-32 mb-6 mx-auto"
+            width={128}
+            height={128}
+            className="mb-6 mx-auto h-32 w-auto"
+            priority
           />
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Contact Us</h1>
         </div>
