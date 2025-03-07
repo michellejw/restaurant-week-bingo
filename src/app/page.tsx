@@ -141,23 +141,25 @@ export default function Home() {
       </SignedIn>
 
       <SignedOut>
-        <div className="max-w-3xl mx-auto text-center py-12">
+        <div className="w-full max-w-3xl mx-auto text-center py-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-6">
             Welcome to Restaurant Week Bingo!
           </h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <p className="text-xl text-gray-600 mb-12">
             Sign in to start playing and earning raffle entries by visiting local restaurants.
           </p>
-          <SignIn
-            routing="hash"
-            appearance={{
-              elements: {
-                rootBox: "w-full",
-                card: "w-full max-w-md mx-auto"
-              }
-            }}
-          />
-          <p>Don&apos;t have an account?</p>
+          <div className="w-full max-w-md mx-auto">
+            <SignIn
+              routing="hash"
+              appearance={{
+                elements: {
+                  rootBox: "w-full",
+                  card: "w-full shadow-lg",
+                  formButtonPrimary: "bg-coral-600 hover:bg-coral-700"
+                }
+              }}
+            />
+          </div>
         </div>
       </SignedOut>
     </div>

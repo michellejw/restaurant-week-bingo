@@ -2,12 +2,21 @@
 
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
+import { useState, useEffect } from 'react';
+import { DatabaseService } from '@/lib/services/database';
 
 export default function ProfileBanner() {
   const { user } = useUser();
+  const [showBanner, setShowBanner] = useState(false);
 
-  // Only show banner if user is logged in and has no phone number
-  if (!user || user.phoneNumbers.length > 0) {
+  useEffect(() => {
+    if (!user) return;
+    DatabaseService.users.getContactInfo(user.id)
+      .then(data => setShowBanner(!data?.phone))
+      .catch(console.error);
+  }, [user]);
+
+  if (!user || !showBanner) {
     return null;
   }
 
@@ -17,7 +26,7 @@ export default function ProfileBanner() {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <p className="text-sm font-medium text-coral-700">
-              Please add your info so we can contact you if you win!
+              Please add your phone number so we can contact you if you win!
             </p>
           </div>
           <Link

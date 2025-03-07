@@ -1,7 +1,3 @@
 please use the projectBrief.md file as a guide for the project.
 
-I am not trying to make something weird! I want to use patterns and approaches that are tried, tested and true. 
-
-Avoid over complicated solutions - if it seems complicated, back up and consider whether a simpler approach is better.
-
-please don't make changes to design or function if they're not needed (only do if specifically requested) - I worked hard to get it to look like it does! 
+Prefer simple solutions using patterns that have been demonstrated to work. But don't go into a loop trying to fix things. if you find you're making more than 2 or 3 adjustments, stop and ask me to check.

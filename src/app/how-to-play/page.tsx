@@ -12,13 +12,9 @@ export default function HowToPlay() {
           </div>
           <div className="space-y-4 animate-fade-in">
             <h1 className="text-4xl font-bold tracking-tight">
-              <div className="mb-4">
-                <span className="block text-gray-900 leading-tight">Pleasure Island</span>
-                <span className="block text-gray-900">Restaurant Week</span>
-              </div>
               <span className="block text-2xl">
-                <span className="text-coral-600 font-bold">Top Taster</span>
-                <span className="text-gray-700"> digital bingo card</span>
+                <span className="text-coral-600 font-bold">How to Play</span>
+                <span className="text-gray-700"> Top Taster Bingo</span>
               </span>
             </h1>
           </div>

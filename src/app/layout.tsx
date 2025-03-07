@@ -51,7 +51,7 @@ export default function RootLayout({
           <UserInitializer />
           <div className="flex flex-col min-h-screen">
             <ClientNavWrapper />
-            <div className="pt-16">
+            <div className="mt-[4rem]">
               <ProfileBanner />
               <main className="flex-grow">
                 {children}
