@@ -55,29 +55,22 @@ export default function BingoCard({ onVisitUpdate }: BingoCardProps) {
     return <div>Loading...</div>;
   }
 
-  // Create a 5x5 grid from the restaurants
-  const grid = Array(5).fill(null).map((_, i) => 
-    restaurants.slice(i * 5, (i + 1) * 5)
-  );
-
   return (
     <div className="grid grid-cols-3 lg:grid-cols-5 gap-[1px] bg-white rounded border-[0.5px] border-gray-100">
-      {grid.map((row, i) => (
-        row.map((restaurant, j) => (
+      {restaurants.map((restaurant) => (
           <div
-            key={`${i}-${j}`}
+            key={restaurant.id}
             className={`aspect-square flex items-center justify-center text-center border-[0.5px] ${
-              restaurant?.visited
+              restaurant.visited
                 ? 'bg-coral-100 border-coral-200'
                 : 'bg-gray-50 border-gray-100'
             }`}
           >
             <span className="text-xs leading-tight px-0.5">
-              {restaurant?.name || 'Coming Soon'}
+              {restaurant.name}
             </span>
           </div>
-        ))
-      ))}
+        ))}    
     </div>
   );
 } 
