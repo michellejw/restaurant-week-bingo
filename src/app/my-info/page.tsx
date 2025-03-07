@@ -100,11 +100,11 @@ export default function Settings() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 pt-3 pb-6">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Contact Information</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-2xl mx-auto px-4 pt-6 pb-8">
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Contact Information</h1>
+      <form onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="name" className="block text-sm font-semibold text-gray-900 mb-2">
             Name
           </label>
           <input
@@ -112,13 +112,13 @@ export default function Settings() {
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-coral-500 focus:ring-coral-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-coral-500 focus:ring-coral-500"
             disabled={loading}
           />
         </div>
 
         <div>
-          <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="phone" className="block text-sm font-semibold text-gray-900 mb-2">
             Phone Number
           </label>
           <input
@@ -126,11 +126,11 @@ export default function Settings() {
             id="phone"
             value={phone}
             onChange={handlePhoneChange}
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-coral-500 focus:ring-coral-500"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 shadow-sm focus:border-coral-500 focus:ring-coral-500"
             placeholder="(XXX) XXX-XXXX"
             disabled={loading}
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-2 text-sm text-gray-600">
             We&apos;ll only use this to contact you if you win a prize during Restaurant Week Bingo!
           </p>
         </div>
