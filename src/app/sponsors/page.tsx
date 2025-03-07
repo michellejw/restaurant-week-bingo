@@ -77,8 +77,8 @@ export default function SponsorsPage() {
   console.log('Render state:', { isLoading, error, sponsorsCount: sponsors.length })
 
   return (
-    <div className="min-h-screen pt-20 pb-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto pt-3 pb-6">
         <div className="text-center mb-12">
           <div className="flex justify-center mb-4">
             <FaHandshake className="text-5xl text-coral-500" />

@@ -1,16 +1,29 @@
 'use client'
 
 import Link from 'next/link'
-import { useUser, SignInButton, UserButton } from '@clerk/nextjs'
-import { useState } from 'react'
+import { useUser, SignInButton, UserButton, useAuth } from '@clerk/nextjs'
+import { useState, useEffect } from 'react'
 import { FaBars, FaTimes, FaHome } from 'react-icons/fa'
 
 export default function NavBar() {
   const { user } = useUser()
+  const { isSignedIn } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+
+  // Close menu when auth state changes
+  useEffect(() => {
+    if (!isSignedIn) {
+      setIsMenuOpen(false)
+    }
+  }, [isSignedIn])
 
   const closeMenu = () => setIsMenuOpen(false)
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
+
+  const handleSignOut = async () => {
+    await signOut()
+    closeMenu()
+  }
 
   return (
     <>
@@ -48,7 +61,19 @@ export default function NavBar() {
                   </button>
                 </SignInButton>
               )}
-              {user && <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />}
+              {user && (
+                <div className="px-3 py-2">
+                  <UserButton 
+                    appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+                    afterSignOutUrl="/"
+                    signInUrl="/sign-in"
+                    afterMultiSessionSingleSignOutUrl="/"
+                    userProfileMode="navigation"
+                    userProfileUrl="/user-profile"
+                    onSignOutCallback={closeMenu}
+                  />
+                </div>
+              )}
             </div>
 
             {/* Mobile menu button */}
@@ -117,7 +142,15 @@ export default function NavBar() {
               )}
               {user && (
                 <div className="px-3 py-2">
-                  <UserButton appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+                  <UserButton 
+                    appearance={{ elements: { avatarBox: "w-8 h-8" } }}
+                    afterSignOutUrl="/"
+                    signInUrl="/sign-in"
+                    afterMultiSessionSingleSignOutUrl="/"
+                    userProfileMode="navigation"
+                    userProfileUrl="/user-profile"
+                    onSignOutCallback={closeMenu}
+                  />
                 </div>
               )}
             </div>

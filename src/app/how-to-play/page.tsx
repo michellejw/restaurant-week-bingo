@@ -4,17 +4,21 @@ import { FaUtensils } from 'react-icons/fa'
 
 export default function HowToPlay() {
   return (
-    <main className="min-h-screen bg-gradient-to-b from-white to-gray-50 pt-20">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <main className="min-h-screen bg-gradient-to-b from-white to-gray-50">
+      <div className="max-w-3xl mx-auto px-4 pt-3 pb-6">
         <div className="text-center mb-8">
           <div className="inline-block bg-[#ff5436] p-4 rounded-lg mb-6">
             <FaUtensils className="text-3xl text-white" />
           </div>
           <div className="space-y-4 animate-fade-in">
             <h1 className="text-4xl font-bold tracking-tight">
+              <div className="mb-4">
+                <span className="block text-gray-900 leading-tight">Pleasure Island</span>
+                <span className="block text-gray-900">Restaurant Week</span>
+              </div>
               <span className="block text-2xl">
-                <span className="text-coral-600 font-bold">How to Play</span>
-                <span className="text-gray-700"> Top Taster Bingo</span>
+                <span className="text-coral-600 font-bold">Top Taster</span>
+                <span className="text-gray-700"> digital bingo card</span>
               </span>
             </h1>
           </div>

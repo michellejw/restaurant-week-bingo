@@ -102,7 +102,7 @@ export default function Home() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6">
+    <div className="max-w-7xl mx-auto px-4 pt-3 pb-6">
       <SignedIn>
         <div className="space-y-6">
           {/* Stats display */}
@@ -144,21 +144,30 @@ export default function Home() {
       </SignedIn>
 
       <SignedOut>
-        <div className="w-full max-w-3xl mx-auto text-center py-12">
+        <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto text-center py-12">
+          <img
+            src="/PICC-logo.png"
+            alt="PICC Logo"
+            className="h-24 mb-8"
+          />
           <h1 className="text-4xl font-bold text-gray-900 mb-6">
             Welcome to Restaurant Week Bingo!
           </h1>
           <p className="text-xl text-gray-600 mb-12">
             Sign in to start playing and earning raffle entries by visiting local restaurants.
           </p>
-          <div className="w-full max-w-md mx-auto">
+          <div className="flex justify-center w-full max-w-md">
             <SignIn
               routing="hash"
               appearance={{
                 elements: {
-                  rootBox: "w-full",
-                  card: "w-full shadow-lg",
+                  rootBox: "w-full flex justify-center",
+                  card: "w-full max-w-[400px] shadow-lg",
                   formButtonPrimary: "bg-coral-600 hover:bg-coral-700"
+                },
+                layout: {
+                  socialButtonsPlacement: "bottom",
+                  socialButtonsVariant: "blockButton"
                 }
               }}
             />
