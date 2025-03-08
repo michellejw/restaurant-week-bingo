@@ -36,6 +36,7 @@ export type Database = {
           longitude: number;
           is_retail: boolean;
           created_at: string;
+          logo_file: string | null;
         };
         Insert: Omit<Database['public']['Tables']['sponsors']['Row'], 'id' | 'created_at'>;
         Update: Partial<Database['public']['Tables']['sponsors']['Insert']>;

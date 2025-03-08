@@ -111,6 +111,15 @@ export default function SponsorsPage() {
                   key={sponsor.id}
                   className="card p-8 hover:shadow-lg transition-shadow duration-300 border-l-4 border-[#ff5436]"
                 >
+                  {sponsor.logo_file && (
+                    <div className="mb-6 flex justify-center">
+                      <img
+                        src={`/logos/${sponsor.logo_file}`}
+                        alt={`${sponsor.name} logo`}
+                        className="max-h-48 w-auto object-contain"
+                      />
+                    </div>
+                  )}
                   <h3 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4">{sponsor.name}</h3>
                   <div className="space-y-3">
                     <p className="text-sm text-gray-600">{sponsor.address}</p>
