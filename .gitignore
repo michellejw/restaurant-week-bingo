@@ -47,3 +47,6 @@ qr-codes/
 inputs/
 
 .idea/
+
+# clerk configuration (can include secrets)
+/.clerk/

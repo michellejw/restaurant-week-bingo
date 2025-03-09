@@ -65,7 +65,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-1">
-              Restaurant Code
+              Restaurant Word
             </label>
             <input
               type="text"
@@ -73,7 +73,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-coral-500 focus:border-coral-500"
-              placeholder="Enter code"
+              placeholder="Enter secret word"
               disabled={loading || !isLoaded}
             />
           </div>
