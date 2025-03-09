@@ -45,3 +45,5 @@ qr-codes/
 
 # input files
 inputs/
+
+.idea/
