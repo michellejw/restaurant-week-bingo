@@ -31,6 +31,7 @@ export default function CheckInModal({ isOpen, onClose }: CheckInModalProps) {
             Close
           </button>
         </div>
+
       </div>
     </div>
   );
