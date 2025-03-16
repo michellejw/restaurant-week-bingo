@@ -121,9 +121,9 @@ export default function Home() {
           {/* Wide check-in button */}
           <button
             onClick={() => setIsCheckInModalOpen(true)}
-            className="w-full py-3 px-4 bg-coral-600 text-white text-lg font-medium rounded-lg hover:bg-coral-700 transition-colors"
+            className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
           >
-            Check In
+            Thanks For A Great Restaurant Week!
           </button>
 
           {/* Full-width map */}

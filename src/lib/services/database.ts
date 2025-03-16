@@ -88,14 +88,34 @@ export const DatabaseService = {
 
   users: {
     async createIfNotExists(userId: string, email?: string | null) {
+      // First check if user exists
+      const { data: existingUser } = await supabase
+        .from('users')
+        .select('email')
+        .eq('id', userId)
+        .single();
+      
+      if (existingUser) {
+        // If user exists but has no email and we have one, update it
+        if (!existingUser.email && email) {
+          const { error: updateError } = await supabase
+            .from('users')
+            .update({ email })
+            .eq('id', userId);
+          
+          if (updateError) throw updateError;
+        }
+        return;
+      }
+
+      // If user doesn't exist, create new user
       const { error } = await supabase
         .from('users')
         .insert([{ id: userId, email }])
         .select()
         .single();
       
-      // Ignore if user already exists
-      if (error?.code === '23505') return; // Unique violation error
+      if (error?.code === '23505') return; // Ignore if user was created in parallel
       if (error) throw error;
     },
 

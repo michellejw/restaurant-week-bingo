@@ -14,7 +14,13 @@ export function UserInitializer() {
         // Get primary email from Clerk user
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
         
-        // Initialize user stats if they don't exist
+        if (!primaryEmail) {
+          console.warn('No primary email found for user:', user.id);
+          return;
+        }
+
+        // Initialize user stats and ensure email is saved
+        await DatabaseService.users.createIfNotExists(user.id, primaryEmail);
         await DatabaseService.userStats.getOrCreate(user.id, primaryEmail);
       } catch (error) {
         console.error('Error initializing user:', error);
