@@ -1,9 +1,5 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
-
 interface CheckInModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -18,7 +14,7 @@ export default function CheckInModal({ isOpen, onClose }: CheckInModalProps) {
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
         <h2 className="text-xl font-semibold text-gray-900 mb-4">Thanks For A Great Restaurant Week!</h2>
         <p className="text-gray-600 mb-6">
-          We hope you enjoyed discovering Pleasure Island's amazing restaurants! While check-ins are now closed, 
+          We hope you enjoyed discovering Pleasure Island&apos;s amazing restaurants! While check-ins are now closed, 
           we encourage you to keep supporting our local restaurants throughout the year. See you next fall for 
           more delicious adventures!
         </p>
@@ -31,7 +27,6 @@ export default function CheckInModal({ isOpen, onClose }: CheckInModalProps) {
             Close
           </button>
         </div>
-
       </div>
     </div>
   );
