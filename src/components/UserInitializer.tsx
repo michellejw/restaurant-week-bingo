@@ -19,9 +19,9 @@ export function UserInitializer() {
           return;
         }
 
-        // Initialize user stats and ensure email is saved
+        // Initialize user and user stats
         await DatabaseService.users.createIfNotExists(user.id, primaryEmail);
-        await DatabaseService.userStats.getOrCreate(user.id, primaryEmail);
+        await DatabaseService.userStats.getOrCreate(user.id);
       } catch (error) {
         console.error('Error initializing user:', error);
       }

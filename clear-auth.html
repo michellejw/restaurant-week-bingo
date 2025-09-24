@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear Authentication Data</title>
+</head>
+<body>
+    <h1>Clear Authentication Data</h1>
+    <button onclick="clearEverything()">Clear All Auth Data</button>
+    <div id="status"></div>
+    
+    <script>
+        function clearEverything() {
+            const status = document.getElementById('status');
+            
+            // Clear localStorage
+            localStorage.clear();
+            
+            // Clear sessionStorage
+            sessionStorage.clear();
+            
+            // Clear all cookies for this domain
+            document.cookie.split(";").forEach(function(c) { 
+                document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/"); 
+            });
+            
+            // Clear specific Clerk cookies
+            const clerkCookies = ['__session', '__clerk_db_jwt', '__client_uat'];
+            clerkCookies.forEach(cookie => {
+                document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+                document.cookie = `${cookie}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=localhost`;
+            });
+            
+            status.innerHTML = '<p style="color: green;">✅ Cleared all authentication data!</p><p>Now close this tab and restart your dev server.</p>';
+        }
+    </script>
+</body>
+</html>
