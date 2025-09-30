@@ -152,6 +152,26 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT SELECT ON restaurants TO anon, authenticated;
 GRANT SELECT ON sponsors TO anon, authenticated;
 
+-- Create users table for contact information
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    name TEXT,
+    phone TEXT,
+    email TEXT
+);
+
+-- Enable RLS on users table
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+
 -- Grant necessary permissions to authenticated users for their own data
 GRANT SELECT, INSERT, UPDATE ON user_stats TO authenticated;
 GRANT SELECT, INSERT ON visits TO authenticated;
+GRANT SELECT, INSERT, UPDATE ON users TO authenticated;
+
+-- NOTE: For development environments, you may want to disable RLS for easier testing:
+-- To disable RLS in development, run these commands:
+-- ALTER TABLE users DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE user_stats DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE visits DISABLE ROW LEVEL SECURITY;
