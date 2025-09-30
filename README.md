@@ -1,108 +1,160 @@
-# Restaurant Week Bingo
+# Restaurant Week Bingo 🎲🍴
 
-A web application for the local chamber of commerce that gamifies restaurant week participation through a digital bingo card system. Users can check in at participating restaurants and earn raffle entries based on their visits.
+A modern web application that gamifies restaurant week participation through a digital bingo card system. Perfect for chambers of commerce, downtown associations, and communities looking to boost local restaurant engagement.
 
-## Features
+**[Live Demo](https://picc-rest-week.waveformanalytics.com)** • **[Hosted Service Available](#-hosted-service)**
 
-- Email/password authentication
-- Interactive bingo card that updates as users visit restaurants
-- Interactive map using OpenStreetMap and Leaflet
-- Check-in system with unique restaurant codes
-- Automatic raffle entry tracking (1 entry per 4 restaurants visited)
-- Real-time visit statistics
-- Responsive design for both mobile and desktop
+## ✨ Features
 
-## Tech Stack
+- 🔐 **Secure Authentication** - Clerk-based user management
+- 🗺️ **Interactive Map** - OpenStreetMap with restaurant locations
+- 🎯 **Digital Bingo Card** - Updates in real-time as users visit restaurants  
+- 📱 **QR Code Check-ins** - Unique codes for each restaurant
+- 🎟️ **Automatic Raffle Entries** - 1 entry per 4 restaurants visited
+- 📊 **Real-time Statistics** - Visit tracking and progress display
+- 🎨 **Responsive Design** - Works perfectly on mobile and desktop
+- 👤 **User Profiles** - Contact information for prize fulfillment
+- 🏪 **Sponsor Integration** - Showcase local business sponsors
 
-- Next.js 14
-- React
-- TypeScript
-- Tailwind CSS
-- Supabase (Authentication & Database)
-- Leaflet with OpenStreetMap
+## 🛠️ Tech Stack
 
-## Setup
+- **Frontend**: Next.js 15, React, TypeScript, Tailwind CSS
+- **Authentication**: Clerk
+- **Database**: Supabase (PostgreSQL)
+- **Maps**: Leaflet with OpenStreetMap
+- **Deployment**: Vercel
+- **Environment Management**: Dev/staging/production separation
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+## 🚀 Hosted Service
 
-3. Create a Supabase project and run the SQL setup commands found in `supabase/init.sql`. This will create:
-   - `restaurants` table for restaurant information
-   - `visits` table for tracking user check-ins
-   - `user_stats` table for caching visit counts and raffle entries
-   - Necessary indexes and RLS policies
-   - Automatic triggers for updating statistics
+**Need this running for your community without the technical setup?** 
 
-4. Set up environment variables:
-   - Copy `.env.local.example` to `.env.local`
-   - Fill in your Supabase credentials
+I offer a fully hosted service that includes:
+- ✅ **Complete setup and configuration**
+- ✅ **Custom branding and domain**
+- ✅ **Restaurant data import and QR code generation**
+- ✅ **Ongoing support and maintenance**
+- ✅ **Analytics and reporting**
+- ✅ **Automatic backups and security updates**
 
-5. Run the development server:
-   ```bash
-   npm run dev
-   ```
+Perfect for chambers of commerce and downtown associations who want "it just works" without managing servers.
 
-6. Open [http://localhost:3000](http://localhost:3000) in your browser
+**[Contact me for pricing and setup →](mailto:michelle@waveformanalytics.com)**
 
-## Database Schema
+---
 
-### restaurants
-```sql
-CREATE TABLE restaurants (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    name TEXT NOT NULL,
-    address TEXT NOT NULL,
-    url TEXT,
-    code TEXT UNIQUE NOT NULL,
-    latitude FLOAT8 NOT NULL,
-    longitude FLOAT8 NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW()
-);
+## 🛠️ Self-Hosting Setup
+
+Want to run this yourself? Here's how:
+
+### Prerequisites
+- Node.js 18+
+- A Supabase account
+- A Clerk account
+- A Vercel account (for deployment)
+
+### 1. Clone and Install
+```bash
+git clone https://github.com/michellejw/restaurant-week-bingo.git
+cd restaurant-week-bingo
+npm install
 ```
 
-### visits
-```sql
-CREATE TABLE visits (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    user_id UUID REFERENCES auth.users NOT NULL,
-    restaurant_id UUID REFERENCES restaurants NOT NULL,
-    created_at TIMESTAMPTZ DEFAULT NOW(),
-    UNIQUE(user_id, restaurant_id)
-);
+### 2. Database Setup
+```bash
+# Create a new Supabase project at https://supabase.com
+# Run these SQL files in order:
+1. supabase/updated_schema.sql     # Creates all tables and functions
+2. supabase/dev_data_import.sql    # Optional: adds sample data
 ```
 
-### user_stats
-```sql
-CREATE TABLE user_stats (
-    user_id UUID PRIMARY KEY REFERENCES auth.users,
-    visit_count INTEGER DEFAULT 0,
-    raffle_entries INTEGER DEFAULT 0,
-    last_updated TIMESTAMPTZ DEFAULT NOW()
-);
+### 3. Authentication Setup
+```bash
+# Create a Clerk application at https://clerk.com
+# Configure allowed domains for your deployment
 ```
 
-## Supabase Setup
+### 4. Environment Variables
+Create `.env.local`:
+```bash
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 
-1. Enable Email Auth in Authentication settings
-2. Run all SQL commands from `supabase/init.sql` in the SQL editor
-3. The SQL file includes:
-   - Table creation
-   - RLS policies
-   - Automatic triggers for stats updates
-   - Performance indexes
+# Clerk
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=your_clerk_publishable_key
+CLERK_SECRET_KEY=your_clerk_secret_key
+```
 
-## Environment Variables
+### 5. Run Development Server
+```bash
+npm run dev
+# Open http://localhost:3000
+```
 
-- `NEXT_PUBLIC_SUPABASE_URL`: Your Supabase project URL
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Your Supabase project's anon/public key
+### 6. Deploy to Production
+- Push to GitHub
+- Connect to Vercel
+- Set environment variables in Vercel dashboard
+- Configure Clerk and Supabase for your production domain
 
-## Contributing
+For detailed setup instructions, see [`notes/DEV_SETUP_PLAN_2025-09-30.md`](notes/DEV_SETUP_PLAN_2025-09-30.md).
+
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── app/                 # Next.js app router pages
+│   ├── components/          # React components
+│   ├── lib/                # Utilities and database services
+│   └── types/              # TypeScript definitions
+├── supabase/               # Database schema and utilities
+├── public/                 # Static assets
+├── notes/                  # Project documentation
+└── dev/                    # Development utilities
+```
+
+## 🗄️ Database Schema
+
+The application uses PostgreSQL via Supabase with these main tables:
+
+- **`restaurants`** - Restaurant information and unique codes
+- **`visits`** - User check-in tracking  
+- **`user_stats`** - Cached visit counts and raffle entries
+- **`users`** - Contact information for prize fulfillment
+- **`sponsors`** - Local business sponsors
+
+Complete schema available in [`supabase/updated_schema.sql`](supabase/updated_schema.sql).
+
+## 🏗️ Architecture
+
+- **Authentication**: Clerk handles user management
+- **Database**: Supabase provides PostgreSQL with real-time features
+- **Frontend**: Next.js with server-side rendering
+- **Deployment**: Vercel with environment-based configuration
+- **Development**: Separate dev/prod environments for safe testing
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 💬 Support
+
+- **Self-hosting questions**: Open an issue on GitHub
+- **Hosted service**: Contact michelle@waveformanalytics.com
+- **Feature requests**: Submit via GitHub issues
+
+---
+
+**Built with ❤️ for local communities** by [Michelle Weirathmueller](https://waveformanalytics.com)
