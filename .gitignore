@@ -52,3 +52,7 @@ inputs/
 /.clerk/
 *.backup
 supabase/*.backup
+
+# macOS system files
+.DS_Store
+*/.DS_Store
