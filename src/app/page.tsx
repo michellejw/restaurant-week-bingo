@@ -119,12 +119,24 @@ export default function Home() {
           </div>
 
           {/* Wide check-in button */}
-          <button
-            onClick={() => setIsCheckInModalOpen(true)}
-            className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
-          >
-            Thanks For A Great Restaurant Week!
-          </button>
+          {/* Enable check-ins for development/testing */}
+          {(typeof window !== 'undefined' && 
+            (process.env.NODE_ENV === 'development' || 
+             window.location.hostname.includes('vercel.app'))) ? (
+            <button
+              onClick={() => setIsCheckInModalOpen(true)}
+              className="w-full py-3 px-4 bg-coral-600 hover:bg-coral-700 text-white text-lg font-medium rounded-lg transition-colors"
+            >
+              Check In at Restaurant
+            </button>
+          ) : (
+            <button
+              onClick={() => setIsCheckInModalOpen(true)}
+              className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
+            >
+              Thanks For A Great Restaurant Week!
+            </button>
+          )}
 
           {/* Full-width map */}
           <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
