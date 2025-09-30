@@ -50,3 +50,5 @@ inputs/
 
 # clerk configuration (can include secrets)
 /.clerk/
+*.backup
+supabase/*.backup
