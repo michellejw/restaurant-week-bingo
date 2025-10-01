@@ -90,8 +90,8 @@ export default function Home() {
     }
 
     try {
-      console.log('🔄 Fetching updated stats after check-in');
-      const stats = await DatabaseService.userStats.getOrCreate(user.id);
+      console.log('🔄 Incrementing stats after check-in');
+      const stats = await DatabaseService.userStats.incrementVisits(user.id);
       console.log('📊 Received updated stats:', stats);
       setUserStats(stats);
       

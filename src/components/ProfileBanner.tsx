@@ -3,18 +3,28 @@
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { DatabaseService } from '@/lib/services/database';
 
 export default function ProfileBanner() {
   const { user } = useUser();
   const [showBanner, setShowBanner] = useState(false);
+  const pathname = usePathname();
 
-  useEffect(() => {
+  const checkContactInfo = async () => {
     if (!user) return;
-    DatabaseService.users.getContactInfo(user.id)
-      .then(data => setShowBanner(!data?.phone))
-      .catch(console.error);
-  }, [user]);
+    try {
+      const data = await DatabaseService.users.getContactInfo(user.id);
+      setShowBanner(!data?.phone);
+    } catch (error) {
+      console.error('Error checking contact info:', error);
+    }
+  };
+
+  // Check contact info when user changes or when navigating back from /my-info
+  useEffect(() => {
+    checkContactInfo();
+  }, [user, pathname]);
 
   if (!user || !showBanner) {
     return null;
