@@ -61,14 +61,6 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         onCheckIn();
       }
       
-      // Close modal after a longer delay to show success message
-      setTimeout(() => {
-        onClose();
-        setCode('');
-        setSuccess('');
-        setError('');
-      }, 3000);
-      
     } catch (error) {
       console.error('Check-in error:', error);
       setError('An error occurred. Please try again.');
@@ -93,53 +85,72 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
             Enter the restaurant&apos;s unique code to check in and earn progress toward raffle entries!
           </p>
           
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
-                Restaurant Code
-              </label>
-              <input
-                type="text"
-                id="code"
-                value={code}
-                onChange={(e) => setCode(e.target.value.toUpperCase())}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500"
-                placeholder="Enter code..."
-                disabled={loading}
-                required
-              />
-            </div>
-            
-            {error && (
-              <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
-                {error}
+          {success ? (
+            // Success state - show celebration message
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                </svg>
               </div>
-            )}
-            
-            {success && (
-              <div className="text-sm text-green-600 bg-green-50 p-2 rounded">
+              <div className="text-lg font-medium text-green-800 bg-green-50 p-3 rounded">
                 {success}
               </div>
-            )}
-            
-            <div className="flex justify-end space-x-3 pt-4">
+              <p className="text-gray-600 text-sm">
+                Great job! Your bingo card and map have been updated with your visit.
+              </p>
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
-                disabled={loading}
+                className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 text-sm font-medium text-white bg-coral-600 rounded-md hover:bg-coral-700 disabled:opacity-50"
-                disabled={loading || !code.trim()}
-              >
-                {loading ? 'Checking In...' : 'Check In'}
+                Continue Playing
               </button>
             </div>
-          </form>
+          ) : (
+            // Code entry state - show form
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="code" className="block text-sm font-medium text-gray-700 mb-2">
+                  Restaurant Code
+                </label>
+                <input
+                  type="text"
+                  id="code"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-coral-500 focus:border-coral-500"
+                  placeholder="Enter code..."
+                  disabled={loading}
+                  required
+                />
+              </div>
+              
+              {error && (
+                <div className="text-sm text-red-600 bg-red-50 p-2 rounded">
+                  {error}
+                </div>
+              )}
+              
+              <div className="flex justify-end space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={loading}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-sm font-medium text-white bg-coral-600 rounded-md hover:bg-coral-700 disabled:opacity-50"
+                  disabled={loading || !code.trim()}
+                >
+                  {loading ? 'Checking In...' : 'Check In'}
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     );
