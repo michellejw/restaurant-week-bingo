@@ -95,8 +95,7 @@ export default function Home() {
       console.log('📊 Received updated stats:', stats);
       setUserStats(stats);
       
-      // Force a re-render of child components by creating a new function reference
-      setIsCheckInModalOpen(false); // Close the modal
+      // Do not close the modal here; let the modal show success and the user dismiss it
     } catch (err) {
       console.error('❌ Error updating stats:', err);
     }
