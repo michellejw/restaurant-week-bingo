@@ -52,7 +52,11 @@ function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
   return <FitBounds bounds={bounds} />;
 }
 
-export default function RestaurantMap() {
+interface RestaurantMapProps {
+  onVisitUpdate?: () => void;
+}
+
+export default function RestaurantMap({ onVisitUpdate }: RestaurantMapProps) {
   const { user } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
@@ -61,9 +65,9 @@ export default function RestaurantMap() {
 
   useEffect(() => {
     setIcons({
-      visited: createIcon('#ff5436'),
-      unvisited: createIcon('#94a3b8'),
-      retail: createIcon('#F59E0B', true)
+      visited: createIcon('#22c55e'), // Green for visited
+      unvisited: createIcon('#6b7280'), // Gray for unvisited  
+      retail: createIcon('#F59E0B', true) // Amber for sponsors
     });
   }, []);
 
@@ -118,7 +122,7 @@ export default function RestaurantMap() {
     if (user) {
       fetchUserVisits();
     }
-  }, [user]);
+  }, [user, onVisitUpdate]);
 
   if (loading) {
     return <div>Loading map...</div>;

@@ -61,13 +61,13 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
         onCheckIn();
       }
       
-      // Close modal after a short delay to show success message
+      // Close modal after a longer delay to show success message
       setTimeout(() => {
         onClose();
         setCode('');
         setSuccess('');
         setError('');
-      }, 1500);
+      }, 3000);
       
     } catch (error) {
       console.error('Check-in error:', error);

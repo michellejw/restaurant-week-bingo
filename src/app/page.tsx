@@ -140,7 +140,7 @@ export default function Home() {
 
           {/* Full-width map */}
           <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <RestaurantMap />
+            <RestaurantMap onVisitUpdate={handleCheckIn} />
           </div>
 
           {/* Bingo card */}
