@@ -11,10 +11,11 @@ A modern web application that gamifies restaurant week participation through a d
 - 🎯 **Digital Bingo Card** - Updates in real-time as users visit restaurants  
 - 📱 **QR Code Check-ins** - Unique codes for each restaurant
 - 🎟️ **Automatic Raffle Entries** - 1 entry per 4 restaurants visited
-- 📊 **Real-time Statistics** - Visit tracking and progress display
+- 📄 **Real-time Statistics** - Visit tracking and progress display
 - 🎨 **Responsive Design** - Works perfectly on mobile and desktop
 - 👤 **User Profiles** - Contact information for prize fulfillment
-- 🏪 **Sponsor Integration** - Showcase local business sponsors
+- 🏦 **Sponsor Integration** - Showcase local business sponsors
+- 🎁 **Promotions Display** - Restaurant specials shown in map popups
 
 ## 🛠️ Tech Stack
 
@@ -119,7 +120,7 @@ For detailed setup instructions, see [`notes/DEV_SETUP_PLAN_2025-09-30.md`](note
 
 The application uses PostgreSQL via Supabase with these main tables:
 
-- **`restaurants`** - Restaurant information and unique codes
+- **`restaurants`** - Restaurant information, unique codes, and promotions
 - **`visits`** - User check-in tracking  
 - **`user_stats`** - Cached visit counts and raffle entries
 - **`users`** - Contact information for prize fulfillment
@@ -136,18 +137,16 @@ This system provides professional tools for managing restaurant data safely acro
 Generate professional XLSX templates for collecting restaurant data:
 
 ```bash
-# Quick defaults (uses development database)
-npm run template                    # Current restaurants template
-npm run backup                      # Database backup
+# Generate interactive template (choose environment and options)
+npm run template                    # Interactive template generator
 
-# Specific environments
-npm run template:dev                # Development data
-npm run template:empty              # Empty template for new setup
-npm run template:interactive        # Choose environment interactively
-
-# Backups
-npm run backup:dev                  # Backup dev database
+# Database backups
+npm run backup                      # Backup dev database
 npm run backup:prod                 # Backup production database
+
+# Database maintenance
+npm run check-consistency           # Check for data inconsistencies
+npm run fix-user-stats             # Fix user stats if needed
 ```
 
 **Template Features:**
@@ -157,26 +156,30 @@ npm run backup:prod                 # Backup production database
 - 🎁 **Promotions Column** - For Restaurant Week specials
 - 🔒 **Professional Format** - Ready to send to chamber/partners
 
-### 📥 Import Restaurant Data
+### 📥 Smart Restaurant Import
 
-Safely import updated restaurant data from XLSX files:
+Safely import updated restaurant data with intelligent fuzzy matching:
 
 ```bash
-# Preview what will be imported (safe, no changes)
-npm run import:preview
-
-# Create backup before importing (recommended)
-npm run import:backup
-
-# Import the data (after preview and backup)
-npm run import:run
+# Smart import with automatic backups and conflict resolution
+npm run import
 ```
 
+**Smart Import Features:**
+- ✅ **Automatic backups** before any changes
+- 🎯 **Fuzzy matching** for similar restaurant names
+- 👤 **Interactive conflict resolution** with checkbox selection
+- 🔒 **Visit preservation** - user check-ins never lost
+- 🔍 **Duplicate detection** in input files
+- 🔄 **Environment selection** (dev vs production)
+
 **Import Process:**
-1. **Preview** - See exactly what will change
-2. **Backup** - Safety first with automatic database backup
-3. **Import** - Replace restaurant data with new XLSX contents
-4. **Verification** - Check results and rollback if needed
+1. **Choose environment** - Development or production database
+2. **Select XLSX file** - From available files in `supabase/data/`
+3. **Automatic backup** - Safety first, always created
+4. **Fuzzy matching** - Finds similar restaurants ("Joe's Cafe" vs "Joes cafe")
+5. **Conflict resolution** - Choose which restaurants to keep with checkboxes
+6. **Safe execution** - Preserves user visits, updates data seamlessly
 
 ### 🔄 Recommended Workflow
 
@@ -191,16 +194,17 @@ npm run import:run
 
 3. **Chamber updates:**
    - Adds new restaurants
-   - Updates existing restaurant info
+   - Updates existing restaurant info  
    - Fills in promotional offers
    - Returns completed XLSX
 
-4. **Import safely:**
+4. **Import safely with smart matching:**
    ```bash
-   npm run import:preview    # See what will change
-   npm run import:backup     # Create safety backup
-   npm run import:run        # Apply changes
+   npm run import           # One command handles everything
    ```
+   - Choose dev or production environment
+   - Resolve any name conflicts interactively
+   - User visits automatically preserved
 
 5. **Deploy to production** using standard git workflow
 
@@ -237,6 +241,7 @@ This project uses separate development and production environments:
    npm run dev                 # Local development server
    npm run backup              # Backup before changes
    npm run template            # Generate data templates
+   npm run import              # Import restaurant data safely
    ```
 
 2. **Commit to dev branch:**
@@ -260,12 +265,11 @@ This project uses separate development and production environments:
 
 5. **Production data sync:**
    ```bash
-   # Generate template from production data
-   npm run template:interactive  # Choose production
+   # Import data to production (includes backup and environment selection)
+   npm run import              # Choose production environment
    
-   # Or import to production after testing in dev
-   npm run import:backup        # Backup prod first
-   npm run import:run           # Apply changes
+   # Generate template from production data if needed
+   npm run template            # Choose production in interactive mode
    ```
 
 ### Vercel Configuration

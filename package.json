@@ -8,15 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "backup": "node scripts/backup-database.js",
-    "backup:dev": "node scripts/backup-database.js",
     "backup:prod": "NODE_ENV=production node scripts/backup-database.js",
-    "template": "node scripts/generate-restaurant-template.js --current",
-    "template:empty": "node scripts/generate-restaurant-template.js --template",
-    "template:dev": "node scripts/generate-restaurant-template.js --current",
-    "template:interactive": "node scripts/generate-restaurant-template-interactive.js",
-    "import:preview": "node scripts/import-restaurants.js --preview",
-    "import:backup": "node scripts/import-restaurants.js --backup",
-    "import:run": "node scripts/import-restaurants.js --import"
+    "template": "node scripts/generate-restaurant-template-interactive.js",
+    "import": "node scripts/smart-import-restaurants.js",
+    "check-consistency": "node scripts/check-db-consistency.js",
+    "fix-user-stats": "node scripts/fix-user-stats.js",
+    "reset-dev": "node scripts/reset-dev-database.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",

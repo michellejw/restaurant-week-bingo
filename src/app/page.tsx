@@ -90,14 +90,14 @@ export default function Home() {
     }
 
     try {
-      console.log('🔄 Incrementing stats after check-in');
-      const stats = await DatabaseService.userStats.incrementVisits(user.id);
-      console.log('📊 Received updated stats:', stats);
+      console.log('🔄 Refreshing stats after check-in (trigger handles the update)');
+      const stats = await DatabaseService.userStats.getOrCreate(user.id);
+      console.log('📊 Received refreshed stats:', stats);
       setUserStats(stats);
       
       // Do not close the modal here; let the modal show success and the user dismiss it
     } catch (err) {
-      console.error('❌ Error updating stats:', err);
+      console.error('❌ Error refreshing stats:', err);
     }
   };
 
@@ -112,7 +112,7 @@ export default function Home() {
               <div className="text-sm text-gray-600">restaurants visited</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-              <div className="text-2xl font-bold text-coral-600 mb-1">{Math.floor(userStats.visit_count / 4)}</div>
+              <div className="text-2xl font-bold text-coral-600 mb-1">{Math.floor(userStats.visit_count / 5)}</div>
               <div className="text-sm text-gray-600">raffle entries</div>
             </div>
           </div>
