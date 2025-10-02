@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
+import { RESTAURANT_WEEK_CONFIG, RestaurantWeekUtils } from '@/config/restaurant-week';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -23,6 +24,11 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   const isDevEnvironment = typeof window !== 'undefined' && 
     (process.env.NODE_ENV === 'development' || 
      window.location.hostname.includes('vercel.app'));
+
+  // Check if Restaurant Week is active
+  const isRestaurantWeekActive = RestaurantWeekUtils.isActive();
+  const daysUntilStart = RestaurantWeekUtils.getDaysUntilStart();
+  const formattedStartDate = RestaurantWeekUtils.getFormattedStartDate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,9 +86,14 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[2000]">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Check In to Restaurant</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">
+            {isRestaurantWeekActive ? 'Check In to Restaurant' : RESTAURANT_WEEK_CONFIG.messages.title}
+          </h2>
           <p className="text-gray-600 mb-4">
-            Enter the restaurant&apos;s unique code to check in and earn progress toward raffle entries!
+            {isRestaurantWeekActive 
+              ? RESTAURANT_WEEK_CONFIG.messages.duringEvent
+              : `${RESTAURANT_WEEK_CONFIG.messages.beforeStart} ${daysUntilStart > 0 ? `Only ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'} to go!` : ''}`
+            }
           </p>
           
           {success ? (
@@ -105,6 +116,29 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
                 className="w-full px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
               >
                 Continue Playing
+              </button>
+            </div>
+          ) : !isRestaurantWeekActive ? (
+            // Restaurant Week hasn't started yet - show countdown
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mb-4">
+                <svg className="w-8 h-8 text-coral-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="bg-coral-50 p-4 rounded-lg">
+                <p className="font-medium text-coral-900 mb-2">Check-ins start on:</p>
+                <p className="text-lg text-coral-800">{formattedStartDate}</p>
+                {daysUntilStart > 0 && (
+                  <p className="text-sm text-coral-600 mt-2">In {daysUntilStart} day{daysUntilStart === 1 ? '' : 's'}!</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleClose}
+                className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Got It
               </button>
             </div>
           ) : (
