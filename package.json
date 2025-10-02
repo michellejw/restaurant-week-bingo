@@ -6,7 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "backup": "node scripts/backup-database.js",
+    "backup:dev": "node scripts/backup-database.js",
+    "backup:prod": "NODE_ENV=production node scripts/backup-database.js",
+    "template": "node scripts/generate-restaurant-template.js --current",
+    "template:empty": "node scripts/generate-restaurant-template.js --template",
+    "template:dev": "node scripts/generate-restaurant-template.js --current",
+    "template:interactive": "node scripts/generate-restaurant-template-interactive.js",
+    "import:preview": "node scripts/import-restaurants.js --preview",
+    "import:backup": "node scripts/import-restaurants.js --backup",
+    "import:run": "node scripts/import-restaurants.js --import"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",
@@ -34,9 +44,11 @@
     "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "15.1.4",
+    "inquirer": "^8.2.7",
     "postcss": "^8",
     "qrcode": "^1.5.4",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "xlsx": "^0.18.5"
   }
 }

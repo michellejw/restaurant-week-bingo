@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.production
 
 # vercel
 .vercel
@@ -56,3 +57,11 @@ supabase/*.backup
 # macOS system files
 .DS_Store
 */.DS_Store
+
+# Restaurant data files (contains business info)
+supabase/data/
+*.xlsx
+*.xls
+
+# Database backups (contains user data)
+backups/

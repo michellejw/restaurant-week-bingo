@@ -32,7 +32,7 @@ A modern web application that gamifies restaurant week participation through a d
 I offer a fully hosted service that includes:
 - ✅ **Complete setup and configuration**
 - ✅ **Custom branding and domain**
-- ✅ **Restaurant data import and QR code generation**
+- ✅ **Restaurant data import
 - ✅ **Ongoing support and maintenance**
 - ✅ **Analytics and reporting**
 - ✅ **Automatic backups and security updates**
@@ -127,6 +127,90 @@ The application uses PostgreSQL via Supabase with these main tables:
 
 Complete schema available in [`supabase/updated_schema.sql`](supabase/updated_schema.sql).
 
+## 🍽️ Restaurant Data Management
+
+This system provides professional tools for managing restaurant data safely across development and production environments.
+
+### 📋 Generate Restaurant Template (for Chamber/Data Provider)
+
+Generate professional XLSX templates for collecting restaurant data:
+
+```bash
+# Quick defaults (uses development database)
+npm run template                    # Current restaurants template
+npm run backup                      # Database backup
+
+# Specific environments
+npm run template:dev                # Development data
+npm run template:empty              # Empty template for new setup
+npm run template:interactive        # Choose environment interactively
+
+# Backups
+npm run backup:dev                  # Backup dev database
+npm run backup:prod                 # Backup production database
+```
+
+**Template Features:**
+- 📝 **Instructions Sheet** - Clear guidance for data entry
+- 📊 **Restaurant Data Sheet** - Properly formatted columns
+- ✅ **Example Data** - Shows correct format (empty template only)
+- 🎁 **Promotions Column** - For Restaurant Week specials
+- 🔒 **Professional Format** - Ready to send to chamber/partners
+
+### 📥 Import Restaurant Data
+
+Safely import updated restaurant data from XLSX files:
+
+```bash
+# Preview what will be imported (safe, no changes)
+npm run import:preview
+
+# Create backup before importing (recommended)
+npm run import:backup
+
+# Import the data (after preview and backup)
+npm run import:run
+```
+
+**Import Process:**
+1. **Preview** - See exactly what will change
+2. **Backup** - Safety first with automatic database backup
+3. **Import** - Replace restaurant data with new XLSX contents
+4. **Verification** - Check results and rollback if needed
+
+### 🔄 Recommended Workflow
+
+**For Restaurant Week Updates:**
+
+1. **Generate current template:**
+   ```bash
+   npm run template
+   ```
+
+2. **Send XLSX to chamber** with current restaurants pre-filled
+
+3. **Chamber updates:**
+   - Adds new restaurants
+   - Updates existing restaurant info
+   - Fills in promotional offers
+   - Returns completed XLSX
+
+4. **Import safely:**
+   ```bash
+   npm run import:preview    # See what will change
+   npm run import:backup     # Create safety backup
+   npm run import:run        # Apply changes
+   ```
+
+5. **Deploy to production** using standard git workflow
+
+### 🗂️ File Management
+
+- **Templates:** Generated in `supabase/data/` (gitignored)
+- **Backups:** Stored in `backups/` (gitignored) 
+- **Retention:** Last 10 backups kept automatically
+- **Security:** All restaurant/user data excluded from git
+
 ## 🏗️ Architecture
 
 - **Authentication**: Clerk handles user management
@@ -134,6 +218,67 @@ Complete schema available in [`supabase/updated_schema.sql`](supabase/updated_sc
 - **Frontend**: Next.js with server-side rendering
 - **Deployment**: Vercel with environment-based configuration
 - **Development**: Separate dev/prod environments for safe testing
+
+## 🚀 Production Deployment
+
+### Environment Setup
+
+This project uses separate development and production environments:
+
+- **Development**: `.env.local` (gitignored)
+- **Production**: `.env.production` (gitignored)
+
+### Deployment Process
+
+**Standard Git Workflow:**
+
+1. **Develop and test locally:**
+   ```bash
+   npm run dev                 # Local development server
+   npm run backup              # Backup before changes
+   npm run template            # Generate data templates
+   ```
+
+2. **Commit to dev branch:**
+   ```bash
+   git add .
+   git commit -m "Add new restaurants and promotions"
+   git push origin dev
+   ```
+
+3. **Test on Vercel preview:**
+   - Preview deployment automatically created
+   - Test with development database first
+   - Verify all functionality works
+
+4. **Deploy to production:**
+   ```bash
+   git checkout main
+   git merge dev
+   git push origin main
+   ```
+
+5. **Production data sync:**
+   ```bash
+   # Generate template from production data
+   npm run template:interactive  # Choose production
+   
+   # Or import to production after testing in dev
+   npm run import:backup        # Backup prod first
+   npm run import:run           # Apply changes
+   ```
+
+### Vercel Configuration
+
+**Environment Variables:**
+- **Production**: Set in Vercel dashboard for `main` branch
+- **Preview**: Set in Vercel dashboard for preview deployments
+- **Development**: Use `.env.local` for local development
+
+**Branch Setup:**
+- `main` → Production deployment
+- `dev` → Preview deployments
+- Feature branches → Preview deployments
 
 ## 🤝 Contributing
 
