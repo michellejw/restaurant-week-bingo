@@ -22,6 +22,7 @@ interface UserStats {
 export default function Home() {
   const { user, isLoaded } = useUser();
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
+  const [statsLoading, setStatsLoading] = useState(true);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
 
@@ -37,6 +38,7 @@ export default function Home() {
       }
 
       try {
+        setStatsLoading(true);
         console.log('🚀 Fetching user stats for ID:', user.id);
         // Fetch initial stats
         const stats = await DatabaseService.userStats.getOrCreate(user.id);
@@ -44,6 +46,7 @@ export default function Home() {
         
         if (mounted) {
           setUserStats(stats);
+          setStatsLoading(false);
           setRetryCount(0);
           console.log('✅ Updated user stats in state');
         }
@@ -62,6 +65,7 @@ export default function Home() {
         }
       } finally {
         if (mounted) {
+          setStatsLoading(false);
           console.log('✅ Loading complete');
         }
       }
@@ -108,11 +112,23 @@ export default function Home() {
           {/* Stats display */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-              <div className="text-2xl font-bold text-gray-900 mb-1">{userStats.visit_count}</div>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {statsLoading ? (
+                  <div className="animate-pulse bg-gray-200 h-8 w-8 mx-auto rounded"></div>
+                ) : (
+                  userStats.visit_count
+                )}
+              </div>
               <div className="text-sm text-gray-600">restaurants visited</div>
             </div>
             <div className="bg-white p-4 rounded-lg border border-gray-200 text-center">
-              <div className="text-2xl font-bold text-coral-600 mb-1">{Math.floor(userStats.visit_count / 5)}</div>
+              <div className="text-2xl font-bold text-coral-600 mb-1">
+                {statsLoading ? (
+                  <div className="animate-pulse bg-coral-200 h-8 w-8 mx-auto rounded"></div>
+                ) : (
+                  Math.floor(userStats.visit_count / 5)
+                )}
+              </div>
               <div className="text-sm text-gray-600">raffle entries</div>
             </div>
           </div>
