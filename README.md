@@ -150,6 +150,8 @@ npm run precommit              # Pre-commit safety checks
 ```bash
 npm run backup                 # Backup dev database (full)
 npm run backup:prod            # Backup production database (full)
+npm run restaurant:backup      # Backup dev restaurants only
+npm run restaurant:backup:prod # Backup production restaurants only
 npm run sponsor:backup         # Backup dev sponsors only
 npm run sponsor:backup:prod    # Backup production sponsors only
 ```

@@ -21,7 +21,9 @@
     "db:fix-user-stats": "node scripts/fix-user-stats.js",
     "db:reset-dev": "node scripts/reset-dev-database.js",
     "template": "node scripts/generate-restaurant-template-interactive.js",
-    "import": "node scripts/smart-import-restaurants.js"
+    "import": "node scripts/smart-import-restaurants.js",
+    "restaurant:backup": "node scripts/backup-database.js",
+    "restaurant:backup:prod": "NODE_ENV=production node scripts/backup-database.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",
