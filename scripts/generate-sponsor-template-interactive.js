@@ -168,27 +168,7 @@ async function main() {
     // Create workbook with multiple sheets
     const workbook = XLSX.utils.book_new();
 
-    // Main data sheet
-    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    
-    // Set column widths
-    worksheet['!cols'] = [
-      { wch: 25 }, // Name
-      { wch: 30 }, // Address
-      { wch: 12 }, // Latitude
-      { wch: 12 }, // Longitude
-      { wch: 15 }, // Phone
-      { wch: 25 }, // Website
-      { wch: 40 }, // Description
-      { wch: 30 }, // Promo Offer
-      { wch: 15 }, // Is Retail
-      { wch: 20 }, // Logo Filename
-      { wch: 30 }  // Notes
-    ];
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sponsors');
-
-    // Instructions sheet
+    // Instructions sheet FIRST (like restaurant format)
     const instructions = [
       ['SPONSOR DATA COLLECTION INSTRUCTIONS'],
       [''],
@@ -234,6 +214,26 @@ async function main() {
     const instructionSheet = XLSX.utils.aoa_to_sheet(instructions);
     instructionSheet['!cols'] = [{ wch: 60 }];
     XLSX.utils.book_append_sheet(workbook, instructionSheet, 'Instructions');
+
+    // Main data sheet SECOND (like restaurant format)
+    const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    
+    // Set column widths
+    worksheet['!cols'] = [
+      { wch: 25 }, // Name
+      { wch: 30 }, // Address
+      { wch: 12 }, // Latitude
+      { wch: 12 }, // Longitude
+      { wch: 15 }, // Phone
+      { wch: 25 }, // Website
+      { wch: 40 }, // Description
+      { wch: 30 }, // Promo Offer
+      { wch: 15 }, // Is Retail
+      { wch: 20 }, // Logo Filename
+      { wch: 30 }  // Notes
+    ];
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Sponsors');
 
     // Example data sheet
     const examples = [
