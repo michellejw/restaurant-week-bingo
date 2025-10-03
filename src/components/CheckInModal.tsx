@@ -23,7 +23,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   // Check if we're in dev environment
   const isDevEnvironment = typeof window !== 'undefined' && 
     (process.env.NODE_ENV === 'development' || 
-     window.location.hostname.includes('vercel.app'));
+     (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
 
   // Check if Restaurant Week is active
   const isRestaurantWeekActive = RestaurantWeekUtils.isActive();

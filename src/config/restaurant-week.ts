@@ -76,8 +76,10 @@ export const RestaurantWeekUtils = {
     if (RESTAURANT_WEEK_CONFIG.testing.allowInDevelopment) {
       const isDevelopment = typeof window !== 'undefined' && 
         (process.env.NODE_ENV === 'development' || 
-         window.location.hostname.includes('vercel.app') ||
-         window.location.hostname === 'localhost');
+         // Only localhost - not Vercel deployments
+         window.location.hostname === 'localhost' ||
+         // Specific dev deployment only (configured via env var)
+         (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
       
       if (isDevelopment) {
         return true;
@@ -132,8 +134,8 @@ export const RestaurantWeekUtils = {
   getStatusInfo() {
     const isDevelopment = typeof window !== 'undefined' && 
       (process.env.NODE_ENV === 'development' || 
-       window.location.hostname.includes('vercel.app') ||
-       window.location.hostname === 'localhost');
+       window.location.hostname === 'localhost' ||
+       (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
     
     return {
       isDevelopment,
