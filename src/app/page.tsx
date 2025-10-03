@@ -23,7 +23,6 @@ interface UserStats {
 export default function Home() {
   const { user, isLoaded } = useUser();
   const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
-  const [statsLoading, setStatsLoading] = useState(true);
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
@@ -40,7 +39,6 @@ export default function Home() {
       }
 
       try {
-        setStatsLoading(true);
         console.log('🚀 Fetching user stats for ID:', user.id);
         // Fetch initial stats
         const stats = await DatabaseService.userStats.getOrCreate(user.id);
@@ -48,7 +46,6 @@ export default function Home() {
         
         if (mounted) {
           setUserStats(stats);
-          setStatsLoading(false);
           setRetryCount(0);
           setInitialLoadComplete(true);
           console.log('✅ Updated user stats in state');
@@ -68,7 +65,6 @@ export default function Home() {
         }
       } finally {
         if (mounted) {
-          setStatsLoading(false);
           console.log('✅ Loading complete');
         }
       }
