@@ -130,6 +130,20 @@ function checkRestaurantWeekConfig() {
         console.log(`🎉 Restaurant Week is active!`);
       }
     }
+    
+    // Check for testing overrides
+    const devOverride = content.includes('allowInDevelopment: true');
+    const prodOverride = content.includes('forceEnableInProduction: true');
+    
+    if (devOverride) {
+      console.log('🧪 Development override enabled (check-ins work in dev before start date)');
+    }
+    
+    if (prodOverride) {
+      console.log('🚨 WARNING: Production override is ENABLED!');
+      console.log('   This will allow check-ins in production before Restaurant Week!');
+      console.log('   Make sure this is intentional!');
+    }
   } else {
     console.log('❌ Restaurant Week config missing');
   }
