@@ -2,7 +2,7 @@
 
 A modern web application that gamifies restaurant week participation through a digital bingo card system. Perfect for chambers of commerce, downtown associations, and communities looking to boost local restaurant engagement.
 
-**[Live Demo](https://picc-rest-week.waveformanalytics.com)** • **[Hosted Service Available](#-hosted-service)**
+**[Live Demo](https://picc-rest-week.waveformanalytics.com)** • **[Hosted Service Available](#-hosted-service)** • **[Data Management Commands](#-data-management)**
 
 ## ✨ Features
 
@@ -128,26 +128,52 @@ The application uses PostgreSQL via Supabase with these main tables:
 
 Complete schema available in [`supabase/updated_schema.sql`](supabase/updated_schema.sql).
 
-## 🍽️ Restaurant Data Management
+## 📊 Data Management
 
-This system provides professional tools for managing restaurant data safely across development and production environments.
+Comprehensive tools for managing restaurant and sponsor data safely across development and production environments.
 
-### 📋 Generate Restaurant Template (for Chamber/Data Provider)
+### 🛠️ Available Commands
 
-Generate professional XLSX templates for collecting restaurant data:
-
+#### **Core Development**
 ```bash
-# Generate interactive template (choose environment and options)
-npm run template                    # Interactive template generator
-
-# Database backups
-npm run backup                      # Backup dev database
-npm run backup:prod                 # Backup production database
-
-# Database maintenance
-npm run check-consistency           # Check for data inconsistencies
-npm run fix-user-stats             # Fix user stats if needed
+npm run dev                    # Start development server
+npm run build                  # Build for production
+npm run audit                  # Production readiness audit
+npm run precommit              # Pre-commit safety checks
 ```
+
+#### **Database Backups**
+```bash
+npm run backup                 # Backup dev database (full)
+npm run backup:prod            # Backup production database (full)
+npm run sponsor:backup         # Backup dev sponsors only
+npm run sponsor:backup:prod    # Backup production sponsors only
+```
+
+#### **Restaurant Management**
+```bash
+npm run restaurant:template    # Generate restaurant Excel template
+npm run restaurant:import      # Import restaurant data with smart matching
+npm run template               # Alias for restaurant:template
+npm run import                 # Alias for restaurant:import
+```
+
+#### **Sponsor Management**
+```bash
+npm run sponsor:template       # Generate sponsor Excel template
+npm run sponsor:import         # Import sponsor data with smart matching
+```
+
+#### **Database Maintenance**
+```bash
+npm run db:check-consistency   # Check for data inconsistencies
+npm run db:fix-user-stats      # Recalculate user visit statistics
+npm run db:reset-dev           # Reset development database
+```
+
+### 🍽️ Restaurant Data Management
+
+#### **Generate Restaurant Template**
 
 **Template Features:**
 - 📝 **Instructions Sheet** - Clear guidance for data entry
@@ -208,12 +234,64 @@ npm run import
 
 5. **Deploy to production** using standard git workflow
 
+---
+
+### 🎯 Sponsor Data Management
+
+Manage local business sponsors with the same professional tools and workflows.
+
+#### **Generate Sponsor Template**
+```bash
+npm run sponsor:template       # Interactive template generator
+```
+
+**Template Options:**
+- 📝 **Empty template** - For new sponsor collection with example data
+- 📊 **Pre-filled template** - Current sponsors + space for additions
+- 📍 **Professional format** - Instructions, examples, and proper formatting
+
+#### **Import Sponsor Data** 
+```bash
+npm run sponsor:import         # Smart import with conflict resolution
+```
+
+**Sponsor Import Features:**
+- ✅ **Fuzzy matching** - Finds similar sponsor names
+- 💾 **Automatic backups** before changes
+- 🤝 **Interactive conflict resolution** - Update vs add new sponsors
+- 📍 **Coordinate validation** - Ensures valid map locations
+- 🖼️ **Logo file management** - Links to `/public/logos/` directory
+
+#### **Sponsor Features**
+- **Map Integration** - Sponsors appear on restaurant map
+- **Retail vs Non-retail** - Different icons (shopping bag vs standard marker)
+- **Logo Display** - Professional logo presentation
+- **Promotional Offers** - Highlight special deals
+- **Contact Information** - Phone, website, description
+
+---
+
 ### 🗂️ File Management
 
-- **Templates:** Generated in `supabase/data/` (gitignored)
-- **Backups:** Stored in `backups/` (gitignored) 
+**Template Files:**
+- **Location:** `supabase/data/` (gitignored)
+- **Format:** Professional Excel with instructions
+- **Types:** Restaurant and sponsor templates
+
+**Backup Files:**
+- **Location:** `backups/` (gitignored)
 - **Retention:** Last 10 backups kept automatically
-- **Security:** All restaurant/user data excluded from git
+- **Types:** Full database + sponsor-only backups
+
+**Logo Files:**
+- **Location:** `/public/logos/` (version controlled)
+- **Formats:** PNG/JPG optimized for web
+- **Naming:** kebab-case (`sponsor-name.png`)
+
+**Security:**
+- ✅ All business/user data excluded from git
+- ✅ Only scripts and documentation tracked
+- ✅ Environment-specific configurations
 
 ## 🏗️ Architecture
 
