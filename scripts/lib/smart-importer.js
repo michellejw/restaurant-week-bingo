@@ -390,7 +390,6 @@ class SmartImporter {
     }
     
     // Handle items that exist in DB but weren't processed (no matches found)
-    // This matches restaurant logic exactly - just logs them, doesn't ask
     const unprocessedExisting = existingItems.filter(existing => {
       const wasProcessed = results.toUpdate.some(update => update.existing.id === existing.id) ||
                           results.toRemove.some(remove => remove.id === existing.id);
@@ -398,14 +397,74 @@ class SmartImporter {
     });
     
     if (unprocessedExisting.length > 0) {
-      console.log(`\n📌 ${unprocessedExisting.length} existing ${this.config.displayName.toLowerCase()}s had no similar matches and will be kept unchanged:`);
-      unprocessedExisting.slice(0, 3).forEach(item => {
+      console.log(`\n📌 Found ${unprocessedExisting.length} existing ${this.config.displayName.toLowerCase()}s with no similar matches in the import file:`);
+      unprocessedExisting.slice(0, 5).forEach(item => {
         console.log(`   • "${item.name}"`);
       });
-      if (unprocessedExisting.length > 3) {
-        console.log(`   ... and ${unprocessedExisting.length - 3} more`);
+      if (unprocessedExisting.length > 5) {
+        console.log(`   ... and ${unprocessedExisting.length - 5} more`);
       }
-      console.log('');
+      
+      console.log(`\n🤔 These ${this.config.displayName.toLowerCase()}s exist in the database but are not in your import file.`);
+      console.log('What would you like to do with them?\n');
+      
+      const { unprocessedAction } = await inquirer.prompt([{
+        type: 'list',
+        name: 'unprocessedAction',
+        message: `How should unprocessed existing ${this.config.displayName.toLowerCase()}s be handled?`,
+        choices: [
+          {
+            name: `Keep them all (${unprocessedExisting.length} ${this.config.displayName.toLowerCase()}s will remain unchanged)`,
+            value: 'keep'
+          },
+          {
+            name: `Remove them all (${unprocessedExisting.length} ${this.config.displayName.toLowerCase()}s will be deleted)`,
+            value: 'remove'
+          },
+          {
+            name: 'Let me choose individually',
+            value: 'choose'
+          }
+        ]
+      }]);
+      
+      if (unprocessedAction === 'remove') {
+        // Add all unprocessed items to removal list
+        results.toRemove.push(...unprocessedExisting);
+        console.log(`✅ All ${unprocessedExisting.length} unprocessed ${this.config.displayName.toLowerCase()}s will be removed.\n`);
+        
+      } else if (unprocessedAction === 'choose') {
+        // Let user choose individually
+        console.log('\n📋 Please select which items to keep (unselected items will be removed):');
+        
+        const choices = unprocessedExisting.map(item => ({
+          name: `"${item.name}"`,
+          value: item.id,
+          checked: true // Default to keeping items
+        }));
+        
+        const { selectedToKeep } = await inquirer.prompt([{
+          type: 'checkbox',
+          name: 'selectedToKeep',
+          message: `Which ${this.config.displayName.toLowerCase()}s would you like to keep?`,
+          choices,
+          pageSize: 15
+        }]);
+        
+        // Add non-selected items to removal list
+        const selectedIds = new Set(selectedToKeep);
+        const itemsToRemove = unprocessedExisting.filter(item => !selectedIds.has(item.id));
+        results.toRemove.push(...itemsToRemove);
+        
+        const keptCount = selectedToKeep.length;
+        const removedCount = itemsToRemove.length;
+        
+        console.log(`✅ ${keptCount} ${this.config.displayName.toLowerCase()}s will be kept, ${removedCount} will be removed.\n`);
+        
+      } else {
+        // Keep all - no action needed
+        console.log(`✅ All ${unprocessedExisting.length} unprocessed ${this.config.displayName.toLowerCase()}s will be kept unchanged.\n`);
+      }
     }
     
     return results;
