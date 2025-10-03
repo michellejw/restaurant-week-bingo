@@ -7,6 +7,7 @@ import { DatabaseService } from '@/lib/services/database';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
+import { RestaurantWeekUtils } from '@/config/restaurant-week';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -134,24 +135,48 @@ export default function Home() {
           </div>
 
           {/* Wide check-in button */}
-          {/* Enable check-ins for development/testing */}
-          {(typeof window !== 'undefined' && 
-            (process.env.NODE_ENV === 'development' || 
-             (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME))) ? (
-            <button
-              onClick={() => setIsCheckInModalOpen(true)}
-              className="w-full py-3 px-4 bg-coral-600 hover:bg-coral-700 text-white text-lg font-medium rounded-lg transition-colors"
-            >
-              Check In at Restaurant
-            </button>
-          ) : (
-            <button
-              onClick={() => setIsCheckInModalOpen(true)}
-              className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
-            >
-              Thanks For A Great Restaurant Week!
-            </button>
-          )}
+          {(() => {
+            const isDevMode = typeof window !== 'undefined' && 
+              (process.env.NODE_ENV === 'development' || 
+               (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+            
+            const isRestaurantWeekActive = RestaurantWeekUtils.isActiveByDateOnly();
+            const daysUntilStart = RestaurantWeekUtils.getDaysUntilStart();
+            
+            // Development mode or Restaurant Week is active
+            if (isDevMode || isRestaurantWeekActive) {
+              return (
+                <button
+                  onClick={() => setIsCheckInModalOpen(true)}
+                  className="w-full py-3 px-4 bg-coral-600 hover:bg-coral-700 text-white text-lg font-medium rounded-lg transition-colors"
+                >
+                  Check In at Restaurant
+                </button>
+              );
+            }
+            
+            // Restaurant Week hasn't started yet
+            if (daysUntilStart > 0) {
+              return (
+                <button
+                  onClick={() => setIsCheckInModalOpen(true)}
+                  className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
+                >
+                  Restaurant Week Coming Soon!
+                </button>
+              );
+            }
+            
+            // Restaurant Week is over
+            return (
+              <button
+                onClick={() => setIsCheckInModalOpen(true)}
+                className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
+              >
+                Thanks For A Great Restaurant Week!
+              </button>
+            );
+          })()}
 
           {/* Full-width map */}
           <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
