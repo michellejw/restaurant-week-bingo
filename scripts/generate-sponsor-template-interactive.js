@@ -148,21 +148,20 @@ async function main() {
       });
     }
 
-    // Add empty rows for new sponsors
-    const emptyRowsToAdd = answers.templateType === 'prefilled' ? 5 : 10;
-    for (let i = 0; i < emptyRowsToAdd; i++) {
+    // Add example row for empty templates only (like restaurant template)
+    if (answers.templateType === 'empty') {
       worksheetData.push([
-        '', // Name
-        '', // Address
-        '', // Latitude
-        '', // Longitude
-        '', // Phone
-        '', // Website
-        '', // Description
-        '', // Promo Offer
-        'FALSE', // Is Retail (default)
-        '', // Logo Filename
-        '' // Notes
+        'Example Sponsor Co',
+        '123 Carolina Beach Ave, Carolina Beach, NC',
+        34.0335,
+        -77.8925,
+        '(910) 555-0123',
+        'https://www.examplesponsor.com',
+        'Local business supporting the community with quality services',
+        '10% off with Restaurant Week receipt',
+        'TRUE',
+        'example-sponsor.png',
+        'Remove this example row and add real sponsors'
       ]);
     }
 
@@ -288,9 +287,9 @@ async function main() {
     
     if (answers.templateType === 'prefilled') {
       console.log(`📈 Current sponsors: ${sponsors.length}`);
-      console.log(`📋 Empty rows added: ${emptyRowsToAdd}`);
+      console.log(`✨ Ready for updates and additions`);
     } else {
-      console.log(`📋 Empty rows: ${emptyRowsToAdd}`);
+      console.log(`📄 Includes example row for formatting guidance`);
     }
 
     console.log('\n📋 NEXT STEPS:');
