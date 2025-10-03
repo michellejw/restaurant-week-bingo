@@ -10,7 +10,6 @@ const inquirer = require('inquirer');
 const XLSX = require('xlsx');
 const fs = require('fs');
 const path = require('path');
-const { DatabaseService } = require('../src/lib/services/database');
 
 console.log('🎯 SPONSOR TEMPLATE GENERATOR');
 console.log('============================');
@@ -45,7 +44,7 @@ async function main() {
       }
     ]);
 
-    // Set environment variables
+    // Load environment variables
     if (answers.environment === 'prod') {
       console.log('\n🚀 Using PRODUCTION environment');
       const prodEnv = fs.readFileSync('.env.production', 'utf8');
@@ -59,6 +58,18 @@ async function main() {
       Object.assign(process.env, envVars);
     } else {
       console.log('\n🧪 Using DEVELOPMENT environment');
+      // Load dev environment from .env.local
+      if (fs.existsSync('.env.local')) {
+        const devEnv = fs.readFileSync('.env.local', 'utf8');
+        const envVars = {};
+        devEnv.split('\n').forEach(line => {
+          const [key, value] = line.split('=');
+          if (key && value) {
+            envVars[key.trim()] = value.trim();
+          }
+        });
+        Object.assign(process.env, envVars);
+      }
     }
 
     // Create output directory
@@ -72,7 +83,27 @@ async function main() {
     if (answers.templateType === 'prefilled') {
       console.log('\n📊 Fetching current sponsors...');
       try {
-        sponsors = await DatabaseService.sponsors.getAll();
+        // Create supabase client
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL,
+          process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+          {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false
+            }
+          }
+        );
+        
+        const { data, error } = await supabase
+          .from('sponsors')
+          .select('*')
+          .order('name');
+          
+        if (error) throw error;
+        sponsors = data || [];
         console.log(`✅ Found ${sponsors.length} existing sponsors`);
       } catch (error) {
         console.log('⚠️  Could not fetch sponsors:', error.message);
