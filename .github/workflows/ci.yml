@@ -1,0 +1,48 @@
+name: 🍽️ Restaurant Week Bingo CI
+
+on:
+  push:
+    branches: [ main, dev, new-v07 ]
+  pull_request:
+    branches: [ main, dev ]
+
+jobs:
+  ci-checks:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📂 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 🔧 Run production audit
+      run: node scripts/audit-production-readiness.js
+      
+    - name: 🏗️ Test build
+      run: npm run build
+      env:
+        # Use dummy values for CI build test
+        NEXT_PUBLIC_SUPABASE_URL: "https://dummy.supabase.co"
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_dummy"
+        SUPABASE_SERVICE_ROLE_KEY: "sb_secret_dummy"
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
+        CLERK_SECRET_KEY: "sk_test_dummy"
+        
+    - name: 🧹 Check linting
+      run: npm run lint
+      
+    - name: ✅ CI Summary
+      run: |
+        echo "🎉 All checks passed!"
+        echo "✅ Production audit completed"
+        echo "✅ Build successful"
+        echo "✅ Linting passed"
+        echo "🚀 Ready for deployment!"

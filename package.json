@@ -13,7 +13,9 @@
     "import": "node scripts/smart-import-restaurants.js",
     "check-consistency": "node scripts/check-db-consistency.js",
     "fix-user-stats": "node scripts/fix-user-stats.js",
-    "reset-dev": "node scripts/reset-dev-database.js"
+    "reset-dev": "node scripts/reset-dev-database.js",
+    "audit": "node scripts/audit-production-readiness.js",
+    "precommit": "node scripts/pre-commit-check.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",
