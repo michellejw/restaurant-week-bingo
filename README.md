@@ -78,6 +78,10 @@ npm install
 ### 4. Environment Variables
 Create `.env.local`:
 ```bash
+# Development hostname for enabling test features
+# Set this to your specific dev deployment hostname (just the hostname, no https://)
+NEXT_PUBLIC_DEV_HOSTNAME=your-app-git-dev-yourname.vercel.app
+
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key

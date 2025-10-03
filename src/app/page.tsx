@@ -137,7 +137,7 @@ export default function Home() {
           {/* Enable check-ins for development/testing */}
           {(typeof window !== 'undefined' && 
             (process.env.NODE_ENV === 'development' || 
-             window.location.hostname.includes('vercel.app'))) ? (
+             (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME))) ? (
             <button
               onClick={() => setIsCheckInModalOpen(true)}
               className="w-full py-3 px-4 bg-coral-600 hover:bg-coral-700 text-white text-lg font-medium rounded-lg transition-colors"
