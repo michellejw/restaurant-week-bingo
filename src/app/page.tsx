@@ -61,6 +61,10 @@ export default function Home() {
                 setRetryCount(prev => prev + 1);
               }
             }, (retryCount + 1) * 1000);
+          } else {
+            // After max retries, still mark as complete to stop loading animation
+            console.log('❌ Max retries reached, stopping attempts');
+            setInitialLoadComplete(true);
           }
         }
       } finally {
@@ -70,7 +74,7 @@ export default function Home() {
       }
     };
 
-    if (isLoaded && !initialLoadComplete) {
+    if (isLoaded && user?.id) {
       console.log('🔄 Conditions met, running initialize');
       initialize();
     } else if (!isLoaded) {
@@ -84,7 +88,7 @@ export default function Home() {
       }
       console.log('🧹 Cleanup: component unmounted');
     };
-  }, [user?.id, isLoaded, retryCount, initialLoadComplete]);
+  }, [user?.id, isLoaded, retryCount]);
 
   const handleCheckIn = async () => {
     if (!user?.id) {
