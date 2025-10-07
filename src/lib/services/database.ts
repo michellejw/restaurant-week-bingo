@@ -126,6 +126,11 @@ export const DatabaseService = {
         .eq('id', userId)
         .single();
       
+      // If user doesn't exist yet or no data found, return null (not an error)
+      if (error?.code === 'PGRST116' || !data) {
+        return null;
+      }
+      
       if (error) throw error;
       return data;
     },

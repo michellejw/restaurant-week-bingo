@@ -15,9 +15,12 @@ export default function ProfileBanner() {
     if (!user) return;
     try {
       const data = await DatabaseService.users.getContactInfo(user.id);
-      setShowBanner(!data?.phone);
+      // Show banner if no data or no phone number
+      setShowBanner(!data || !data.phone);
     } catch (error) {
       console.error('Error checking contact info:', error);
+      // On error, show banner to be safe
+      setShowBanner(true);
     }
   };
 
