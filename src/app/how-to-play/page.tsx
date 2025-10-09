@@ -2,6 +2,7 @@
 
 import { FaUtensils } from 'react-icons/fa'
 import { useUser, SignInButton } from '@clerk/nextjs'
+import Link from 'next/link'
 
 export default function HowToPlay() {
   const { user } = useUser()
@@ -69,16 +70,17 @@ export default function HowToPlay() {
 
           {user && (
             <section className="card p-8 bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-center">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">You're All Set!</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">You&apos;re All Set!</h2>
               <p className="text-gray-600 mb-6">
                 Welcome back! Head to your dashboard to check your bingo card and start checking in at restaurants.
               </p>
-              <a 
+              <Link 
                 href="/"
                 className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-lg"
+                legacyBehavior
               >
                 Go to My Dashboard
-              </a>
+              </Link>
             </section>
           )}
         </div>
