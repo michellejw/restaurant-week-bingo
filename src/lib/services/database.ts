@@ -126,6 +126,11 @@ export const DatabaseService = {
         .eq('id', userId)
         .single();
       
+      // If user doesn't exist yet or no data found, return null (not an error)
+      if (error?.code === 'PGRST116' || !data) {
+        return null;
+      }
+      
       if (error) throw error;
       return data;
     },
@@ -146,18 +151,29 @@ export const DatabaseService = {
 
   userStats: {
     async getOrCreate(userId: string): Promise<UserStats> {
+      const startTime = Date.now();
+      console.log('🔍 Getting user stats for:', userId);
+      
       try {
         // Try to get existing stats first
+        const queryStart = Date.now();
         const { data: existingStats } = await supabase
           .from('user_stats')
           .select('*')
           .eq('user_id', userId)
           .single();
+        
+        console.log(`📊 Initial stats query took: ${Date.now() - queryStart}ms`);
 
         // If stats exist, return them
-        if (existingStats) return existingStats;
+        if (existingStats) {
+          console.log(`✅ Found existing stats in ${Date.now() - startTime}ms`);
+          return existingStats;
+        }
 
         // Create new user stats entry
+        console.log('🆕 Creating new user stats...');
+        const createStart = Date.now();
         const { data: newStats, error: createError } = await supabase
           .from('user_stats')
           .insert([{ 
@@ -183,9 +199,11 @@ export const DatabaseService = {
           throw createError;
         }
 
+        console.log(`✅ Created new stats in ${Date.now() - createStart}ms`);
+        console.log(`⏱️ Total getOrCreate time: ${Date.now() - startTime}ms`);
         return newStats;
       } catch (error) {
-        console.error('Error in getOrCreate:', error);
+        console.error(`❌ Error in getOrCreate (${Date.now() - startTime}ms):`, error);
         throw error;
       }
     },

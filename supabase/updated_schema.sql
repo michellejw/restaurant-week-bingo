@@ -112,17 +112,12 @@ ALTER TABLE visits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
 ALTER TABLE sponsors ENABLE ROW LEVEL SECURITY;
 
--- User stats policies
-CREATE POLICY "Enable read for users based on user_id" ON user_stats
-    FOR SELECT TO authenticated
-    USING (true);
-
-CREATE POLICY "Enable update for users based on user_id" ON user_stats
-    FOR UPDATE TO authenticated
-    USING (true);
-
-CREATE POLICY "Enable insert for users based on user_id" ON user_stats
-    FOR INSERT TO authenticated
+-- User stats policies - Compatible with Clerk authentication
+-- These policies allow both anon (frontend) and service_role (scripts) access
+CREATE POLICY "Allow all operations for app" ON user_stats
+    FOR ALL
+    TO anon, service_role
+    USING (true)
     WITH CHECK (true);
 
 -- Restaurant policies - allow public read access
@@ -135,13 +130,11 @@ CREATE POLICY "Enable read access for all users" ON sponsors
     FOR SELECT
     USING (true);
 
--- Visit policies
-CREATE POLICY "Enable read for users based on user_id" ON visits
-    FOR SELECT TO authenticated
-    USING (true);
-
-CREATE POLICY "Enable insert for users based on user_id" ON visits
-    FOR INSERT TO authenticated
+-- Visit policies - Compatible with Clerk authentication
+CREATE POLICY "Allow all operations for app" ON visits
+    FOR ALL
+    TO anon, service_role
+    USING (true)
     WITH CHECK (true);
 
 -- Grant necessary permissions
@@ -165,13 +158,26 @@ CREATE TABLE users (
 -- Enable RLS on users table
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
--- Grant necessary permissions to authenticated users for their own data
-GRANT SELECT, INSERT, UPDATE ON user_stats TO authenticated;
-GRANT SELECT, INSERT ON visits TO authenticated;
-GRANT SELECT, INSERT, UPDATE ON users TO authenticated;
+-- Users table policy - Compatible with Clerk authentication
+CREATE POLICY "Allow all operations for app" ON users
+    FOR ALL
+    TO anon, service_role
+    USING (true)
+    WITH CHECK (true);
 
--- NOTE: For development environments, you may want to disable RLS for easier testing:
--- To disable RLS in development, run these commands:
--- ALTER TABLE users DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE user_stats DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE visits DISABLE ROW LEVEL SECURITY;
+-- Grant necessary permissions for Clerk authentication pattern
+-- Frontend (anon key) needs these permissions
+GRANT SELECT, INSERT, UPDATE ON user_stats TO anon;
+GRANT SELECT, INSERT ON visits TO anon;
+GRANT SELECT, INSERT, UPDATE ON users TO anon;
+
+-- Service role (scripts) needs full permissions
+GRANT ALL ON user_stats TO service_role;
+GRANT ALL ON visits TO service_role;
+GRANT ALL ON users TO service_role;
+GRANT SELECT ON restaurants TO service_role;
+GRANT SELECT ON sponsors TO service_role;
+
+-- NOTE: This schema is compatible with Clerk authentication in both dev and production.
+-- The RLS policies allow both anon (frontend) and service_role (scripts) access,
+-- which matches the hybrid Clerk + Supabase architecture used by this application.
