@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
@@ -9,21 +9,25 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
 // Modern SVG marker icons - moved inside component to ensure client-side only
-const createIcon = (fillColor: string, isRetail: boolean = false) => {
+const createIcon = (fillColor: string, isRetail: boolean = false, isSelected: boolean = false) => {
+  const size: [number, number] = isSelected ? [28, 42] : [20, 30];
+  const viewBox = isSelected ? "0 0 28 42" : "0 0 20 30";
+  
   return new L.DivIcon({
     html: `
-      <svg width="20" height="30" viewBox="0 0 20 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="${size[0]}" height="${size[1]}" viewBox="${viewBox}" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- White outline/stroke -->
-        <path d="M10 1C5.02944 1 1 5.02944 1 10C1 16.6667 10 29 10 29C10 29 19 16.6667 19 10C19 5.02944 14.9706 1 10 1Z" fill="white" stroke="#333" stroke-width="1"/>
+        <path d="M${isSelected ? '14' : '10'} 1C${isSelected ? '7.04116 1 1.4 6.64116 1.4 14C1.4 23.3333 14 41 14 41C14 41 26.6 23.3333 26.6 14C26.6 6.64116 20.9588 1 14 1Z' : '5.02944 1 1 5.02944 1 10C1 16.6667 10 29 10 29C10 29 19 16.6667 19 10C19 5.02944 14.9706 1 10 1Z'}" fill="white" stroke="#333" stroke-width="${isSelected ? '2' : '1'}"/>
         <!-- Main marker fill -->
-        <path d="M10 2C5.58172 2 2 5.58172 2 10C2 16 10 27 10 27C10 27 18 16 18 10C18 5.58172 14.4183 2 10 2Z" fill="${fillColor}"/>
-        ${isRetail ? '<circle cx="10" cy="10" r="4" fill="white" stroke="#333" stroke-width="1"/>' : ''}
+        <path d="M${isSelected ? '14' : '10'} ${isSelected ? '2.8' : '2'}C${isSelected ? '8.12325 2.8 2.8 8.12325 2.8 14C2.8 22.4 14 38.2 14 38.2C14 38.2 25.2 22.4 25.2 14C25.2 8.12325 19.8767 2.8 14 2.8Z' : '5.58172 2 2 5.58172 2 10C2 16 10 27 10 27C10 27 18 16 18 10C18 5.58172 14.4183 2 10 2Z'}" fill="${fillColor}"/>
+        ${isRetail ? `<circle cx="${isSelected ? '14' : '10'}" cy="${isSelected ? '14' : '10'}" r="${isSelected ? '5.6' : '4'}" fill="white" stroke="#333" stroke-width="${isSelected ? '1.4' : '1'}"/>` : ''}
+        ${isSelected ? `<circle cx="${isSelected ? '14' : '10'}" cy="${isSelected ? '14' : '10'}" r="3" fill="white" opacity="0.8"/>` : ''}
       </svg>
     `,
-    className: '',
-    iconSize: [20, 30],
-    iconAnchor: [10, 30],
-    popupAnchor: [0, -30]
+    className: isSelected ? 'selected-marker' : '',
+    iconSize: size,
+    iconAnchor: [size[0] / 2, size[1]],
+    popupAnchor: [0, -size[1]]
   });
 };
 
@@ -40,8 +44,16 @@ function FitBounds({ bounds }: { bounds: LatLngBounds }) {
   return null;
 }
 
-function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
-  if (!restaurants.length) return null;
+function ResetView({ restaurants, targetRestaurantId, hasEverBeenTargeted }: { 
+  restaurants: Restaurant[], 
+  targetRestaurantId?: string | null,
+  hasEverBeenTargeted?: boolean
+}) {
+  // Don't reset if:
+  // 1. No restaurants
+  // 2. A restaurant is currently selected
+  // 3. A restaurant has ever been selected (to prevent zoom-out on deselection)
+  if (!restaurants.length || targetRestaurantId || hasEverBeenTargeted) return null;
 
   // Calculate bounds from restaurant locations
   const lats = restaurants.map(r => r.latitude);
@@ -54,22 +66,62 @@ function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
   return <FitBounds bounds={bounds} />;
 }
 
+// Component to handle map clicks for deselection
+function MapClickHandler({ onRestaurantDeselect, targetRestaurantId }: { onRestaurantDeselect?: () => void, targetRestaurantId: string | null }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    const handleMapClick = () => {
+      if (targetRestaurantId && onRestaurantDeselect) {
+        onRestaurantDeselect();
+      }
+    };
+    
+    map.on('click', handleMapClick);
+    
+    return () => {
+      map.off('click', handleMapClick);
+    };
+  }, [map, onRestaurantDeselect, targetRestaurantId]);
+  
+  return null;
+}
+
 // Component to center map on a specific restaurant
-function MapController({ targetRestaurantId, restaurants }: { targetRestaurantId: string | null, restaurants: Restaurant[] }) {
+function MapController({ 
+  targetRestaurantId, 
+  restaurants, 
+  onSetHasEverBeenTargeted 
+}: { 
+  targetRestaurantId: string | null, 
+  restaurants: Restaurant[],
+  onSetHasEverBeenTargeted: () => void
+}) {
   const map = useMap();
   
   useEffect(() => {
     if (targetRestaurantId && restaurants.length > 0) {
       const restaurant = restaurants.find(r => r.id === targetRestaurantId);
       if (restaurant) {
-        // Center and zoom to the restaurant with a nice zoom level
-        map.setView([restaurant.latitude, restaurant.longitude], 16, {
+        // Mark that we've ever targeted a restaurant
+        onSetHasEverBeenTargeted();
+        
+        const targetLat = restaurant.latitude;
+        const targetLng = restaurant.longitude;
+        
+        // Always set view regardless of current position
+        // Stop any ongoing animations first
+        map.stop();
+        
+        // Set view with consistent zoom level and smooth animation
+        map.setView([targetLat, targetLng], 16, {
           animate: true,
-          duration: 1.0
+          duration: 1.0,
+          easeLinearity: 0.25
         });
       }
     }
-  }, [map, targetRestaurantId, restaurants]);
+  }, [map, targetRestaurantId, restaurants, onSetHasEverBeenTargeted]);
   
   return null;
 }
@@ -77,37 +129,58 @@ function MapController({ targetRestaurantId, restaurants }: { targetRestaurantId
 interface RestaurantMapProps {
   onVisitUpdate?: () => void;
   targetRestaurantId?: string | null;
+  onRestaurantSelect?: (restaurantId: string) => void;
+  onRestaurantDeselect?: () => void;
 }
 
 
-export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: RestaurantMapProps) {
+export default function RestaurantMap({ onVisitUpdate, targetRestaurantId, onRestaurantSelect, onRestaurantDeselect }: RestaurantMapProps) {
   const { user } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
-  const [icons, setIcons] = useState<{ visited: L.DivIcon; unvisited: L.DivIcon; retail: L.DivIcon } | null>(null);
+  const [hasEverBeenTargeted, setHasEverBeenTargeted] = useState(false);
+  const [icons, setIcons] = useState<{ 
+    visited: L.DivIcon; 
+    unvisited: L.DivIcon; 
+    retail: L.DivIcon;
+    selectedVisited: L.DivIcon;
+    selectedUnvisited: L.DivIcon;
+  } | null>(null);
 
   useEffect(() => {
     setIcons({
       visited: createIcon('#10b981'), // Emerald green for visited
       unvisited: createIcon('#6b7280'), // Gray for unvisited  
-      retail: createIcon('#f59e0b', true) // Amber for sponsors
+      retail: createIcon('#f59e0b', true), // Amber for sponsors
+      selectedVisited: createIcon('#dc2626', false, true), // Bright red for selected visited
+      selectedUnvisited: createIcon('#dc2626', false, true) // Bright red for selected unvisited
     });
   }, []);
 
-  // Fetch restaurants and sponsors
+  // Fetch restaurants, sponsors, and user visits all together
   useEffect(() => {
-    const fetchRestaurants = async () => {
+    const fetchAllData = async () => {
+      if (!user?.id) {
+        return;
+      }
+
       try {
-        const [restaurantsData, sponsorsData] = await Promise.all([
+        const [restaurantsData, sponsorsData, visits] = await Promise.all([
           DatabaseService.restaurants.getAll(),
-          DatabaseService.sponsors.getAll()
+          DatabaseService.sponsors.getAll(),
+          DatabaseService.visits.getByUser(user.id)
         ]);
         
-        setRestaurants(restaurantsData.map(r => ({
+        const visitedIds = new Set(visits.map(v => v.restaurant_id));
+        
+        // Set restaurants with correct visited status from the start
+        const restaurantsWithVisits = restaurantsData.map(r => ({
           ...r,
-          visited: false
-        })));
+          visited: visitedIds.has(r.id)
+        }));
+        
+        setRestaurants(restaurantsWithVisits);
         setSponsors(sponsorsData);
       } catch (e) {
         console.error('Error fetching data:', e);
@@ -117,34 +190,7 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: Res
     };
 
     if (user) {
-      fetchRestaurants();
-    }
-  }, [user]);
-
-  // Fetch user visits when user is available
-  useEffect(() => {
-    const fetchUserVisits = async () => {
-      if (!user?.id) {
-        return;
-      }
-
-      try {
-        const visits = await DatabaseService.visits.getByUser(user.id);
-        const visitedIds = new Set(visits.map(v => v.restaurant_id));
-        
-        setRestaurants(current => 
-          current.map(r => ({
-            ...r,
-            visited: visitedIds.has(r.id)
-          }))
-        );
-      } catch (e) {
-        console.error('Error fetching user visits:', e);
-      }
-    };
-
-    if (user) {
-      fetchUserVisits();
+      fetchAllData();
     }
   }, [user, onVisitUpdate]);
 
@@ -165,16 +211,49 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: Res
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
-      <ResetView restaurants={restaurants} />
-      <MapController targetRestaurantId={targetRestaurantId} restaurants={restaurants} />
+      <ResetView 
+        restaurants={restaurants} 
+        targetRestaurantId={targetRestaurantId} 
+        hasEverBeenTargeted={hasEverBeenTargeted}
+      />
+      <MapController 
+        targetRestaurantId={targetRestaurantId || null} 
+        restaurants={restaurants}
+        onSetHasEverBeenTargeted={() => setHasEverBeenTargeted(true)}
+      />
+      <MapClickHandler onRestaurantDeselect={onRestaurantDeselect} targetRestaurantId={targetRestaurantId || null} />
       {/* Restaurants */}
-      {restaurants.map((restaurant, index) => (
-        <Marker
-          key={restaurant.id}
-          position={[restaurant.latitude, restaurant.longitude]}
-          icon={restaurant.visited ? icons?.visited : icons?.unvisited}
-          zIndexOffset={restaurant.visited ? 1000 : 500 + index} // Visited markers on top
-        >
+      {restaurants.map((restaurant, index) => {
+        const isSelected = targetRestaurantId === restaurant.id;
+        let icon;
+        let zIndex;
+        
+        if (isSelected) {
+          icon = restaurant.visited ? icons?.selectedVisited : icons?.selectedUnvisited;
+          zIndex = 2000; // Selected markers on top of everything
+        } else {
+          icon = restaurant.visited ? icons?.visited : icons?.unvisited;
+          zIndex = restaurant.visited ? 1000 : 500 + index;
+        }
+        
+        return (
+          <Marker
+            key={restaurant.id}
+            position={[restaurant.latitude, restaurant.longitude]}
+            icon={icon}
+            zIndexOffset={zIndex}
+            eventHandlers={{
+              click: () => {
+                if (isSelected) {
+                  // If clicking the already selected restaurant, deselect it
+                  onRestaurantDeselect?.();
+                } else {
+                  // If clicking a different restaurant, select it (this will auto-deselect previous)
+                  onRestaurantSelect?.(restaurant.id);
+                }
+              }
+            }}
+          >
           <Popup>
             <div className="text-sm max-w-[250px]">
               <h3 className="font-semibold text-lg text-gray-900 mb-2">{restaurant.name}</h3>
@@ -231,8 +310,9 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: Res
               </div>
             </div>
           </Popup>
-        </Marker>
-      ))}
+          </Marker>
+        );
+      })}
       {/* Sponsors */}
       {sponsors.map((sponsor) => (
         <Marker

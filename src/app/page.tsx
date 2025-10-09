@@ -110,9 +110,16 @@ export default function Home() {
   };
 
   const handleRestaurantSelect = (restaurantId: string) => {
-    setSelectedRestaurantId(restaurantId);
-    // Clear selection after a brief moment to allow for re-selecting the same restaurant
-    setTimeout(() => setSelectedRestaurantId(null), 1500);
+    // If empty string is passed, deselect
+    if (restaurantId === '') {
+      setSelectedRestaurantId(null);
+    } else {
+      setSelectedRestaurantId(restaurantId);
+    }
+  };
+
+  const handleRestaurantDeselect = () => {
+    setSelectedRestaurantId(null);
   };
 
   return (
@@ -192,6 +199,8 @@ export default function Home() {
             <RestaurantMap 
               onVisitUpdate={handleCheckIn} 
               targetRestaurantId={selectedRestaurantId}
+              onRestaurantSelect={handleRestaurantSelect}
+              onRestaurantDeselect={handleRestaurantDeselect}
             />
           </div>
 
@@ -200,6 +209,7 @@ export default function Home() {
             <BingoCard 
               onVisitUpdate={handleCheckIn}
               onRestaurantSelect={handleRestaurantSelect}
+              selectedRestaurantId={selectedRestaurantId}
             />
           </div>
         </div>
