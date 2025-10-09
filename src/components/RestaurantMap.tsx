@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
@@ -54,12 +54,33 @@ function ResetView({ restaurants }: { restaurants: Restaurant[] }) {
   return <FitBounds bounds={bounds} />;
 }
 
+// Component to center map on a specific restaurant
+function MapController({ targetRestaurantId, restaurants }: { targetRestaurantId: string | null, restaurants: Restaurant[] }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    if (targetRestaurantId && restaurants.length > 0) {
+      const restaurant = restaurants.find(r => r.id === targetRestaurantId);
+      if (restaurant) {
+        // Center and zoom to the restaurant with a nice zoom level
+        map.setView([restaurant.latitude, restaurant.longitude], 16, {
+          animate: true,
+          duration: 1.0
+        });
+      }
+    }
+  }, [map, targetRestaurantId, restaurants]);
+  
+  return null;
+}
+
 interface RestaurantMapProps {
   onVisitUpdate?: () => void;
+  targetRestaurantId?: string | null;
 }
 
 
-export default function RestaurantMap({ onVisitUpdate }: RestaurantMapProps) {
+export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: RestaurantMapProps) {
   const { user } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
