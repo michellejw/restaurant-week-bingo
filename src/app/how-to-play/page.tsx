@@ -74,12 +74,10 @@ export default function HowToPlay() {
               <p className="text-gray-600 mb-6">
                 Welcome back! Head to your dashboard to check your bingo card and start checking in at restaurants.
               </p>
-              <Link 
-                href="/"
-                className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-lg"
-                legacyBehavior
-              >
-                Go to My Dashboard
+              <Link href="/">
+                <button className="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-8 rounded-lg transition-colors text-lg">
+                  Go to My Dashboard
+                </button>
               </Link>
             </section>
           )}
