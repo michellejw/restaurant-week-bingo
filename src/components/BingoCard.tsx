@@ -13,9 +13,10 @@ interface Restaurant {
 
 interface BingoCardProps {
   onVisitUpdate?: () => void;
+  onRestaurantSelect?: (restaurantId: string) => void;
 }
 
-export default function BingoCard({ onVisitUpdate }: BingoCardProps) {
+export default function BingoCard({ onVisitUpdate, onRestaurantSelect }: BingoCardProps) {
   const { user, isLoaded } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,18 +59,20 @@ export default function BingoCard({ onVisitUpdate }: BingoCardProps) {
   return (
     <div className="grid grid-cols-3 lg:grid-cols-5 gap-[1px] bg-white rounded border-[0.5px] border-gray-100">
       {restaurants.map((restaurant) => (
-          <div
+          <button
             key={restaurant.id}
-            className={`aspect-square flex items-center justify-center text-center border-[0.5px] ${
+            onClick={() => onRestaurantSelect?.(restaurant.id)}
+            className={`aspect-square flex items-center justify-center text-center border-[0.5px] transition-all duration-200 hover:scale-105 hover:shadow-md hover:z-10 relative ${
               restaurant.visited
-                ? 'bg-coral-100 border-coral-200'
-                : 'bg-gray-50 border-gray-100'
+                ? 'bg-coral-100 border-coral-200 hover:bg-coral-200'
+                : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
             }`}
+            title={`Click to view ${restaurant.name} on map`}
           >
-            <span className="text-xs leading-tight px-0.5">
+            <span className="text-xs leading-tight px-0.5 pointer-events-none">
               {restaurant.name}
             </span>
-          </div>
+          </button>
         ))}    
     </div>
   );

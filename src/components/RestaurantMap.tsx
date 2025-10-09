@@ -166,6 +166,7 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId }: Res
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
       <ResetView restaurants={restaurants} />
+      <MapController targetRestaurantId={targetRestaurantId} restaurants={restaurants} />
       {/* Restaurants */}
       {restaurants.map((restaurant, index) => (
         <Marker
