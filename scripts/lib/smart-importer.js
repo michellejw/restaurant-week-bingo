@@ -110,6 +110,9 @@ class SmartImporter {
   async initialize() {
     console.log(`${this.config.emoji} Smart ${this.config.displayName} Import Tool\n`);
     
+    // Small delay to ensure console is ready
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     // Choose environment
     const { environment } = await inquirer.prompt([{
       type: 'list',
