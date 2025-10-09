@@ -26,6 +26,7 @@ export default function Home() {
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
 
   // Initialize and fetch initial data
   useEffect(() => {
@@ -108,6 +109,19 @@ export default function Home() {
     }
   };
 
+  const handleRestaurantSelect = (restaurantId: string) => {
+    // If empty string is passed, deselect
+    if (restaurantId === '') {
+      setSelectedRestaurantId(null);
+    } else {
+      setSelectedRestaurantId(restaurantId);
+    }
+  };
+
+  const handleRestaurantDeselect = () => {
+    setSelectedRestaurantId(null);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 pt-3 pb-6">
       <SignedIn>
@@ -182,12 +196,21 @@ export default function Home() {
 
           {/* Full-width map */}
           <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <RestaurantMap onVisitUpdate={handleCheckIn} />
+            <RestaurantMap 
+              onVisitUpdate={handleCheckIn} 
+              targetRestaurantId={selectedRestaurantId}
+              onRestaurantSelect={handleRestaurantSelect}
+              onRestaurantDeselect={handleRestaurantDeselect}
+            />
           </div>
 
           {/* Bingo card */}
           <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
-            <BingoCard onVisitUpdate={handleCheckIn} />
+            <BingoCard 
+              onVisitUpdate={handleCheckIn}
+              onRestaurantSelect={handleRestaurantSelect}
+              selectedRestaurantId={selectedRestaurantId}
+            />
           </div>
         </div>
 
