@@ -41,7 +41,7 @@ export const RESTAURANT_WEEK_CONFIG = {
      * ⚠️  REMEMBER TO SET BACK TO FALSE BEFORE RESTAURANT WEEK!
      * ⚠️  This affects the live site!
      */
-    forceEnableInProduction: false
+    forceEnableInProduction: true
   },
   
   /**
