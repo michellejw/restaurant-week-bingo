@@ -105,6 +105,15 @@ class RestaurantMapEditor {
             this.showFileStatus('Processing file...', 'loading');
             
             const data = await this.readExcelFile(file);
+            
+            // Ask user to select data type instead of auto-detecting
+            const dataType = await this.askForDataType();
+            if (!dataType) {
+                this.showFileStatus('Import cancelled', 'error');
+                return;
+            }
+            
+            this.dataType = dataType;
             const { restaurants, errors } = this.parseRestaurantData(data);
             
             this.restaurants = restaurants;
@@ -166,6 +175,36 @@ class RestaurantMapEditor {
         });
     }
     
+    askForDataType() {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('data-type-modal');
+            const restaurantBtn = modal.querySelector('[data-type="restaurants"]');
+            const sponsorBtn = modal.querySelector('[data-type="sponsors"]');
+            const cancelBtn = document.getElementById('cancel-data-type');
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Handle selection
+            const handleSelection = (dataType) => {
+                modal.style.display = 'none';
+                resolve(dataType);
+            };
+            
+            // Event listeners
+            restaurantBtn.onclick = () => handleSelection('restaurants');
+            sponsorBtn.onclick = () => handleSelection('sponsors');
+            cancelBtn.onclick = () => handleSelection(null);
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleSelection(null);
+                }
+            };
+        });
+    }
+    
     detectDataType(rawData) {
         // Look for restaurant-specific patterns
         const hasRestaurantCode = rawData.some(row => 
@@ -196,9 +235,7 @@ class RestaurantMapEditor {
     }
     
     parseRestaurantData(rawData) {
-        // Detect data type first
-        this.dataType = this.detectDataType(rawData);
-        console.log(`Detected data type: ${this.dataType}`);
+        console.log(`Processing data as: ${this.dataType}`);
         
         if (this.dataType === 'sponsors') {
             return this.parseSponsorData(rawData);
@@ -208,11 +245,11 @@ class RestaurantMapEditor {
     }
     
     parseRestaurants(rawData) {
-        // Adapted from your restaurant-config.js parseDataRows function
+        // Adapted to use column names instead of hardcoded positions
         const restaurants = [];
         const errors = [];
         
-        // Find header row (matching your existing logic)
+        // Find header row
         let headerRowIndex = -1;
         for (let i = 0; i < Math.min(10, rawData.length); i++) {
             const row = rawData[i];
@@ -228,28 +265,64 @@ class RestaurantMapEditor {
             throw new Error('Could not find header row with NAME column');
         }
         
-        // Parse restaurant data using hardcoded column positions (matching your existing logic)
+        // Map column names to indexes (flexible matching like sponsors)
+        const headers = rawData[headerRowIndex];
+        console.log('Found headers:', headers); // Debug log
+        const columnMap = {};
+        headers.forEach((header, index) => {
+            const h = header.toString().toLowerCase().trim();
+            if (h === 'name') {
+                columnMap.name = index;
+            } else if (h.includes('address')) {
+                columnMap.address = index;
+            } else if (h.includes('url') || h.includes('website')) {
+                columnMap.url = index;
+            } else if (h === 'code' || h.includes('code')) {
+                columnMap.code = index;
+            } else if (h === 'latitude' || h.includes('lat')) {
+                columnMap.latitude = index;
+            } else if (h === 'longitude' || h.includes('long') || h.includes('lng')) {
+                columnMap.longitude = index;
+            } else if (h.includes('desc')) {
+                columnMap.description = index;
+            } else if (h === 'phone' || h.includes('phone')) {
+                columnMap.phone = index;
+            } else if (h === 'promotions' || h.includes('special') || h.includes('promotion')) {
+                columnMap.specials = index;
+            }
+        });
+        
+        console.log('Column mapping:', columnMap); // Debug log
+        
+        // Validate required columns
+        const required = ['name', 'address', 'code', 'latitude', 'longitude'];
+        const missing = required.filter(col => columnMap[col] === undefined);
+        if (missing.length > 0) {
+            throw new Error(`Missing required columns: ${missing.join(', ')}`);
+        }
+        
+        // Parse restaurant data using column mapping
         for (let i = headerRowIndex + 1; i < rawData.length; i++) {
             const row = rawData[i];
-            if (!row || !row[0]) continue;
+            if (!row || !row[columnMap.name]) continue;
             
             const rowNum = i + 1;
             
             try {
                 const restaurant = {
-                    name: row[0]?.toString()?.trim(),
-                    address: row[1]?.toString()?.trim(),
-                    url: row[2]?.toString()?.trim() || null,
-                    code: row[3]?.toString()?.trim(),
-                    latitude: parseFloat(row[4]),
-                    longitude: parseFloat(row[5]),
-                    description: row[6]?.toString()?.trim() || null,
-                    phone: row[8]?.toString()?.trim() || null,
-                    specials: row[13]?.toString()?.trim() || null,
+                    name: row[columnMap.name]?.toString()?.trim(),
+                    address: row[columnMap.address]?.toString()?.trim(),
+                    url: row[columnMap.url]?.toString()?.trim() || null,
+                    code: row[columnMap.code]?.toString()?.trim(),
+                    latitude: parseFloat(row[columnMap.latitude]),
+                    longitude: parseFloat(row[columnMap.longitude]),
+                    description: row[columnMap.description]?.toString()?.trim() || null,
+                    phone: row[columnMap.phone]?.toString()?.trim() || null,
+                    specials: row[columnMap.specials]?.toString()?.trim() || null,
                     _rowNumber: rowNum
                 };
                 
-                // Validate required fields (matching your existing logic)
+                // Validate required fields
                 if (!restaurant.name || !restaurant.code || 
                     isNaN(restaurant.latitude) || isNaN(restaurant.longitude)) {
                     errors.push(`Row ${rowNum}: missing required data (name, code, or coordinates)`);
@@ -391,7 +464,7 @@ class RestaurantMapEditor {
             });
             
             // Drag end handler with confirmation
-            marker.on('dragend', (e) => {
+            marker.on('dragend', async (e) => {
                 const newPos = e.target.getLatLng();
                 const originalLat = marker._originalLat;
                 const originalLng = marker._originalLng;
@@ -401,7 +474,7 @@ class RestaurantMapEditor {
                 const lngDiff = Math.abs(newPos.lng - originalLng);
                 
                 if (latDiff > 0.0001 || lngDiff > 0.0001) {
-                    this.confirmLocationChange(index, originalLat, originalLng, newPos.lat, newPos.lng);
+                    await this.confirmLocationChange(index, originalLat, originalLng, newPos.lat, newPos.lng);
                 }
             });
             
@@ -423,16 +496,49 @@ class RestaurantMapEditor {
     
     confirmLocationChange(index, oldLat, oldLng, newLat, newLng) {
         const restaurant = this.restaurants[index];
-        const message = `Update location for "${restaurant.name}"?\n\nOld: ${oldLat.toFixed(6)}, ${oldLng.toFixed(6)}\nNew: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
         
-        if (confirm(message)) {
-            // Accept the change
-            this.updateRestaurantLocation(index, newLat, newLng);
-            this.showEditMessage(`✅ Updated location for "${restaurant.name}"`, 'success');
-        } else {
-            // Revert the marker position
-            this.markers[index].setLatLng([oldLat, oldLng]);
-        }
+        return new Promise((resolve) => {
+            const modal = document.getElementById('location-confirm-modal');
+            const nameDisplay = modal.querySelector('.restaurant-name-display');
+            const beforeCoords = modal.querySelector('.location-before .coordinates');
+            const afterCoords = modal.querySelector('.location-after .coordinates');
+            const confirmBtn = document.getElementById('location-confirm');
+            const cancelBtn = document.getElementById('location-cancel');
+            
+            // Populate modal
+            nameDisplay.textContent = restaurant.name;
+            beforeCoords.textContent = `${oldLat.toFixed(6)}, ${oldLng.toFixed(6)}`;
+            afterCoords.textContent = `${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Handle confirmation
+            const handleResult = (accepted) => {
+                modal.style.display = 'none';
+                
+                if (accepted) {
+                    this.updateRestaurantLocation(index, newLat, newLng);
+                    this.showEditMessage(`✅ Updated location for "${restaurant.name}"`, 'success');
+                } else {
+                    // Revert the marker position
+                    this.markers[index].setLatLng([oldLat, oldLng]);
+                }
+                
+                resolve(accepted);
+            };
+            
+            // Event listeners
+            confirmBtn.onclick = () => handleResult(true);
+            cancelBtn.onclick = () => handleResult(false);
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleResult(false);
+                }
+            };
+        });
     }
     
     updateRestaurantLocation(index, lat, lng) {
@@ -515,61 +621,246 @@ class RestaurantMapEditor {
         // Close any open popups
         this.markers.forEach(marker => marker.closePopup());
         
+        // Show modal
+        const modal = document.getElementById('edit-modal');
+        
         // Show/hide fields based on data type
-        this.updateFormFields();
+        this.updateModalFormFields();
         
         // Populate form with current data
-        document.getElementById('edit-name').value = restaurant.name || '';
-        document.getElementById('edit-address').value = restaurant.address || '';
-        document.getElementById('edit-latitude').value = restaurant.latitude || '';
-        document.getElementById('edit-longitude').value = restaurant.longitude || '';
-        document.getElementById('edit-code').value = restaurant.code || '';
-        document.getElementById('edit-url').value = restaurant.url || '';
-        document.getElementById('edit-phone').value = restaurant.phone || '';
-        document.getElementById('edit-description').value = restaurant.description || '';
+        document.getElementById('modal-edit-name').value = restaurant.name || '';
+        document.getElementById('modal-edit-address').value = restaurant.address || '';
+        document.getElementById('modal-edit-latitude').value = restaurant.latitude || '';
+        document.getElementById('modal-edit-longitude').value = restaurant.longitude || '';
+        document.getElementById('modal-edit-code').value = restaurant.code || '';
+        document.getElementById('modal-edit-url').value = restaurant.url || '';
+        document.getElementById('modal-edit-phone').value = restaurant.phone || '';
+        document.getElementById('modal-edit-description').value = restaurant.description || '';
         
         // Restaurant-specific fields
-        document.getElementById('edit-specials').value = restaurant.specials || '';
+        document.getElementById('modal-edit-specials').value = restaurant.specials || '';
         
         // Sponsor-specific fields
         if (this.dataType === 'sponsors') {
-            document.getElementById('edit-promo').value = restaurant.promo_offer || '';
-            document.getElementById('edit-retail').checked = restaurant.is_retail || false;
-            document.getElementById('edit-logo').value = restaurant.logo_file || '';
+            document.getElementById('modal-edit-promo').value = restaurant.promo_offer || '';
+            document.getElementById('modal-edit-retail').checked = restaurant.is_retail || false;
+            document.getElementById('modal-edit-logo').value = restaurant.logo_file || '';
         }
         
-        // Show form and scroll it into view
-        const editForm = document.getElementById('editing-form');
-        editForm.classList.add('active');
-        editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Clear any previous messages
+        document.getElementById('edit-modal-messages').innerHTML = '';
+        
+        // Show modal
+        modal.style.display = 'flex';
         
         // Select and highlight the restaurant
         this.selectRestaurant(index);
         
-        // Clear any previous messages
-        document.getElementById('edit-messages').innerHTML = '';
-        
         // Focus on the name field for immediate editing
         setTimeout(() => {
-            document.getElementById('edit-name').focus();
+            document.getElementById('modal-edit-name').focus();
         }, 100);
         
-        // Add real-time coordinate validation and preview
-        const latInput = document.getElementById('edit-latitude');
-        const lngInput = document.getElementById('edit-longitude');
+        // Set up modal event handlers
+        this.setupModalEventHandlers(index);
+    }
+    
+    updateModalFormFields() {
+        const isSponsors = this.dataType === 'sponsors';
+        
+        // Restaurant-only fields
+        document.getElementById('modal-specials-group').style.display = isSponsors ? 'none' : 'block';
+        
+        // Code field - required for restaurants, optional for sponsors
+        const codeInput = document.getElementById('modal-edit-code');
+        const codeLabel = document.getElementById('modal-code-label');
+        const codeGroup = document.getElementById('modal-code-group');
+        
+        if (isSponsors) {
+            codeInput.removeAttribute('required');
+            codeLabel.textContent = 'Code (optional)';
+            codeGroup.style.display = 'none'; // Hide completely for sponsors
+        } else {
+            codeInput.setAttribute('required', 'required');
+            codeLabel.textContent = 'Business Code *';
+            codeGroup.style.display = 'block';
+        }
+        
+        // Sponsor-only fields
+        document.getElementById('modal-promo-group').style.display = isSponsors ? 'block' : 'none';
+        document.getElementById('modal-sponsor-options').style.display = isSponsors ? 'flex' : 'none';
+    }
+    
+    setupModalEventHandlers(index) {
+        const modal = document.getElementById('edit-modal');
+        const saveBtn = document.getElementById('modal-save-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+        const deleteBtn = document.getElementById('modal-delete-btn');
+        const form = document.getElementById('edit-modal-form');
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newSaveBtn = saveBtn.cloneNode(true);
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        const newDeleteBtn = deleteBtn.cloneNode(true);
+        
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+        
+        // Add event listeners
+        newSaveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.saveModalRestaurant(index);
+        });
+        
+        newCancelBtn.addEventListener('click', () => {
+            this.closeModal();
+        });
+        
+        newDeleteBtn.addEventListener('click', () => {
+            this.deleteModalRestaurant(index);
+        });
+        
+        // Form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveModalRestaurant(index);
+        });
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        };
+        
+        // Real-time coordinate preview
+        const latInput = document.getElementById('modal-edit-latitude');
+        const lngInput = document.getElementById('modal-edit-longitude');
         
         const updatePreview = () => {
             const lat = parseFloat(latInput.value);
             const lng = parseFloat(lngInput.value);
             
             if (!isNaN(lat) && !isNaN(lng) && this.markers[index]) {
-                // Update marker position for preview
                 this.markers[index].setLatLng([lat, lng]);
             }
         };
         
         latInput.addEventListener('input', updatePreview);
         lngInput.addEventListener('input', updatePreview);
+    }
+    
+    closeModal() {
+        document.getElementById('edit-modal').style.display = 'none';
+        this.editingIndex = -1;
+        this.selectedRestaurant = null;
+        
+        // Clear selection
+        document.querySelectorAll('.restaurant-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Close all popups
+        this.markers.forEach(marker => marker.closePopup());
+    }
+    
+    saveModalRestaurant(index) {
+        try {
+            const formData = {
+                name: document.getElementById('modal-edit-name').value.trim(),
+                address: document.getElementById('modal-edit-address').value.trim(),
+                latitude: parseFloat(document.getElementById('modal-edit-latitude').value),
+                longitude: parseFloat(document.getElementById('modal-edit-longitude').value),
+                url: document.getElementById('modal-edit-url').value.trim() || null,
+                phone: document.getElementById('modal-edit-phone').value.trim() || null,
+                description: document.getElementById('modal-edit-description').value.trim() || null
+            };
+            
+            // Add type-specific fields
+            if (this.dataType === 'sponsors') {
+                formData.promo_offer = document.getElementById('modal-edit-promo').value.trim() || null;
+                formData.is_retail = document.getElementById('modal-edit-retail').checked;
+                formData.logo_file = document.getElementById('modal-edit-logo').value.trim() || null;
+            } else {
+                formData.code = document.getElementById('modal-edit-code').value.trim();
+                formData.specials = document.getElementById('modal-edit-specials').value.trim() || null;
+            }
+            
+            // Validate required fields based on data type
+            let validationErrors = [];
+            if (!formData.name) validationErrors.push('Name is required');
+            if (!formData.address) validationErrors.push('Address is required');
+            if (isNaN(formData.latitude)) validationErrors.push('Valid latitude is required');
+            if (isNaN(formData.longitude)) validationErrors.push('Valid longitude is required');
+            if (this.dataType === 'restaurants' && !formData.code) validationErrors.push('Business code is required');
+            
+            if (validationErrors.length > 0) {
+                this.showModalMessage('Validation errors:\n• ' + validationErrors.join('\n• '), 'error');
+                return;
+            }
+            
+            if (index === -1) {
+                // Adding new restaurant
+                formData._rowNumber = this.restaurants.length + 1;
+                this.restaurants.push(formData);
+                this.showModalMessage('✅ Business added successfully!', 'success');
+                this.showFileStatus(`✅ Added new business: "${formData.name}"`, 'success');
+            } else {
+                // Updating existing restaurant
+                const existing = this.restaurants[index];
+                Object.assign(existing, formData);
+                this.showModalMessage('✅ Business updated successfully!', 'success');
+                this.showFileStatus(`✅ Updated business: "${formData.name}"`, 'success');
+                
+                // Update marker position if coordinates changed
+                if (this.markers[index]) {
+                    this.markers[index].setLatLng([formData.latitude, formData.longitude]);
+                    this.markers[index]._originalLat = formData.latitude;
+                    this.markers[index]._originalLng = formData.longitude;
+                }
+            }
+            
+            this.updateUI();
+            this.renderMarkers();
+            
+            // Close modal after a delay
+            setTimeout(() => {
+                this.closeModal();
+            }, 1500);
+            
+        } catch (error) {
+            this.showModalMessage(`Error saving business: ${error.message}`, 'error');
+        }
+    }
+    
+    async deleteModalRestaurant(index) {
+        if (index === -1) return;
+        
+        const restaurant = this.restaurants[index];
+        const confirmMessage = `⚠️ DELETE BUSINESS ⚠️\n\n"${restaurant.name}"\n${restaurant.address}\n\nThis action cannot be undone.\n\nAre you sure you want to delete this business?`;
+        
+        if (confirm(confirmMessage)) {
+            const deletedName = restaurant.name;
+            this.restaurants.splice(index, 1);
+            this.updateUI();
+            this.renderMarkers();
+            this.closeModal();
+            
+            this.showFileStatus(`✅ Deleted business: "${deletedName}"`, 'success');
+        }
+    }
+    
+    showModalMessage(message, type) {
+        const messagesEl = document.getElementById('edit-modal-messages');
+        messagesEl.innerHTML = `<div class="${type}">${message.replace(/\n/g, '<br>')}</div>`;
+        
+        // Auto-clear success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                messagesEl.innerHTML = '';
+            }, 3000);
+        }
     }
     
     saveRestaurant(e) {
@@ -760,6 +1051,87 @@ class RestaurantMapEditor {
         });
     }
     
+    generateDefaultFilename() {
+        const now = new Date();
+        
+        // Format date as YYYY-MM-DD
+        const date = now.toISOString().split('T')[0];
+        
+        // Format time as HH-MM
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const time = `${hours}-${minutes}`;
+        
+        // Create base filename
+        const dataPrefix = this.dataType === 'sponsors' ? 'sponsor-data' : 'restaurant-data';
+        const baseName = `${dataPrefix}-edited-${date}-${time}`;
+        
+        // Check if we've already exported with this date-time combo
+        const baseKey = `${date}-${time}`;
+        if (this.exportCounter[baseKey]) {
+            this.exportCounter[baseKey]++;
+            return `${baseName}-(${this.exportCounter[baseKey]})`;
+        } else {
+            this.exportCounter[baseKey] = 1;
+            return baseName;
+        }
+    }
+    
+    askForFilename() {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('filename-modal');
+            const filenameInput = document.getElementById('export-filename');
+            const exportBtn = document.getElementById('filename-export');
+            const cancelBtn = document.getElementById('filename-cancel');
+            
+            // Generate smart default filename
+            const defaultFilename = this.generateDefaultFilename();
+            filenameInput.value = defaultFilename;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Focus and select the filename (without extension)
+            setTimeout(() => {
+                filenameInput.focus();
+                filenameInput.select();
+            }, 100);
+            
+            // Handle selection
+            const handleResult = (filename) => {
+                modal.style.display = 'none';
+                resolve(filename);
+            };
+            
+            // Event listeners
+            exportBtn.onclick = () => {
+                const filename = filenameInput.value.trim();
+                if (filename) {
+                    handleResult(filename + '.xlsx');
+                } else {
+                    filenameInput.focus();
+                }
+            };
+            
+            cancelBtn.onclick = () => handleResult(null);
+            
+            // Handle Enter key
+            filenameInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    exportBtn.click();
+                }
+            };
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleResult(null);
+                }
+            };
+        });
+    }
+    
     generateExportFileName() {
         const now = new Date();
         
@@ -788,8 +1160,14 @@ class RestaurantMapEditor {
         }
     }
     
-    exportToExcel() {
+    async exportToExcel() {
         try {
+            // Get filename from user
+            const filename = await this.askForFilename();
+            if (!filename) {
+                return; // User cancelled
+            }
+            
             let data, wb;
             if (this.dataType === 'sponsors') {
                 // Sponsor export format (single sheet with flexible headers)
@@ -820,10 +1198,11 @@ class RestaurantMapEditor {
                 XLSX.utils.book_append_sheet(wb, sponsorWs, 'Sponsor Data');
                 
             } else {
-                // Restaurant export format (2 sheets with fixed structure)
+                // Restaurant export format matching your original data structure:
+                // A=NAME, B=ADDRESS, C=URL, D=CODE, E=LATITUDE, F=LONGITUDE, G=DESCRIPTION, H=PHONE, I=?, J=PROMOTIONS
                 const headers = [
                     'NAME', 'ADDRESS', 'URL', 'CODE', 'LATITUDE', 'LONGITUDE', 
-                    'DESCRIPTION', '', 'PHONE', '', '', '', '', 'SPECIALS'
+                    'DESCRIPTION', 'PHONE', '', 'PROMOTIONS'
                 ];
                 
                 data = [
@@ -836,10 +1215,9 @@ class RestaurantMapEditor {
                         restaurant.latitude,
                         restaurant.longitude,
                         restaurant.description || '',
-                        '', // Column 7 (empty)
                         restaurant.phone || '',
-                        '', '', '', '', // Columns 9-12 (empty)
-                        restaurant.specials || ''
+                        '', // Column I (empty)
+                        restaurant.specials || '' // Column J = PROMOTIONS
                     ])
                 ];
                 
@@ -851,7 +1229,7 @@ class RestaurantMapEditor {
                     ['Restaurant Week Data Import Instructions'],
                     [''],
                     ['Sheet 2 contains the actual restaurant data.'],
-                    ['Please do not modify the column headers.'],
+                    ['Column structure: NAME, ADDRESS, URL, CODE, LATITUDE, LONGITUDE, DESCRIPTION, PHONE, (empty), PROMOTIONS'],
                     ['Required fields: NAME, ADDRESS, CODE, LATITUDE, LONGITUDE']
                 ];
                 const instructionsWs = XLSX.utils.aoa_to_sheet(instructionsData);
@@ -862,13 +1240,12 @@ class RestaurantMapEditor {
                 XLSX.utils.book_append_sheet(wb, restaurantWs, 'Restaurant Data');
             }
             
-            // Generate filename with date, time, and duplicate handling
-            const fileName = this.generateExportFileName();
-            console.log(`Generating export file: ${fileName}`);
-            XLSX.writeFile(wb, fileName);
+            // Use user-provided filename
+            console.log(`Generating export file: ${filename}`);
+            XLSX.writeFile(wb, filename);
             
-            this.showEditMessage(`✅ Exported ${this.restaurants.length} businesses to ${fileName}`, 'success');
-            this.showFileStatus(`📁 Downloaded: ${fileName}`, 'success');
+            this.showEditMessage(`✅ Exported ${this.restaurants.length} businesses to ${filename}`, 'success');
+            this.showFileStatus(`📁 Downloaded: ${filename}`, 'success');
             
         } catch (error) {
             console.error('Export error:', error);

@@ -26,6 +26,7 @@ CREATE TABLE restaurants (
     description TEXT,
     phone TEXT,
     specials TEXT,
+    promotions TEXT,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     logo_file TEXT
 );
