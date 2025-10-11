@@ -230,6 +230,7 @@ class RestaurantMapEditor {
         
         // Map column names to indexes (flexible matching like sponsors)
         const headers = rawData[headerRowIndex];
+        console.log('Found headers:', headers); // Debug log
         const columnMap = {};
         headers.forEach((header, index) => {
             const h = header.toString().toLowerCase().trim();
@@ -239,20 +240,22 @@ class RestaurantMapEditor {
                 columnMap.address = index;
             } else if (h.includes('url') || h.includes('website')) {
                 columnMap.url = index;
-            } else if (h.includes('code')) {
+            } else if (h === 'code' || h.includes('code')) {
                 columnMap.code = index;
-            } else if (h.includes('lat')) {
+            } else if (h === 'latitude' || h.includes('lat')) {
                 columnMap.latitude = index;
-            } else if (h.includes('long') || h.includes('lng')) {
+            } else if (h === 'longitude' || h.includes('long') || h.includes('lng')) {
                 columnMap.longitude = index;
             } else if (h.includes('desc')) {
                 columnMap.description = index;
-            } else if (h.includes('phone')) {
+            } else if (h === 'phone' || h.includes('phone')) {
                 columnMap.phone = index;
-            } else if (h.includes('special') || h.includes('promotion')) {
+            } else if (h === 'promotions' || h.includes('special') || h.includes('promotion')) {
                 columnMap.specials = index;
             }
         });
+        
+        console.log('Column mapping:', columnMap); // Debug log
         
         // Validate required columns
         const required = ['name', 'address', 'code', 'latitude', 'longitude'];
