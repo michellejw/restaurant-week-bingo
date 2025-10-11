@@ -204,6 +204,24 @@ export default function Home() {
             />
           </div>
 
+          {/* Restaurant Specials Button */}
+          <div className="flex justify-center">
+            <a
+              href="https://www.pleasureislandnc.org/restaurant-week-specials.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white hover:bg-coral-50 text-gray-900 font-medium rounded-lg border-2 border-coral-500 hover:border-coral-600 transition-colors shadow-md"
+            >
+              <svg className="w-5 h-5 text-coral-500" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+              </svg>
+              View Restaurant Week Specials
+              <svg className="w-4 h-4 text-coral-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
+
           {/* Bingo card */}
           <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
             <BingoCard 
