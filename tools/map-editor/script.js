@@ -464,7 +464,7 @@ class RestaurantMapEditor {
             });
             
             // Drag end handler with confirmation
-            marker.on('dragend', (e) => {
+            marker.on('dragend', async (e) => {
                 const newPos = e.target.getLatLng();
                 const originalLat = marker._originalLat;
                 const originalLng = marker._originalLng;
@@ -474,7 +474,7 @@ class RestaurantMapEditor {
                 const lngDiff = Math.abs(newPos.lng - originalLng);
                 
                 if (latDiff > 0.0001 || lngDiff > 0.0001) {
-                    this.confirmLocationChange(index, originalLat, originalLng, newPos.lat, newPos.lng);
+                    await this.confirmLocationChange(index, originalLat, originalLng, newPos.lat, newPos.lng);
                 }
             });
             
@@ -496,16 +496,49 @@ class RestaurantMapEditor {
     
     confirmLocationChange(index, oldLat, oldLng, newLat, newLng) {
         const restaurant = this.restaurants[index];
-        const message = `Update location for "${restaurant.name}"?\n\nOld: ${oldLat.toFixed(6)}, ${oldLng.toFixed(6)}\nNew: ${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
         
-        if (confirm(message)) {
-            // Accept the change
-            this.updateRestaurantLocation(index, newLat, newLng);
-            this.showEditMessage(`✅ Updated location for "${restaurant.name}"`, 'success');
-        } else {
-            // Revert the marker position
-            this.markers[index].setLatLng([oldLat, oldLng]);
-        }
+        return new Promise((resolve) => {
+            const modal = document.getElementById('location-confirm-modal');
+            const nameDisplay = modal.querySelector('.restaurant-name-display');
+            const beforeCoords = modal.querySelector('.location-before .coordinates');
+            const afterCoords = modal.querySelector('.location-after .coordinates');
+            const confirmBtn = document.getElementById('location-confirm');
+            const cancelBtn = document.getElementById('location-cancel');
+            
+            // Populate modal
+            nameDisplay.textContent = restaurant.name;
+            beforeCoords.textContent = `${oldLat.toFixed(6)}, ${oldLng.toFixed(6)}`;
+            afterCoords.textContent = `${newLat.toFixed(6)}, ${newLng.toFixed(6)}`;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Handle confirmation
+            const handleResult = (accepted) => {
+                modal.style.display = 'none';
+                
+                if (accepted) {
+                    this.updateRestaurantLocation(index, newLat, newLng);
+                    this.showEditMessage(`✅ Updated location for "${restaurant.name}"`, 'success');
+                } else {
+                    // Revert the marker position
+                    this.markers[index].setLatLng([oldLat, oldLng]);
+                }
+                
+                resolve(accepted);
+            };
+            
+            // Event listeners
+            confirmBtn.onclick = () => handleResult(true);
+            cancelBtn.onclick = () => handleResult(false);
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleResult(false);
+                }
+            };
+        });
     }
     
     updateRestaurantLocation(index, lat, lng) {
@@ -588,61 +621,246 @@ class RestaurantMapEditor {
         // Close any open popups
         this.markers.forEach(marker => marker.closePopup());
         
+        // Show modal
+        const modal = document.getElementById('edit-modal');
+        
         // Show/hide fields based on data type
-        this.updateFormFields();
+        this.updateModalFormFields();
         
         // Populate form with current data
-        document.getElementById('edit-name').value = restaurant.name || '';
-        document.getElementById('edit-address').value = restaurant.address || '';
-        document.getElementById('edit-latitude').value = restaurant.latitude || '';
-        document.getElementById('edit-longitude').value = restaurant.longitude || '';
-        document.getElementById('edit-code').value = restaurant.code || '';
-        document.getElementById('edit-url').value = restaurant.url || '';
-        document.getElementById('edit-phone').value = restaurant.phone || '';
-        document.getElementById('edit-description').value = restaurant.description || '';
+        document.getElementById('modal-edit-name').value = restaurant.name || '';
+        document.getElementById('modal-edit-address').value = restaurant.address || '';
+        document.getElementById('modal-edit-latitude').value = restaurant.latitude || '';
+        document.getElementById('modal-edit-longitude').value = restaurant.longitude || '';
+        document.getElementById('modal-edit-code').value = restaurant.code || '';
+        document.getElementById('modal-edit-url').value = restaurant.url || '';
+        document.getElementById('modal-edit-phone').value = restaurant.phone || '';
+        document.getElementById('modal-edit-description').value = restaurant.description || '';
         
         // Restaurant-specific fields
-        document.getElementById('edit-specials').value = restaurant.specials || '';
+        document.getElementById('modal-edit-specials').value = restaurant.specials || '';
         
         // Sponsor-specific fields
         if (this.dataType === 'sponsors') {
-            document.getElementById('edit-promo').value = restaurant.promo_offer || '';
-            document.getElementById('edit-retail').checked = restaurant.is_retail || false;
-            document.getElementById('edit-logo').value = restaurant.logo_file || '';
+            document.getElementById('modal-edit-promo').value = restaurant.promo_offer || '';
+            document.getElementById('modal-edit-retail').checked = restaurant.is_retail || false;
+            document.getElementById('modal-edit-logo').value = restaurant.logo_file || '';
         }
         
-        // Show form and scroll it into view
-        const editForm = document.getElementById('editing-form');
-        editForm.classList.add('active');
-        editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Clear any previous messages
+        document.getElementById('edit-modal-messages').innerHTML = '';
+        
+        // Show modal
+        modal.style.display = 'flex';
         
         // Select and highlight the restaurant
         this.selectRestaurant(index);
         
-        // Clear any previous messages
-        document.getElementById('edit-messages').innerHTML = '';
-        
         // Focus on the name field for immediate editing
         setTimeout(() => {
-            document.getElementById('edit-name').focus();
+            document.getElementById('modal-edit-name').focus();
         }, 100);
         
-        // Add real-time coordinate validation and preview
-        const latInput = document.getElementById('edit-latitude');
-        const lngInput = document.getElementById('edit-longitude');
+        // Set up modal event handlers
+        this.setupModalEventHandlers(index);
+    }
+    
+    updateModalFormFields() {
+        const isSponsors = this.dataType === 'sponsors';
+        
+        // Restaurant-only fields
+        document.getElementById('modal-specials-group').style.display = isSponsors ? 'none' : 'block';
+        
+        // Code field - required for restaurants, optional for sponsors
+        const codeInput = document.getElementById('modal-edit-code');
+        const codeLabel = document.getElementById('modal-code-label');
+        const codeGroup = document.getElementById('modal-code-group');
+        
+        if (isSponsors) {
+            codeInput.removeAttribute('required');
+            codeLabel.textContent = 'Code (optional)';
+            codeGroup.style.display = 'none'; // Hide completely for sponsors
+        } else {
+            codeInput.setAttribute('required', 'required');
+            codeLabel.textContent = 'Business Code *';
+            codeGroup.style.display = 'block';
+        }
+        
+        // Sponsor-only fields
+        document.getElementById('modal-promo-group').style.display = isSponsors ? 'block' : 'none';
+        document.getElementById('modal-sponsor-options').style.display = isSponsors ? 'flex' : 'none';
+    }
+    
+    setupModalEventHandlers(index) {
+        const modal = document.getElementById('edit-modal');
+        const saveBtn = document.getElementById('modal-save-btn');
+        const cancelBtn = document.getElementById('modal-cancel-btn');
+        const deleteBtn = document.getElementById('modal-delete-btn');
+        const form = document.getElementById('edit-modal-form');
+        
+        // Remove any existing event listeners to prevent duplicates
+        const newSaveBtn = saveBtn.cloneNode(true);
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        const newDeleteBtn = deleteBtn.cloneNode(true);
+        
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+        
+        // Add event listeners
+        newSaveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            this.saveModalRestaurant(index);
+        });
+        
+        newCancelBtn.addEventListener('click', () => {
+            this.closeModal();
+        });
+        
+        newDeleteBtn.addEventListener('click', () => {
+            this.deleteModalRestaurant(index);
+        });
+        
+        // Form submission
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            this.saveModalRestaurant(index);
+        });
+        
+        // Close on overlay click
+        modal.onclick = (e) => {
+            if (e.target === modal) {
+                this.closeModal();
+            }
+        };
+        
+        // Real-time coordinate preview
+        const latInput = document.getElementById('modal-edit-latitude');
+        const lngInput = document.getElementById('modal-edit-longitude');
         
         const updatePreview = () => {
             const lat = parseFloat(latInput.value);
             const lng = parseFloat(lngInput.value);
             
             if (!isNaN(lat) && !isNaN(lng) && this.markers[index]) {
-                // Update marker position for preview
                 this.markers[index].setLatLng([lat, lng]);
             }
         };
         
         latInput.addEventListener('input', updatePreview);
         lngInput.addEventListener('input', updatePreview);
+    }
+    
+    closeModal() {
+        document.getElementById('edit-modal').style.display = 'none';
+        this.editingIndex = -1;
+        this.selectedRestaurant = null;
+        
+        // Clear selection
+        document.querySelectorAll('.restaurant-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        
+        // Close all popups
+        this.markers.forEach(marker => marker.closePopup());
+    }
+    
+    saveModalRestaurant(index) {
+        try {
+            const formData = {
+                name: document.getElementById('modal-edit-name').value.trim(),
+                address: document.getElementById('modal-edit-address').value.trim(),
+                latitude: parseFloat(document.getElementById('modal-edit-latitude').value),
+                longitude: parseFloat(document.getElementById('modal-edit-longitude').value),
+                url: document.getElementById('modal-edit-url').value.trim() || null,
+                phone: document.getElementById('modal-edit-phone').value.trim() || null,
+                description: document.getElementById('modal-edit-description').value.trim() || null
+            };
+            
+            // Add type-specific fields
+            if (this.dataType === 'sponsors') {
+                formData.promo_offer = document.getElementById('modal-edit-promo').value.trim() || null;
+                formData.is_retail = document.getElementById('modal-edit-retail').checked;
+                formData.logo_file = document.getElementById('modal-edit-logo').value.trim() || null;
+            } else {
+                formData.code = document.getElementById('modal-edit-code').value.trim();
+                formData.specials = document.getElementById('modal-edit-specials').value.trim() || null;
+            }
+            
+            // Validate required fields based on data type
+            let validationErrors = [];
+            if (!formData.name) validationErrors.push('Name is required');
+            if (!formData.address) validationErrors.push('Address is required');
+            if (isNaN(formData.latitude)) validationErrors.push('Valid latitude is required');
+            if (isNaN(formData.longitude)) validationErrors.push('Valid longitude is required');
+            if (this.dataType === 'restaurants' && !formData.code) validationErrors.push('Business code is required');
+            
+            if (validationErrors.length > 0) {
+                this.showModalMessage('Validation errors:\n• ' + validationErrors.join('\n• '), 'error');
+                return;
+            }
+            
+            if (index === -1) {
+                // Adding new restaurant
+                formData._rowNumber = this.restaurants.length + 1;
+                this.restaurants.push(formData);
+                this.showModalMessage('✅ Business added successfully!', 'success');
+                this.showFileStatus(`✅ Added new business: "${formData.name}"`, 'success');
+            } else {
+                // Updating existing restaurant
+                const existing = this.restaurants[index];
+                Object.assign(existing, formData);
+                this.showModalMessage('✅ Business updated successfully!', 'success');
+                this.showFileStatus(`✅ Updated business: "${formData.name}"`, 'success');
+                
+                // Update marker position if coordinates changed
+                if (this.markers[index]) {
+                    this.markers[index].setLatLng([formData.latitude, formData.longitude]);
+                    this.markers[index]._originalLat = formData.latitude;
+                    this.markers[index]._originalLng = formData.longitude;
+                }
+            }
+            
+            this.updateUI();
+            this.renderMarkers();
+            
+            // Close modal after a delay
+            setTimeout(() => {
+                this.closeModal();
+            }, 1500);
+            
+        } catch (error) {
+            this.showModalMessage(`Error saving business: ${error.message}`, 'error');
+        }
+    }
+    
+    async deleteModalRestaurant(index) {
+        if (index === -1) return;
+        
+        const restaurant = this.restaurants[index];
+        const confirmMessage = `⚠️ DELETE BUSINESS ⚠️\n\n"${restaurant.name}"\n${restaurant.address}\n\nThis action cannot be undone.\n\nAre you sure you want to delete this business?`;
+        
+        if (confirm(confirmMessage)) {
+            const deletedName = restaurant.name;
+            this.restaurants.splice(index, 1);
+            this.updateUI();
+            this.renderMarkers();
+            this.closeModal();
+            
+            this.showFileStatus(`✅ Deleted business: "${deletedName}"`, 'success');
+        }
+    }
+    
+    showModalMessage(message, type) {
+        const messagesEl = document.getElementById('edit-modal-messages');
+        messagesEl.innerHTML = `<div class="${type}">${message.replace(/\n/g, '<br>')}</div>`;
+        
+        // Auto-clear success messages
+        if (type === 'success') {
+            setTimeout(() => {
+                messagesEl.innerHTML = '';
+            }, 3000);
+        }
     }
     
     saveRestaurant(e) {

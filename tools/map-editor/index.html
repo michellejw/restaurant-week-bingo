@@ -402,6 +402,71 @@
             display: flex;
             justify-content: flex-end;
         }
+        
+        .modal-large {
+            max-width: 700px;
+        }
+        
+        /* Location confirmation modal styles */
+        .location-change-info {
+            text-align: center;
+        }
+        
+        .restaurant-name-display {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem;
+            background: #f8fafc;
+            border-radius: 6px;
+        }
+        
+        .location-comparison {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+        
+        .location-before,
+        .location-after {
+            flex: 1;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        
+        .location-before {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+        }
+        
+        .location-after {
+            background: #dcfce7;
+            border: 1px solid #86efac;
+        }
+        
+        .location-before strong,
+        .location-after strong {
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .location-arrow {
+            font-size: 1.5rem;
+            color: #64748b;
+            font-weight: bold;
+        }
+        
+        .coordinates {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #374151;
+            background: rgba(255, 255, 255, 0.7);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -432,6 +497,121 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" id="cancel-data-type">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Location Confirmation Modal -->
+    <div id="location-confirm-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Confirm Location Change</h3>
+            </div>
+            <div class="modal-body">
+                <div class="location-change-info">
+                    <div class="restaurant-name-display"></div>
+                    <div class="location-comparison">
+                        <div class="location-before">
+                            <strong>Current Location:</strong>
+                            <div class="coordinates"></div>
+                        </div>
+                        <div class="location-arrow">→</div>
+                        <div class="location-after">
+                            <strong>New Location:</strong>
+                            <div class="coordinates"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="location-cancel">Cancel</button>
+                <button class="btn" id="location-confirm">Update Location</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Business Modal -->
+    <div id="edit-modal" class="modal-overlay" style="display: none;">
+        <div class="modal modal-large">
+            <div class="modal-header">
+                <h3>Edit Business</h3>
+            </div>
+            <div class="modal-body">
+                <div id="edit-modal-messages"></div>
+                <form id="edit-modal-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modal-edit-name">Business Name *</label>
+                            <input type="text" id="modal-edit-name" required>
+                        </div>
+                        <div class="form-group" id="modal-code-group">
+                            <label for="modal-edit-code" id="modal-code-label">Business Code *</label>
+                            <input type="text" id="modal-edit-code" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-edit-address">Address *</label>
+                        <textarea id="modal-edit-address" required rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modal-edit-latitude">Latitude *</label>
+                            <input type="number" id="modal-edit-latitude" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="modal-edit-longitude">Longitude *</label>
+                            <input type="number" id="modal-edit-longitude" step="any" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="modal-edit-url">Website URL</label>
+                            <input type="url" id="modal-edit-url">
+                        </div>
+                        <div class="form-group">
+                            <label for="modal-edit-phone">Phone Number</label>
+                            <input type="text" id="modal-edit-phone">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="modal-edit-description">Description</label>
+                        <textarea id="modal-edit-description" rows="3"></textarea>
+                    </div>
+                    
+                    <!-- Restaurant-specific fields -->
+                    <div class="form-group" id="modal-specials-group">
+                        <label for="modal-edit-specials">Special Offers / Promotions</label>
+                        <textarea id="modal-edit-specials" rows="2"></textarea>
+                    </div>
+                    
+                    <!-- Sponsor-specific fields -->
+                    <div class="form-group" id="modal-promo-group" style="display: none;">
+                        <label for="modal-edit-promo">Promo Offer</label>
+                        <textarea id="modal-edit-promo" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="form-row" id="modal-sponsor-options" style="display: none;">
+                        <div class="form-group">
+                            <label for="modal-edit-logo">Logo Filename</label>
+                            <input type="text" id="modal-edit-logo">
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" id="modal-edit-retail"> Is Retail Location
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="modal-delete-btn" type="button">Delete Business</button>
+                <div style="flex: 1;"></div>
+                <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
+                <button class="btn" id="modal-save-btn">Save Changes</button>
             </div>
         </div>
     </div>
