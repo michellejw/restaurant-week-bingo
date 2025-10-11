@@ -105,6 +105,15 @@ class RestaurantMapEditor {
             this.showFileStatus('Processing file...', 'loading');
             
             const data = await this.readExcelFile(file);
+            
+            // Ask user to select data type instead of auto-detecting
+            const dataType = await this.askForDataType();
+            if (!dataType) {
+                this.showFileStatus('Import cancelled', 'error');
+                return;
+            }
+            
+            this.dataType = dataType;
             const { restaurants, errors } = this.parseRestaurantData(data);
             
             this.restaurants = restaurants;
@@ -166,6 +175,36 @@ class RestaurantMapEditor {
         });
     }
     
+    askForDataType() {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('data-type-modal');
+            const restaurantBtn = modal.querySelector('[data-type="restaurants"]');
+            const sponsorBtn = modal.querySelector('[data-type="sponsors"]');
+            const cancelBtn = document.getElementById('cancel-data-type');
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Handle selection
+            const handleSelection = (dataType) => {
+                modal.style.display = 'none';
+                resolve(dataType);
+            };
+            
+            // Event listeners
+            restaurantBtn.onclick = () => handleSelection('restaurants');
+            sponsorBtn.onclick = () => handleSelection('sponsors');
+            cancelBtn.onclick = () => handleSelection(null);
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleSelection(null);
+                }
+            };
+        });
+    }
+    
     detectDataType(rawData) {
         // Look for restaurant-specific patterns
         const hasRestaurantCode = rawData.some(row => 
@@ -196,9 +235,7 @@ class RestaurantMapEditor {
     }
     
     parseRestaurantData(rawData) {
-        // Detect data type first
-        this.dataType = this.detectDataType(rawData);
-        console.log(`Detected data type: ${this.dataType}`);
+        console.log(`Processing data as: ${this.dataType}`);
         
         if (this.dataType === 'sponsors') {
             return this.parseSponsorData(rawData);
