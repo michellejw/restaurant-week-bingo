@@ -31,6 +31,17 @@ node scripts/generate-qr-codes.js
 # File: supabase/init.sql
 ```
 
+### Restaurant Data Management
+```bash
+# Interactive map editor for restaurant locations
+open tools/map-editor/index.html
+# or
+cd tools/map-editor && ./launch.sh
+
+# Smart import restaurants from Excel
+node scripts/smart-import-restaurants.js
+```
+
 ### Testing Individual Features
 ```bash
 # Test database connection and QR generation
@@ -175,6 +186,13 @@ Based on `.cursorrules`:
 - Use `scripts/generate-qr-codes.js` to create QR codes
 - Generates PNG files in `/qr-codes` directory
 - Based on restaurant codes from database
+
+### Administrative Tools
+- **Map Editor** (`tools/map-editor/`): Interactive visual tool for editing restaurant locations
+  - Drag & drop markers to fix coordinates
+  - Full editing of all restaurant fields
+  - Excel import/export with existing file structure
+  - Standalone tool that works offline
 
 ## Known Issues & Considerations
 
