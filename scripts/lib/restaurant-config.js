@@ -37,24 +37,56 @@ function parseDataRows(rawData) {
     throw new Error('Could not find header row with NAME column');
   }
   
-  // Parse restaurant data using hardcoded column positions (like original)
+  // Map column names to indexes (flexible matching like map editor)
+  const headers = rawData[headerRowIndex];
+  const columnMap = {};
+  headers.forEach((header, index) => {
+    const h = header.toString().toLowerCase().trim();
+    if (h === 'name') {
+      columnMap.name = index;
+    } else if (h.includes('address')) {
+      columnMap.address = index;
+    } else if (h.includes('url') || h.includes('website')) {
+      columnMap.url = index;
+    } else if (h === 'code' || h.includes('code')) {
+      columnMap.code = index;
+    } else if (h === 'latitude' || h.includes('lat')) {
+      columnMap.latitude = index;
+    } else if (h === 'longitude' || h.includes('long') || h.includes('lng')) {
+      columnMap.longitude = index;
+    } else if (h.includes('desc')) {
+      columnMap.description = index;
+    } else if (h === 'phone' || h.includes('phone')) {
+      columnMap.phone = index;
+    } else if (h === 'promotions' || h.includes('promotion')) {
+      columnMap.promotions = index;
+    } else if (h.includes('special')) {
+      columnMap.specials = index;
+    }
+  });
+  
+  console.log('Found headers:', headers);
+  console.log('Column mapping:', columnMap);
+  
+  // Parse restaurant data using column mapping
   for (let i = headerRowIndex + 1; i < rawData.length; i++) {
     const row = rawData[i];
-    if (!row || !row[0]) continue;
+    if (!row || !row[columnMap.name]) continue;
     
     const rowNum = i + 1;
     
     try {
       const restaurant = {
-        name: row[0]?.toString()?.trim(),
-        address: row[1]?.toString()?.trim(),
-        url: row[2]?.toString()?.trim() || null,
-        code: row[3]?.toString()?.trim(),
-        latitude: parseFloat(row[4]),
-        longitude: parseFloat(row[5]),
-        description: row[6]?.toString()?.trim() || null,
-        phone: row[8]?.toString()?.trim() || null,
-        specials: row[13]?.toString()?.trim() || null,
+        name: row[columnMap.name]?.toString()?.trim(),
+        address: row[columnMap.address]?.toString()?.trim(),
+        url: row[columnMap.url]?.toString()?.trim() || null,
+        code: row[columnMap.code]?.toString()?.trim(),
+        latitude: parseFloat(row[columnMap.latitude]),
+        longitude: parseFloat(row[columnMap.longitude]),
+        description: row[columnMap.description]?.toString()?.trim() || null,
+        phone: row[columnMap.phone]?.toString()?.trim() || null,
+        specials: row[columnMap.specials]?.toString()?.trim() || null,
+        promotions: row[columnMap.promotions]?.toString()?.trim() || null,
         _rowNumber: rowNum
       };
       
@@ -78,8 +110,14 @@ function parseDataRows(rawData) {
 function displayItemDetails(restaurant, indent = '   ') {
   console.log(`${indent}Address: ${restaurant.address}`);
   console.log(`${indent}Code: ${restaurant.code}`);
+  if (restaurant.phone) {
+    console.log(`${indent}Phone: ${restaurant.phone}`);
+  }
   if (restaurant.specials) {
     console.log(`${indent}Specials: ${restaurant.specials}`);
+  }
+  if (restaurant.promotions) {
+    console.log(`${indent}Promotions: ${restaurant.promotions}`);
   }
 }
 
@@ -98,7 +136,8 @@ function prepareUpdateData(restaurantData) {
     longitude: updateData.longitude,
     description: updateData.description,
     phone: updateData.phone,
-    specials: updateData.specials
+    specials: updateData.specials,
+    promotions: updateData.promotions
   };
 }
 
