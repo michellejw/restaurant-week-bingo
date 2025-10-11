@@ -210,10 +210,10 @@ export default function Home() {
               href="https://www.pleasureislandnc.org/restaurant-week-specials.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-md"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white font-medium rounded-lg transition-colors shadow-md"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 0v1.5m0 0L16 9.5m-4-1.5L10 9.5M15 21H9a2 2 0 01-2-2V9.5A2 2 0 119 7.5V6a2 2 0 112 0v1.5" />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
               </svg>
               View Restaurant Week Specials
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
