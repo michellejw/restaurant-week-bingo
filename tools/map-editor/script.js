@@ -1051,6 +1051,87 @@ class RestaurantMapEditor {
         });
     }
     
+    generateDefaultFilename() {
+        const now = new Date();
+        
+        // Format date as YYYY-MM-DD
+        const date = now.toISOString().split('T')[0];
+        
+        // Format time as HH-MM
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const time = `${hours}-${minutes}`;
+        
+        // Create base filename
+        const dataPrefix = this.dataType === 'sponsors' ? 'sponsor-data' : 'restaurant-data';
+        const baseName = `${dataPrefix}-edited-${date}-${time}`;
+        
+        // Check if we've already exported with this date-time combo
+        const baseKey = `${date}-${time}`;
+        if (this.exportCounter[baseKey]) {
+            this.exportCounter[baseKey]++;
+            return `${baseName}-(${this.exportCounter[baseKey]})`;
+        } else {
+            this.exportCounter[baseKey] = 1;
+            return baseName;
+        }
+    }
+    
+    askForFilename() {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('filename-modal');
+            const filenameInput = document.getElementById('export-filename');
+            const exportBtn = document.getElementById('filename-export');
+            const cancelBtn = document.getElementById('filename-cancel');
+            
+            // Generate smart default filename
+            const defaultFilename = this.generateDefaultFilename();
+            filenameInput.value = defaultFilename;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Focus and select the filename (without extension)
+            setTimeout(() => {
+                filenameInput.focus();
+                filenameInput.select();
+            }, 100);
+            
+            // Handle selection
+            const handleResult = (filename) => {
+                modal.style.display = 'none';
+                resolve(filename);
+            };
+            
+            // Event listeners
+            exportBtn.onclick = () => {
+                const filename = filenameInput.value.trim();
+                if (filename) {
+                    handleResult(filename + '.xlsx');
+                } else {
+                    filenameInput.focus();
+                }
+            };
+            
+            cancelBtn.onclick = () => handleResult(null);
+            
+            // Handle Enter key
+            filenameInput.onkeydown = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    exportBtn.click();
+                }
+            };
+            
+            // Close on overlay click
+            modal.onclick = (e) => {
+                if (e.target === modal) {
+                    handleResult(null);
+                }
+            };
+        });
+    }
+    
     generateExportFileName() {
         const now = new Date();
         
@@ -1079,8 +1160,14 @@ class RestaurantMapEditor {
         }
     }
     
-    exportToExcel() {
+    async exportToExcel() {
         try {
+            // Get filename from user
+            const filename = await this.askForFilename();
+            if (!filename) {
+                return; // User cancelled
+            }
+            
             let data, wb;
             if (this.dataType === 'sponsors') {
                 // Sponsor export format (single sheet with flexible headers)
@@ -1153,13 +1240,12 @@ class RestaurantMapEditor {
                 XLSX.utils.book_append_sheet(wb, restaurantWs, 'Restaurant Data');
             }
             
-            // Generate filename with date, time, and duplicate handling
-            const fileName = this.generateExportFileName();
-            console.log(`Generating export file: ${fileName}`);
-            XLSX.writeFile(wb, fileName);
+            // Use user-provided filename
+            console.log(`Generating export file: ${filename}`);
+            XLSX.writeFile(wb, filename);
             
-            this.showEditMessage(`✅ Exported ${this.restaurants.length} businesses to ${fileName}`, 'success');
-            this.showFileStatus(`📁 Downloaded: ${fileName}`, 'success');
+            this.showEditMessage(`✅ Exported ${this.restaurants.length} businesses to ${filename}`, 'success');
+            this.showFileStatus(`📁 Downloaded: ${filename}`, 'success');
             
         } catch (error) {
             console.error('Export error:', error);

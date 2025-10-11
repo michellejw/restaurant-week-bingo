@@ -467,6 +467,47 @@
             border-radius: 4px;
             margin-top: 0.25rem;
         }
+        
+        /* Filename input styles */
+        .filename-input-group {
+            display: flex;
+            align-items: center;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .filename-input-group input {
+            flex: 1;
+            border: none;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+        }
+        
+        .filename-input-group input:focus {
+            outline: none;
+        }
+        
+        .filename-input-group:focus-within {
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .filename-extension {
+            background: #f8fafc;
+            color: #64748b;
+            padding: 0.5rem;
+            font-size: 0.875rem;
+            border-left: 1px solid #e2e8f0;
+            font-weight: 500;
+        }
+        
+        .form-help {
+            color: #64748b;
+            font-size: 0.75rem;
+            margin-top: 0.25rem;
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -612,6 +653,30 @@
                 <div style="flex: 1;"></div>
                 <button class="btn btn-secondary" id="modal-cancel-btn">Cancel</button>
                 <button class="btn" id="modal-save-btn">Save Changes</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filename Selection Modal -->
+    <div id="filename-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Export Filename</h3>
+            </div>
+            <div class="modal-body">
+                <p>Choose a filename for your exported data:</p>
+                <div class="form-group">
+                    <label for="export-filename">Filename</label>
+                    <div class="filename-input-group">
+                        <input type="text" id="export-filename" placeholder="Enter filename...">
+                        <span class="filename-extension">.xlsx</span>
+                    </div>
+                    <small class="form-help">The file will be saved to your Downloads folder</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="filename-cancel">Cancel</button>
+                <button class="btn" id="filename-export">Export File</button>
             </div>
         </div>
     </div>
