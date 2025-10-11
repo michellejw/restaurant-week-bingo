@@ -19,6 +19,7 @@ export type Database = {
           description: string | null;
           phone: string | null;
           specials: string | null;
+          promotions: string | null;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['restaurants']['Row'], 'id' | 'created_at'>;
