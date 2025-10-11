@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Week Map Editor</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+    
+    <!-- Custom CSS -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b35, #f7931e);
+            color: white;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        .container {
+            display: flex;
+            height: calc(100vh - 120px);
+            gap: 1rem;
+            padding: 1rem;
+        }
+        
+        .sidebar {
+            width: 400px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .map-container {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+        
+        .sidebar-section {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .sidebar-section:last-child {
+            border-bottom: none;
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .sidebar-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #1e293b;
+        }
+        
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            border-radius: 6px;
+            padding: 1rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .file-upload:hover {
+            border-color: #ff6b35;
+            background: #fef7f0;
+        }
+        
+        .file-upload.drag-over {
+            border-color: #ff6b35;
+            background: #fef7f0;
+        }
+        
+        .file-upload input {
+            display: none;
+        }
+        
+        .btn {
+            background: #ff6b35;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn:hover {
+            background: #e55a2b;
+        }
+        
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: #64748b;
+        }
+        
+        .btn-secondary:hover {
+            background: #475569;
+        }
+        
+        .btn-danger {
+            background: #dc2626;
+        }
+        
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        
+        .btn-small {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+            color: #374151;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 0.875rem;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #ff6b35;
+            box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .form-row .form-group {
+            flex: 1;
+        }
+        
+        .status-bar {
+            padding: 0.75rem 1rem;
+            background: #f1f5f9;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+        
+        .restaurant-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .restaurant-item {
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .restaurant-item:hover {
+            border-color: #ff6b35;
+            background: #fef7f0;
+        }
+        
+        .restaurant-item.selected {
+            border-color: #ff6b35;
+            background: #fef7f0;
+        }
+        
+        .restaurant-item h4 {
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .restaurant-item p {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 0.125rem;
+        }
+        
+        .editing-form {
+            display: none;
+        }
+        
+        .editing-form.active {
+            display: block;
+        }
+        
+        .map-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .control-button {
+            background: white;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 0.5rem;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        
+        .control-button:hover {
+            background: #f9fafb;
+        }
+        
+        .control-button.active {
+            background: #ff6b35;
+            color: white;
+            border-color: #ff6b35;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+        
+        .error {
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #fecaca;
+            margin-bottom: 1rem;
+        }
+        
+        .success {
+            background: #f0fdf4;
+            color: #16a34a;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #bbf7d0;
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>📍 Business Location Map Editor</h1>
+        <p>Upload your Excel file, edit business locations and details, then export your changes</p>
+    </div>
+    
+    <div class="container">
+        <div class="sidebar">
+            <!-- File Upload Section -->
+            <div class="sidebar-section">
+                <h3>📁 Data Import</h3>
+                <div class="file-upload" onclick="document.getElementById('file-input').click()">
+                    <input type="file" id="file-input" accept=".xlsx,.xls" />
+                    <div>
+                        <strong>Click to upload</strong> or drag & drop<br>
+                        <small>Excel files (.xlsx, .xls)</small>
+                    </div>
+                </div>
+                <div id="file-status" class="status-bar" style="display: none;"></div>
+            </div>
+            
+            <!-- Controls Section -->
+            <div class="sidebar-section">
+                <h3>🛠️ Actions</h3>
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-secondary" id="add-restaurant-btn" disabled>
+                        ➕ Add Business
+                    </button>
+                    <button class="btn" id="export-btn" disabled>
+                        💾 Export Excel
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Business List Section -->
+            <div class="sidebar-section">
+                <h3>📍 Businesses (<span id="restaurant-count">0</span>) <span id="data-type-indicator" style="font-size: 0.75rem; color: #64748b;"></span></h3>
+                <div id="restaurant-list" class="restaurant-list">
+                    <div class="loading">Upload an Excel file to get started</div>
+                </div>
+            </div>
+            
+            <!-- Editing Form Section -->
+            <div class="sidebar-section editing-form" id="editing-form">
+                <h3>✏️ Edit Business</h3>
+                <div id="edit-messages"></div>
+                
+                <form id="restaurant-form">
+                    <div class="form-group">
+                        <label for="edit-name">Name *</label>
+                        <input type="text" id="edit-name" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-address">Address *</label>
+                        <textarea id="edit-address" required></textarea>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="edit-latitude">Latitude *</label>
+                            <input type="number" id="edit-latitude" step="any" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="edit-longitude">Longitude *</label>
+                            <input type="number" id="edit-longitude" step="any" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group" id="code-group">
+                        <label for="edit-code" id="code-label">Business Code *</label>
+                        <input type="text" id="edit-code" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-url">Website</label>
+                        <input type="url" id="edit-url">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-phone">Phone</label>
+                        <input type="tel" id="edit-phone">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="edit-description">Description</label>
+                        <textarea id="edit-description"></textarea>
+                    </div>
+                    
+                    <div class="form-group" id="specials-group">
+                        <label for="edit-specials">Specials</label>
+                        <textarea id="edit-specials"></textarea>
+                    </div>
+                    
+                    <!-- Sponsor-only fields -->
+                    <div class="form-group" id="promo-group" style="display: none;">
+                        <label for="edit-promo">Promo Offer</label>
+                        <textarea id="edit-promo"></textarea>
+                    </div>
+                    
+                    <div class="form-group" id="retail-group" style="display: none;">
+                        <label for="edit-retail">
+                            <input type="checkbox" id="edit-retail"> Is Retail Location
+                        </label>
+                    </div>
+                    
+                    <div class="form-group" id="logo-group" style="display: none;">
+                        <label for="edit-logo">Logo Filename</label>
+                        <input type="text" id="edit-logo">
+                    </div>
+                    
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="submit" class="btn">💾 Save Changes</button>
+                        <button type="button" class="btn btn-danger" id="delete-restaurant-btn">🗑️ Delete</button>
+                        <button type="button" class="btn btn-secondary" id="cancel-edit-btn">✖️ Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <div class="map-controls">
+                <button class="control-button" id="add-mode-btn" title="Click map to add business" disabled>
+                    ➕
+                </button>
+            </div>
+            <div id="map"></div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+    
+    <!-- SheetJS for Excel handling -->
+    <script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
