@@ -146,6 +146,21 @@ export const DatabaseService = {
         });
       
       if (error) throw error;
+    },
+
+    async isAdmin(userId: string): Promise<boolean> {
+      const { data, error } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', userId)
+        .single();
+      
+      if (error || !data) {
+        console.log('User not found or error checking admin status:', error);
+        return false; // Default to false if user doesn't exist or error
+      }
+      
+      return data.is_admin || false;
     }
   },
 
