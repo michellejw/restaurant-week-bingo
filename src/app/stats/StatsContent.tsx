@@ -39,6 +39,8 @@ function RestaurantVisitsChart({ data }: { data: { name: string; visits: number 
         x: {
           label: "Number of visits →",
           grid: true,
+          tickFormat: "d", // Force integer formatting
+          ticks: "width" // Use automatic tick spacing but with integer format
         },
         y: {
           label: null, // No y-axis label since restaurant names are self-explanatory
@@ -116,6 +118,12 @@ function UserVisitsHistogram({ data }: { data: number[] }) {
         width: 900,
         height: 400,
         marginBottom: 60,
+        x: {
+          tickFormat: "d", // Force integer formatting on x-axis
+        },
+        y: {
+          tickFormat: "d", // Force integer formatting on y-axis
+        },
         marks: [
           Plot.barY(plotData, {
             x: "visits",
