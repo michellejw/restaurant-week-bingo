@@ -1,0 +1,74 @@
+<!doctype html>
+<notebook theme="air">
+  <title>PICC Restaurant Week Stats Page</title>
+  <script id="1" type="text/markdown">
+    # PICC Restaurant Week Stats Page
+  </script>
+  <script id="5" type="module" pinned="">
+    // Data loader approach - runs on Observable's servers
+    // Create a separate data loader cell that fetches the data server-side
+  </script>
+  <script id="6" type="application/vnd.node.javascript" pinned="" output="restaurantData" format="buffer">
+    // This runs on Observable's servers, not in the browser
+    const { createClient } = require('@supabase/supabase-js');
+
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_KEY; // Use service key on server
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    const { data: restaurants, error } = await supabase
+      .from('restaurants')
+      .select('*');
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    // Output as JSON for the notebook to consume
+    console.log(JSON.stringify(restaurants));
+  </script>
+  <script id="2" type="module" pinned="">
+    import { createClient } from "npm:@supabase/supabase-js";
+
+    // These are safe to expose for read-only public data
+    const supabaseUrl = 'https://your-project-ref.supabase.co';
+    const supabaseAnonKey = 'your-publishable-anon-key-here';
+
+    const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+    const { data: restaurants, error } = await supabase
+      .from('restaurants')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching data:', error);
+      display(`Error: ${error.message}`);
+    } else {
+      display(restaurants);
+    }
+  </script>
+  <script id="3" type="module" pinned="">
+    // Alternative fetch approach with proper Supabase headers
+    const supabaseUrl = 'https://your-project-ref.supabase.co'; // Replace with your actual URL
+    const supabaseAnonKey = 'your-publishable-key-here'; // Replace with your actual publishable key
+
+    const response = await fetch(`${supabaseUrl}/rest/v1/restaurants`, {
+      headers: {
+        'apikey': supabaseAnonKey,
+        'Authorization': `Bearer ${supabaseAnonKey}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const restaurantData = await response.json();
+    display(restaurantData);
+  </script>
+  <script id="4" type="application/sql" pinned="" database="supabase">
+    SELECT * FROM restaurants WHERE active = true;
+  </script>
+</notebook>

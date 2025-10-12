@@ -4,18 +4,40 @@ import Link from 'next/link'
 import { useUser, SignInButton, UserButton, useAuth } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import { FaBars, FaTimes, FaHome } from 'react-icons/fa'
+import { DatabaseService } from '@/lib/services/database'
 
 export default function NavBar() {
   const { user } = useUser()
   const { isSignedIn } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   // Close menu when auth state changes
   useEffect(() => {
     if (!isSignedIn) {
       setIsMenuOpen(false)
+      setIsAdmin(false)
     }
   }, [isSignedIn])
+
+  // Check admin status when user changes
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user?.id) {
+        try {
+          const adminStatus = await DatabaseService.users.isAdmin(user.id)
+          setIsAdmin(adminStatus)
+        } catch (error) {
+          console.error('Error checking admin status:', error)
+          setIsAdmin(false)
+        }
+      } else {
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdminStatus()
+  }, [user?.id])
 
   const closeMenu = () => setIsMenuOpen(false)
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen)
@@ -47,6 +69,11 @@ export default function NavBar() {
               {user && (
                 <Link href="/my-info" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors whitespace-nowrap">
                   My Info
+                </Link>
+              )}
+              {user && isAdmin && (
+                <Link href="/stats" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors whitespace-nowrap">
+                  Stats
                 </Link>
               )}
               {!user && (
@@ -122,6 +149,15 @@ export default function NavBar() {
                   onClick={closeMenu}
                 >
                   My Info
+                </Link>
+              )}
+              {user && isAdmin && (
+                <Link
+                  href="/stats"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
+                  onClick={closeMenu}
+                >
+                  Stats
                 </Link>
               )}
               {!user && (

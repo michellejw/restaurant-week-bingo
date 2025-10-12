@@ -27,11 +27,13 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",
+    "@observablehq/plot": "^0.6.17",
     "@supabase/supabase-js": "^2.48.1",
     "@types/leaflet.markercluster": "^1.5.5",
     "@types/uuid": "^10.0.0",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
+    "d3": "^7.9.0",
     "leaflet": "^1.9.4",
     "leaflet.markercluster": "^1.5.3",
     "next": "^15.2.1",

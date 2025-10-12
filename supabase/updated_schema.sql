@@ -153,7 +153,8 @@ CREATE TABLE users (
     updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
     name TEXT,
     phone TEXT,
-    email TEXT
+    email TEXT,
+    is_admin BOOLEAN DEFAULT FALSE
 );
 
 -- Enable RLS on users table

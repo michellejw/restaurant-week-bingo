@@ -68,6 +68,8 @@ export type Database = {
           id: string;
           name: string | null;
           phone: string | null;
+          email: string | null;
+          is_admin: boolean;
           created_at: string;
         };
         Insert: Omit<Database['public']['Tables']['users']['Row'], 'created_at'>;
