@@ -180,6 +180,7 @@ export interface StatsData {
     totalVisits: number;
     totalUsers: number;
     totalRestaurants: number;
+    totalRegisteredUsers: number;
     avgVisitsPerUser: number;
   };
 }
@@ -219,9 +220,10 @@ export default function StatsContent() {
         setError(null);
 
         // Fetch required data
-        const [restaurants, visits] = await Promise.all([
+        const [restaurants, visits, totalRegisteredUsers] = await Promise.all([
           DatabaseService.restaurants.getAll(),
           fetchAllVisits(),
+          fetchTotalRegisteredUsers(),
         ]);
 
         console.log('Raw visits:', visits);
@@ -268,6 +270,7 @@ export default function StatsContent() {
             totalVisits,
             totalUsers,
             totalRestaurants,
+            totalRegisteredUsers,
             avgVisitsPerUser: Math.round(avgVisitsPerUser * 100) / 100,
           },
         };
@@ -371,5 +374,15 @@ async function fetchAllVisits() {
   
   if (error) throw error;
   return data || [];
+}
+
+async function fetchTotalRegisteredUsers() {
+  const { supabase } = await import('@/lib/supabase');
+  const { count, error } = await supabase
+    .from('users')
+    .select('*', { count: 'exact', head: true });
+  
+  if (error) throw error;
+  return count || 0;
 }
 
