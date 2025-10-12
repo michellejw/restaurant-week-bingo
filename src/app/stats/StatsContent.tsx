@@ -189,6 +189,7 @@ export default function StatsContent() {
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchStatsData = async () => {
@@ -218,17 +219,25 @@ export default function StatsContent() {
         setError(null);
 
         // Fetch required data
-        const [restaurants, userStats, visits] = await Promise.all([
+        const [restaurants, visits] = await Promise.all([
           DatabaseService.restaurants.getAll(),
-          fetchUserStats(),
           fetchAllVisits(),
         ]);
 
-        console.log('Raw userStats:', userStats);
         console.log('Raw visits:', visits);
 
-        // Create array of visit counts for histogram
-        const userVisitCounts = userStats.map(user => user.visit_count);
+        // Calculate user visit counts directly from visits data (more reliable)
+        const userVisitCountMap = new Map<string, number>();
+        visits.forEach(visit => {
+          const currentCount = userVisitCountMap.get(visit.user_id) || 0;
+          userVisitCountMap.set(visit.user_id, currentCount + 1);
+        });
+        
+        // Get all unique users from visits
+        const userVisitCounts = Array.from(userVisitCountMap.values());
+        
+        console.log('Calculated user visit counts:', userVisitCounts);
+        console.log('User visit count map:', Array.from(userVisitCountMap.entries()));
         
         console.log('User visit counts for histogram:', userVisitCounts);
         
@@ -246,10 +255,10 @@ export default function StatsContent() {
         
         console.log('Restaurant visits:', restaurantVisits);
 
-        // Calculate basic stats
-        const totalUsers = userStats.length;
+        // Calculate basic stats directly from raw data
+        const totalUsers = userVisitCountMap.size; // Users who have made visits
         const totalRestaurants = restaurants.length;
-        const totalVisits = userVisitCounts.reduce((sum, count) => sum + count, 0);
+        const totalVisits = visits.length; // Direct count from visits table
         const avgVisitsPerUser = totalUsers > 0 ? totalVisits / totalUsers : 0;
 
         const statsData: StatsData = {
@@ -273,7 +282,7 @@ export default function StatsContent() {
     };
 
     fetchStatsData();
-  }, [user?.id]);
+  }, [user?.id, refreshTrigger]);
 
   if (loading) {
     return (
@@ -283,12 +292,16 @@ export default function StatsContent() {
     );
   }
 
+  const handleRefresh = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   if (error) {
     return (
       <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
         <p className="text-red-700">{error}</p>
         <button 
-          onClick={() => window.location.reload()} 
+          onClick={handleRefresh} 
           className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
         >
           Try Again
@@ -307,6 +320,23 @@ export default function StatsContent() {
 
   return (
     <div className="space-y-8">
+      {/* Refresh Button */}
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-gray-600">
+          Last updated: {new Date().toLocaleTimeString()}
+        </div>
+        <button
+          onClick={handleRefresh}
+          disabled={loading}
+          className="flex items-center space-x-2 px-4 py-2 bg-coral-600 text-white rounded-lg hover:bg-coral-700 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <svg className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>{loading ? 'Refreshing...' : 'Refresh Data'}</span>
+        </button>
+      </div>
+      
       {/* Basic Stats */}
       <OverallStatsCards stats={data.overallStats} />
       
@@ -343,13 +373,3 @@ async function fetchAllVisits() {
   return data || [];
 }
 
-async function fetchUserStats() {
-  // Get aggregated user visit counts
-  const { supabase } = await import('@/lib/supabase');
-  const { data, error } = await supabase
-    .from('user_stats')
-    .select('user_id, visit_count');
-  
-  if (error) throw error;
-  return data || [];
-}
