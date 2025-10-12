@@ -76,6 +76,11 @@ export default function NavBar() {
                   Stats
                 </Link>
               )}
+              {user && isAdmin && (
+                <Link href="/admin" className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors whitespace-nowrap">
+                  Admin
+                </Link>
+              )}
               {!user && (
                 <SignInButton mode="modal">
                   <button className="text-sm font-medium text-gray-700 hover:text-coral-500 transition-colors whitespace-nowrap">
@@ -158,6 +163,15 @@ export default function NavBar() {
                   onClick={closeMenu}
                 >
                   Stats
+                </Link>
+              )}
+              {user && isAdmin && (
+                <Link
+                  href="/admin"
+                  className="block px-3 py-2 text-base font-medium text-gray-700 hover:text-coral-500 hover:bg-gray-50 transition-colors"
+                  onClick={closeMenu}
+                >
+                  Admin
                 </Link>
               )}
               {!user && (
