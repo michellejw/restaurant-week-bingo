@@ -2,6 +2,7 @@ interface OverallStats {
   totalVisits: number;
   totalUsers: number;
   totalRestaurants: number;
+  totalRegisteredUsers: number;
   avgVisitsPerUser: number;
 }
 
@@ -24,6 +25,12 @@ export default function OverallStatsCards({ stats }: Props) {
       color: 'bg-blue-100 text-blue-900',
     },
     {
+      title: 'Registered Users',
+      value: stats.totalRegisteredUsers.toLocaleString(),
+      icon: '👤',
+      color: 'bg-yellow-100 text-yellow-900',
+    },
+    {
       title: 'Restaurants',
       value: stats.totalRestaurants.toLocaleString(),
       icon: '🍽️',
@@ -38,7 +45,7 @@ export default function OverallStatsCards({ stats }: Props) {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
       {statCards.map((card, index) => (
         <div
           key={index}
