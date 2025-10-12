@@ -219,17 +219,25 @@ export default function StatsContent() {
         setError(null);
 
         // Fetch required data
-        const [restaurants, userStats, visits] = await Promise.all([
+        const [restaurants, visits] = await Promise.all([
           DatabaseService.restaurants.getAll(),
-          fetchUserStats(),
           fetchAllVisits(),
         ]);
 
-        console.log('Raw userStats:', userStats);
         console.log('Raw visits:', visits);
 
-        // Create array of visit counts for histogram
-        const userVisitCounts = userStats.map(user => user.visit_count);
+        // Calculate user visit counts directly from visits data (more reliable)
+        const userVisitCountMap = new Map<string, number>();
+        visits.forEach(visit => {
+          const currentCount = userVisitCountMap.get(visit.user_id) || 0;
+          userVisitCountMap.set(visit.user_id, currentCount + 1);
+        });
+        
+        // Get all unique users from visits
+        const userVisitCounts = Array.from(userVisitCountMap.values());
+        
+        console.log('Calculated user visit counts:', userVisitCounts);
+        console.log('User visit count map:', Array.from(userVisitCountMap.entries()));
         
         console.log('User visit counts for histogram:', userVisitCounts);
         
@@ -247,10 +255,10 @@ export default function StatsContent() {
         
         console.log('Restaurant visits:', restaurantVisits);
 
-        // Calculate basic stats
-        const totalUsers = userStats.length;
+        // Calculate basic stats directly from raw data
+        const totalUsers = userVisitCountMap.size; // Users who have made visits
         const totalRestaurants = restaurants.length;
-        const totalVisits = userVisitCounts.reduce((sum, count) => sum + count, 0);
+        const totalVisits = visits.length; // Direct count from visits table
         const avgVisitsPerUser = totalUsers > 0 ? totalVisits / totalUsers : 0;
 
         const statsData: StatsData = {
@@ -365,13 +373,3 @@ async function fetchAllVisits() {
   return data || [];
 }
 
-async function fetchUserStats() {
-  // Get aggregated user visit counts
-  const { supabase } = await import('@/lib/supabase');
-  const { data, error } = await supabase
-    .from('user_stats')
-    .select('user_id, visit_count');
-  
-  if (error) throw error;
-  return data || [];
-}
