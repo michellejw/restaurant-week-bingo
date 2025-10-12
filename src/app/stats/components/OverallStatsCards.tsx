@@ -49,7 +49,7 @@ export default function OverallStatsCards({ stats }: Props) {
           </div>
           <div className="space-y-1">
             <p className="text-sm font-medium opacity-80">{card.title}</p>
-            <p className={`text-2xl font-bold ${card.isText ? 'text-sm truncate' : ''}`}>
+            <p className="text-2xl font-bold">
               {card.value}
             </p>
           </div>

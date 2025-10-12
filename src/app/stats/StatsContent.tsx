@@ -189,7 +189,6 @@ export default function StatsContent() {
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchStatsData = async () => {
@@ -202,7 +201,6 @@ export default function StatsContent() {
       // Check if user is admin first
       try {
         const adminStatus = await DatabaseService.users.isAdmin(user.id);
-        setIsAdmin(adminStatus);
         
         if (!adminStatus) {
           setLoading(false);

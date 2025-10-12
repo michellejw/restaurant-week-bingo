@@ -81,7 +81,7 @@ export default function UserEngagementChart({ data }: Props) {
 
       {/* X-axis labels */}
       <div className="flex justify-center space-x-2 mb-4">
-        {data.map((item, index) => (
+        {data.map((item) => (
           <div key={item.visitRange} className="flex-1 text-center max-w-16">
             <div className="text-xs text-gray-600 font-medium transform -rotate-12 origin-center">
               {item.visitRange}
