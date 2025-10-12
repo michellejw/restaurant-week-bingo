@@ -163,7 +163,7 @@ function UserVisitsHistogram({ data }: { data: number[] }) {
       <div className="mt-4 text-sm text-gray-600">
         <p>Total users: {data.length}</p>
         {data.filter(v => v > 0).length > 0 && (
-          <p>Visit range: 1 to 23 visits (showing distribution for users with visits > 0)</p>
+          <p>Visit range: 1 to 23 visits (showing distribution for users with visits {'>'} 0)</p>
         )}
       </div>
     </div>
