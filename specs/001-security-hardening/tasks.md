@@ -104,11 +104,11 @@
 
 **Purpose**: Full verification that all changes work together without regression
 
-- [ ] T021 Complete quickstart.md verification checklist section 1 (RLS Policies)
-- [ ] T022 Complete quickstart.md verification checklist section 2 (Admin Auth)
-- [ ] T023 Complete quickstart.md verification checklist section 3 (Test Endpoint)
-- [ ] T024 Complete quickstart.md verification checklist section 4 (Regression Test - Full User Flow)
-- [ ] T025 Update quickstart.md sign-off section with completion status
+- [x] T021 Complete quickstart.md verification checklist section 1 (RLS Policies)
+- [x] T022 Complete quickstart.md verification checklist section 2 (Admin Auth)
+- [x] T023 Complete quickstart.md verification checklist section 3 (Test Endpoint)
+- [x] T024 Complete quickstart.md verification checklist section 4 (Regression Test - Full User Flow)
+- [x] T025 Update quickstart.md sign-off section with completion status
 
 ---
 
