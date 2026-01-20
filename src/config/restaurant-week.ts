@@ -14,13 +14,13 @@ export const RESTAURANT_WEEK_CONFIG = {
    * Format: 'YYYY-MM-DD'
    * 
    * Just change this date for each Restaurant Week:
-   * - Current: October 11, 2025 → '2025-10-11'
+   * - Current: October 10, 2025 → '2025-10-10'
    * - Next could be: April 15, 2026 → '2026-04-15'  
    * - Following: October 10, 2026 → '2026-10-10'
    * 
    * (These are just examples - use your actual dates)
    */
-  startDate: '2025-10-11',
+  startDate: '2025-10-10',
   
   /**
    * 🧪 TESTING OVERRIDES
@@ -41,7 +41,7 @@ export const RESTAURANT_WEEK_CONFIG = {
      * ⚠️  REMEMBER TO SET BACK TO FALSE BEFORE RESTAURANT WEEK!
      * ⚠️  This affects the live site!
      */
-    forceEnableInProduction: true
+    forceEnableInProduction: false
   },
   
   /**
@@ -51,7 +51,7 @@ export const RESTAURANT_WEEK_CONFIG = {
    */
   messages: {
     title: "Restaurant Week Coming Soon!",
-    beforeStart: "Restaurant Week check-ins will be available starting October 11, 2025. Get ready to discover amazing local restaurants and earn raffle entries!",
+    beforeStart: "Restaurant Week check-ins will be available starting October 10, 2025. Get ready to discover amazing local restaurants and earn raffle entries!",
     duringEvent: "Restaurant Week is active! Enter restaurant codes to check in and earn raffle entries."
   }
 } as const;

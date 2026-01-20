@@ -38,7 +38,7 @@ async function fixUserStats() {
     // Update each user's stats
     for (const stat of userStats) {
       const actualVisits = userVisitCounts[stat.user_id] || 0;
-      const correctRaffleEntries = Math.floor(actualVisits / 5);
+      const correctRaffleEntries = Math.floor(actualVisits / 4);
       
       if (actualVisits !== stat.visit_count || correctRaffleEntries !== stat.raffle_entries) {
         console.log(`📝 Updating user ${stat.user_id}:`);

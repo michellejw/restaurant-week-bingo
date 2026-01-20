@@ -29,12 +29,11 @@ jobs:
     - name: 🏗️ Test build
       run: npm run build
       env:
-        # Use dummy values for CI build test
-        NEXT_PUBLIC_SUPABASE_URL: "https://dummy.supabase.co"
-        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_dummy"
-        SUPABASE_SERVICE_ROLE_KEY: "sb_secret_dummy"
-        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
-        CLERK_SECRET_KEY: "sk_test_dummy"
+        NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
+        SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+        CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
         
     - name: 🧹 Check linting
       run: npm run lint
