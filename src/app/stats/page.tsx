@@ -1,7 +1,16 @@
 import { Suspense } from 'react';
+import { redirect } from 'next/navigation';
+import { verifyAdmin } from '@/lib/auth/admin-check';
 import StatsContent from './StatsContent';
 
-export default function StatsPage() {
+export default async function StatsPage() {
+  // Server-side admin verification - fails closed on any error
+  const { authorized } = await verifyAdmin();
+
+  if (!authorized) {
+    redirect('/');
+  }
+
   return (
     <div className="min-h-screen bg-coral-50">
       <div className="container mx-auto px-4 py-8">
@@ -14,7 +23,7 @@ export default function StatsPage() {
               Statistical analysis of user engagement patterns and temporal behavior
             </p>
           </div>
-          
+
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-coral-500"></div>

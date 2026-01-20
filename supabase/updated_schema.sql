@@ -47,9 +47,20 @@ CREATE TABLE sponsors (
     logo_file TEXT
 );
 
+-- Create users table for contact information (must be created before user_stats)
+CREATE TABLE users (
+    id TEXT PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
+    name TEXT,
+    phone TEXT,
+    email TEXT,
+    is_admin BOOLEAN DEFAULT FALSE
+);
+
 -- Create user_stats table (updated schema from backup)
 CREATE TABLE user_stats (
-    user_id TEXT PRIMARY KEY,
+    user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     visit_count INTEGER DEFAULT 0,
     raffle_entries INTEGER DEFAULT 0,
     created_at TIMESTAMPTZ DEFAULT NOW(),
@@ -145,17 +156,6 @@ GRANT USAGE ON SCHEMA public TO authenticated;
 -- Grant SELECT permissions to both anon and authenticated users for public data
 GRANT SELECT ON restaurants TO anon, authenticated;
 GRANT SELECT ON sponsors TO anon, authenticated;
-
--- Create users table for contact information
-CREATE TABLE users (
-    id TEXT PRIMARY KEY,
-    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL,
-    name TEXT,
-    phone TEXT,
-    email TEXT,
-    is_admin BOOLEAN DEFAULT FALSE
-);
 
 -- Enable RLS on users table
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
