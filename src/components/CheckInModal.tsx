@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import { RESTAURANT_WEEK_CONFIG, RestaurantWeekUtils } from '@/config/restaurant-week';
 
 interface CheckInModalProps {
@@ -40,34 +39,33 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
     setSuccess('');
 
     try {
-      // Get all restaurants to find matching code
-      const restaurants = await DatabaseService.restaurants.getAll();
-      const restaurant = restaurants.find(r => r.code.toLowerCase() === code.trim().toLowerCase());
-      
-      if (!restaurant) {
-        setError('Invalid code. Please check the code and try again.');
-        setLoading(false);
-        return;
-      }
+      const response = await fetch('/api/check-in', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim() })
+      });
 
-      // Check if already visited
-      const alreadyVisited = await DatabaseService.visits.checkExists(user.id, restaurant.id);
-      if (alreadyVisited) {
-        setError(`You've already checked in at ${restaurant.name}!`);
-        setLoading(false);
-        return;
-      }
+      const data = await response.json();
 
-      // Create the visit
-      await DatabaseService.visits.create(user.id, restaurant.id);
-      
-      setSuccess(`Successfully checked in at ${restaurant.name}!`);
-      
-      // Call the onCheckIn callback to refresh parent state
-      if (onCheckIn) {
-        onCheckIn();
+      if (response.ok) {
+        // T015: Handle 200 success
+        setSuccess(`Successfully checked in at ${data.restaurant}!`);
+        if (onCheckIn) {
+          onCheckIn();
+        }
+      } else if (response.status === 401) {
+        // T018: Handle 401 unauthorized
+        setError('Please sign in to check in.');
+      } else if (response.status === 429) {
+        // T019: Handle 429 rate limit
+        setError(data.error || 'Too many attempts. Please wait a moment.');
+      } else if (response.status === 409) {
+        // T017: Handle 409 conflict (already visited)
+        setError(data.error || `You've already checked in at this restaurant!`);
+      } else {
+        // T016: Handle 400/404 and other errors
+        setError(data.error || 'Invalid code. Please check and try again.');
       }
-      
     } catch (error) {
       console.error('Check-in error:', error);
       setError('An error occurred. Please try again.');
