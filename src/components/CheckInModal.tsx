@@ -42,7 +42,8 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
       const response = await fetch('/api/check-in', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: code.trim() })
+        body: JSON.stringify({ code: code.trim() }),
+        credentials: 'include'
       });
 
       const data = await response.json();

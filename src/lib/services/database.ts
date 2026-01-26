@@ -222,33 +222,5 @@ export const DatabaseService = {
         throw error;
       }
     },
-
-    async incrementVisits(userId: string): Promise<UserStats> {
-      // First get current stats
-      const { data: currentStats } = await supabase
-        .from('user_stats')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-
-      if (!currentStats) throw new Error('User stats not found');
-
-      // Calculate new values
-      const newVisitCount = currentStats.visit_count + 1;
-      const newRaffleEntries = Math.floor(newVisitCount / 4);
-
-      // Update with new values
-      const response = await supabase
-        .from('user_stats')
-        .update({ 
-          visit_count: newVisitCount,
-          raffle_entries: newRaffleEntries
-        })
-        .eq('user_id', userId)
-        .select()
-        .single();
-        
-      return checkError(response);
-    },
   },
 }; 

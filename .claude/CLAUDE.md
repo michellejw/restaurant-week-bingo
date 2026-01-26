@@ -24,5 +24,14 @@ When I say "looks good" or "done", proceed to the next file.
 ## Project Guidelines
 
 - **Roadmap**: Feature roadmap lives at `.specify/roadmap.md`. Check it when ready for next steps.
-- **Spec-first**: Before implementing any feature, ensure a spec exists. If unclear, write/update the  
-  spec first.     
+- **Spec-first**: Before implementing any feature, ensure a spec exists. If unclear, write/update the
+  spec first.
+
+## Troubleshooting
+
+### Clerk Authentication Issues
+If you encounter Clerk errors that seem impossible to resolve (like "kid mismatch" or "handshake token verification failed"):
+- **Use localhost:3000** - Clerk Development instance may only allow specific ports
+- localhost:3001 or other ports may NOT work with Clerk dev keys
+- Always run `npm run dev` without specifying a port (defaults to 3000)
+- If 3000 is busy, kill all node processes: `pkill -f "next dev"` then retry     
