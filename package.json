@@ -28,6 +28,7 @@
   "dependencies": {
     "@clerk/nextjs": "^6.12.3",
     "@observablehq/plot": "^0.6.17",
+    "@sentry/nextjs": "^10.37.0",
     "@supabase/supabase-js": "^2.48.1",
     "@types/leaflet.markercluster": "^1.5.5",
     "@types/uuid": "^10.0.0",
