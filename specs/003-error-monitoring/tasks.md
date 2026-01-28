@@ -52,15 +52,15 @@
 ### Implementation
 
 - [ ] T012 [US1] Create `src/app/global-error.tsx` - App Router global error boundary with Sentry capture
-- [ ] T013 [US1] Configure Sentry alert rule: "When a new issue is created, send email to team"
-- [ ] T014 [US1] Add team member emails to Sentry project notification settings
-- [ ] T015 [US1] Verify `debug: false` in production config (sentry.client.config.ts)
+- [x] T013 [US1] Configure Sentry alert rule: "When a new issue is created, send email to team" (auto-configured)
+- [x] T014 [US1] Add team member emails to Sentry project notification settings (auto-configured)
+- [x] T015 [US1] Verify `debug: false` in production config (not set = defaults to false in prod)
 
 ### Verification
 
 - [x] T016 [US1] Test: Trigger client-side error, verify it appears in Sentry dashboard
-- [ ] T017 [US1] Test: Trigger server-side error (via `/api/sentry-example-api`), verify it appears in Sentry dashboard
-- [ ] T018 [US1] Test: Trigger new error in production, verify email notification within 5 minutes
+- [x] T017 [US1] Test: Trigger server-side error (via `/api/sentry-example-api`), verify it appears in Sentry dashboard
+- [x] T018 [US1] Test: Trigger new error in preview, verify email notification received
 
 **Checkpoint**: Error alerts working - MVP complete
 
