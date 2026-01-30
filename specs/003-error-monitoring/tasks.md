@@ -74,14 +74,14 @@
 
 ### Implementation
 
-- [ ] T019 [US2] Create `src/lib/sentry/user-context.ts` per contract (setSentryUserContext helper)
-- [ ] T020 [US2] Integrate user context in app layout or provider - call `setSentryUserContext(user?.id)` on auth state change
-- [ ] T021 [US2] Verify NO PII fields are passed (no email, username, name, phone, ip_address)
+- [x] T019 [US2] Create `src/lib/sentry/user-context.ts` per contract (setSentryUserContext helper)
+- [x] T020 [US2] Integrate user context in UserInitializer - call `setSentryUserContext(user?.id)` on auth state change
+- [x] T021 [US2] Verify NO PII fields are passed (only user ID sent, no email/username/name/phone/ip_address)
 
 ### Verification
 
-- [ ] T022 [US2] Test: Trigger error while signed in, verify user ID appears in error report
-- [ ] T023 [US2] Test: Audit error report - confirm NO email, name, or phone visible
+- [x] T022 [US2] Test: Trigger error while signed in, verify user ID appears in error report
+- [x] T023 [US2] Test: Audit error report - confirm NO email, name, or phone visible (only user ID shown)
 - [ ] T024 [US2] Test: Trigger error while signed out, verify user context is null
 
 **Checkpoint**: Error context working with user ID only (no PII)
