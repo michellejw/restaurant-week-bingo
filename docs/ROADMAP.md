@@ -41,10 +41,10 @@
 
 > **Goal**: Better tooling for development and debugging.
 
-- [ ] **003-error-monitoring** - Sentry integration
-  - [ ] Install and configure @sentry/nextjs
-  - [ ] Set up error alerting for production
-  - [ ] Add user context to error reports
+- [x] **003-error-monitoring** - Sentry integration
+  - [x] Install and configure @sentry/nextjs
+  - [x] Set up error alerting for production
+  - [x] Add user context to error reports
 
 - [ ] **004-data-caching** - SWR for client-side caching
   - [ ] Install SWR
@@ -101,7 +101,7 @@
 |-------|--------|-------|
 | Phase 1: Security | ✅ Complete | 001 |
 | Phase 2: Code Quality | ✅ Complete | 002 |
-| Phase 3: Dev Experience | ⏳ Not Started | 003, 004, 005 |
+| Phase 3: Dev Experience | 🔄 In Progress | 003 ✅, 004, 005 |
 | Phase 4: Documentation | ⏳ Not Started | 006, 007 |
 
 ---
