@@ -46,11 +46,11 @@
   - [x] Set up error alerting for production
   - [x] Add user context to error reports
 
-- [ ] **004-data-caching** - SWR for client-side caching
-  - [ ] Install SWR
-  - [ ] Create `useRestaurants` hook with caching
-  - [ ] Create `useUserStats` hook with caching
-  - [ ] Reduce unnecessary API calls on page loads
+- [x] **004-data-caching** - SWR for client-side caching
+  - [x] Install SWR
+  - [x] Create `useRestaurants` hook with caching
+  - [x] Create `useUserStats` hook with caching
+  - [x] Reduce unnecessary API calls on page loads
 
 - [ ] **005-config-constants** - Centralize magic numbers
   - [ ] Create `GAME_CONFIG` in restaurant-week.ts
@@ -101,7 +101,7 @@
 |-------|--------|-------|
 | Phase 1: Security | ✅ Complete | 001 |
 | Phase 2: Code Quality | ✅ Complete | 002 |
-| Phase 3: Dev Experience | 🔄 In Progress | 003 ✅, 004, 005 |
+| Phase 3: Dev Experience | 🔄 In Progress | 003 ✅, 004 ✅, 005 |
 | Phase 4: Documentation | ⏳ Not Started | 006, 007 |
 
 ---
@@ -117,4 +117,4 @@
 
 ---
 
-*Last updated: 2026-01-26*
+*Last updated: 2026-02-01*

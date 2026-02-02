@@ -1,15 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
-
-interface Restaurant {
-  id: string;
-  name: string;
-  code: string;
-  visited: boolean;
-}
+import { useRestaurants } from '@/hooks/useRestaurants';
 
 interface BingoCardProps {
   onVisitUpdate?: () => void;
@@ -17,43 +8,10 @@ interface BingoCardProps {
   selectedRestaurantId?: string | null;
 }
 
-export default function BingoCard({ onVisitUpdate, onRestaurantSelect, selectedRestaurantId }: BingoCardProps) {
-  const { user, isLoaded } = useUser();
-  const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function BingoCard({ onRestaurantSelect, selectedRestaurantId }: BingoCardProps) {
+  const { restaurants, isLoading } = useRestaurants();
 
-  useEffect(() => {
-    async function loadRestaurants() {
-      if (!user?.id) return;
-
-      try {
-        // Get all restaurants
-        const allRestaurants = await DatabaseService.restaurants.getAll();
-        
-        // Get user's visits
-        const visits = await DatabaseService.visits.getByUser(user.id);
-        const visitedIds = new Set(visits.map(v => v.restaurant_id));
-
-        // Combine the data
-        const restaurantsWithVisits = allRestaurants.map(r => ({
-          ...r,
-          visited: visitedIds.has(r.id)
-        }));
-
-        setRestaurants(restaurantsWithVisits);
-      } catch (error) {
-        console.error('Error loading restaurants:', error);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (isLoaded) {
-      loadRestaurants();
-    }
-  }, [user?.id, isLoaded, onVisitUpdate]);
-
-  if (loading || !isLoaded) {
+  if (isLoading) {
     return <div>Loading...</div>;
   }
 
@@ -70,7 +28,7 @@ export default function BingoCard({ onVisitUpdate, onRestaurantSelect, selectedR
             onRestaurantSelect?.(restaurant.id);
           }
         };
-        
+
         return (
           <button
             key={restaurant.id}
@@ -91,7 +49,7 @@ export default function BingoCard({ onVisitUpdate, onRestaurantSelect, selectedR
             </span>
           </button>
         );
-      })}    
+      })}
     </div>
   );
-} 
+}
