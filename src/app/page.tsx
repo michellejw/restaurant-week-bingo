@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useUser, SignIn, SignedIn, SignedOut } from '@clerk/nextjs';
 import Image from 'next/image';
-import { DatabaseService } from '@/lib/services/database';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
 import { RestaurantWeekUtils } from '@/config/restaurant-week';
+import { useUserStats } from '@/hooks/useUserStats';
+import { useRestaurants } from '@/hooks/useRestaurants';
 
 // Dynamically import the map component with SSR disabled
 const RestaurantMap = dynamic(
@@ -15,98 +16,22 @@ const RestaurantMap = dynamic(
   { ssr: false }
 );
 
-interface UserStats {
-  visit_count: number;
-  raffle_entries: number;
-}
-
 export default function Home() {
-  const { user, isLoaded } = useUser();
-  const [userStats, setUserStats] = useState<UserStats>({ visit_count: 0, raffle_entries: 0 });
+  const { user } = useUser();
+  const { stats: userStats, loading: statsLoading, refresh: refreshStats } = useUserStats();
+  const { refresh: refreshRestaurants } = useRestaurants();
   const [isCheckInModalOpen, setIsCheckInModalOpen] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   const [selectedRestaurantId, setSelectedRestaurantId] = useState<string | null>(null);
 
-  // Initialize and fetch initial data
-  useEffect(() => {
-    let mounted = true;
-    let retryTimeout: NodeJS.Timeout;
-
-    const initialize = async () => {
-      if (!user?.id) {
-        console.log('⏳ Waiting for user...');
-        return;
-      }
-
-      try {
-        console.log('🚀 Fetching user stats for ID:', user.id);
-        // Fetch initial stats
-        const stats = await DatabaseService.userStats.getOrCreate(user.id);
-        console.log('📊 Received user stats:', stats);
-        
-        if (mounted) {
-          setUserStats(stats);
-          setRetryCount(0);
-          setInitialLoadComplete(true);
-          console.log('✅ Updated user stats in state');
-        }
-      } catch (err) {
-        console.error('❌ Initialization error:', err);
-        if (mounted) {
-          // If we haven't retried too many times, try again after a delay
-          if (retryCount < 3) {
-            console.log(`🔄 Will retry in ${(retryCount + 1) * 1000}ms (attempt ${retryCount + 1}/3)`);
-            retryTimeout = setTimeout(() => {
-              if (mounted) {
-                setRetryCount(prev => prev + 1);
-              }
-            }, (retryCount + 1) * 1000);
-          } else {
-            // After max retries, still mark as complete to stop loading animation
-            console.log('❌ Max retries reached, stopping attempts');
-            setInitialLoadComplete(true);
-          }
-        }
-      } finally {
-        if (mounted) {
-          console.log('✅ Loading complete');
-        }
-      }
-    };
-
-    if (isLoaded && user?.id) {
-      console.log('🔄 Conditions met, running initialize');
-      initialize();
-    } else if (!isLoaded) {
-      console.log('⏳ Waiting for conditions:', { isLoaded });
-    }
-
-    return () => {
-      mounted = false;
-      if (retryTimeout) {
-        clearTimeout(retryTimeout);
-      }
-      console.log('🧹 Cleanup: component unmounted');
-    };
-  }, [user?.id, isLoaded, retryCount]);
+  // Loading state based on SWR hooks
+  const initialLoadComplete = !statsLoading;
 
   const handleCheckIn = async () => {
     if (!user?.id) {
-      console.log('❌ Cannot check in: no user');
       return;
     }
-
-    try {
-      console.log('🔄 Refreshing stats after check-in (trigger handles the update)');
-      const stats = await DatabaseService.userStats.getOrCreate(user.id);
-      console.log('📊 Received refreshed stats:', stats);
-      setUserStats(stats);
-      
-      // Do not close the modal here; let the modal show success and the user dismiss it
-    } catch (err) {
-      console.error('❌ Error refreshing stats:', err);
-    }
+    // Refresh both caches after check-in
+    await Promise.all([refreshStats(), refreshRestaurants()]);
   };
 
   const handleRestaurantSelect = (restaurantId: string) => {

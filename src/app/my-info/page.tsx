@@ -79,12 +79,23 @@ export default function Settings() {
     }
 
     try {
-      // Update contact info in Supabase only
-      await DatabaseService.users.updateContactInfo(
-        user.id,
-        name || null,
-        phone ? unformatPhoneNumber(phone) : null
-      );
+      // Update contact info via API route (uses service_role for RLS)
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: name || null,
+          phone: phone ? unformatPhoneNumber(phone) : null
+        }),
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setMessage(data.error || 'An error occurred while updating your profile.');
+        return;
+      }
 
       setMessage('Profile updated successfully!');
     } catch (error) {

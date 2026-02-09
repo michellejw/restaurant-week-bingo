@@ -8,6 +8,7 @@ import {
 import Link from 'next/link';
 import ProfileBanner from "@/components/ProfileBanner";
 import { UserInitializer } from "@/components/UserInitializer";
+import { SWRProvider } from "@/components/SWRProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,8 +49,9 @@ export default function RootLayout({
             }
           }}
         >
-          <UserInitializer />
-          <div className="flex flex-col min-h-screen">
+          <SWRProvider>
+            <UserInitializer />
+            <div className="flex flex-col min-h-screen">
             <ClientNavWrapper />
             <div className="mt-[4rem]">
               <ProfileBanner />
@@ -58,21 +60,22 @@ export default function RootLayout({
               </main>
             </div>
           </div>
-          <footer className="py-6 px-4 mt-auto border-t border-gray-100">
-            <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
-              <p>
-                Crafted in Wilmington, NC by{' '}
-                <Link 
-                  href="https://waveformanalytics.com" 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-coral-500 hover:text-coral-600 transition-colors"
-                >
-                  Waveform Analytics
-                </Link>
-              </p>
-            </div>
-          </footer>
+            <footer className="py-6 px-4 mt-auto border-t border-gray-100">
+              <div className="max-w-7xl mx-auto text-center text-sm text-gray-500">
+                <p>
+                  Crafted in Wilmington, NC by{' '}
+                  <Link
+                    href="https://waveformanalytics.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-coral-500 hover:text-coral-600 transition-colors"
+                  >
+                    Waveform Analytics
+                  </Link>
+                </p>
+              </div>
+            </footer>
+          </SWRProvider>
         </ClerkProvider>
       </body>
     </html>

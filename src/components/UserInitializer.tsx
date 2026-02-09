@@ -2,9 +2,18 @@
 import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { DatabaseService } from '@/lib/services/database';
+import { setSentryUserContext } from '@/lib/sentry/user-context';
 
 export function UserInitializer() {
   const { user, isLoaded } = useUser();
+
+  // Set Sentry user context when auth state changes
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    // Set or clear Sentry user context (only user ID, no PII)
+    setSentryUserContext(user?.id ?? null);
+  }, [isLoaded, user?.id]);
 
   useEffect(() => {
     if (!isLoaded || !user) return;
@@ -13,7 +22,7 @@ export function UserInitializer() {
       try {
         // Get primary email from Clerk user
         const primaryEmail = user.primaryEmailAddress?.emailAddress;
-        
+
         if (!primaryEmail) {
           console.warn('No primary email found for user:', user.id);
           return;
