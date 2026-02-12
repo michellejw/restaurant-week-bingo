@@ -3,6 +3,7 @@
 import { FaUtensils } from 'react-icons/fa'
 import { useUser, SignInButton } from '@clerk/nextjs'
 import Link from 'next/link'
+import { GAME_CONFIG } from '@/config/restaurant-week'
 
 export default function HowToPlay() {
   const { user } = useUser()
@@ -35,7 +36,7 @@ export default function HowToPlay() {
               <li>Sign up or log in to your account <span className="text-gray-500">(your email will only be used to notify you as a winner!)</span></li>
               <li>Check out your unique bingo card and plot your exploration!</li>
               <li>Visit as many venues as you can during Restaurant Week</li>
-              <li>Check in at each location you visit - <span className="italic">Every 4 check-ins = (1) entry for the &lsquo;Top Taster&rsquo; $500 prize package!</span></li>
+              <li>Check in at each location you visit - <span className="italic">Every {GAME_CONFIG.raffle.restaurantsPerEntry} check-ins = (1) entry for the &lsquo;Top Taster&rsquo; $500 prize package!</span></li>
             </ol>
           </section>
 

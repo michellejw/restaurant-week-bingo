@@ -68,7 +68,7 @@ export default function Home() {
                 {!initialLoadComplete ? (
                   <div className="animate-pulse bg-coral-200 h-8 w-8 mx-auto rounded"></div>
                 ) : (
-                  Math.floor(userStats.visit_count / 4)
+                  userStats.raffle_entries
                 )}
               </div>
               <div className="text-sm text-gray-600">raffle entries</div>

@@ -52,11 +52,11 @@
   - [x] Create `useUserStats` hook with caching
   - [x] Reduce unnecessary API calls on page loads
 
-- [ ] **005-config-constants** - Centralize magic numbers
-  - [ ] Create `GAME_CONFIG` in restaurant-week.ts
-  - [ ] Extract `RESTAURANTS_PER_RAFFLE_ENTRY` (currently hardcoded as 4)
-  - [ ] Extract `MAX_CHECKINS_PER_MINUTE` (currently hardcoded as 10)
-  - [ ] Update all references to use config constants
+- [x] **005-config-constants** - Centralize magic numbers
+  - [x] Create `GAME_CONFIG` in restaurant-week.ts
+  - [x] Extract `RESTAURANTS_PER_RAFFLE_ENTRY` (currently hardcoded as 4)
+  - [x] Extract `MAX_CHECKINS_PER_MINUTE` (currently hardcoded as 10)
+  - [x] Update all references to use config constants
 
 ---
 
@@ -101,7 +101,7 @@
 |-------|--------|-------|
 | Phase 1: Security | ✅ Complete | 001 |
 | Phase 2: Code Quality | ✅ Complete | 002 |
-| Phase 3: Dev Experience | 🔄 In Progress | 003 ✅, 004 ✅, 005 |
+| Phase 3: Dev Experience | ✅ Complete | 003 ✅, 004 ✅, 005 ✅ |
 | Phase 4: Documentation | ⏳ Not Started | 006, 007 |
 
 ---
@@ -117,4 +117,4 @@
 
 ---
 
-*Last updated: 2026-02-01*
+*Last updated: 2026-02-11*
