@@ -5,6 +5,8 @@ Auto-generated from all feature plans. Last updated: 2026-01-16
 ## Active Technologies
 - TypeScript 5.x with Next.js 15 (App Router) + @sentry/nextjs (Sentry's official Next.js SDK) (003-error-monitoring)
 - N/A (Sentry is SaaS - no local storage for errors) (003-error-monitoring)
+- Markdown documentation (no code) + None (documentation only) (007-developer-docs)
+- N/A - markdown files (007-developer-docs)
 
 - TypeScript 5.x with Next.js 15 (App Router) + @clerk/nextjs (auth), @supabase/supabase-js (database), React 19 (001-security-hardening)
 
@@ -24,6 +26,7 @@ npm test && npm run lint
 TypeScript 5.x with Next.js 15 (App Router): Follow standard conventions
 
 ## Recent Changes
+- 007-developer-docs: Added Markdown documentation (no code) + None (documentation only)
 - 003-error-monitoring: Added TypeScript 5.x with Next.js 15 (App Router) + @sentry/nextjs (Sentry's official Next.js SDK)
 
 - 001-security-hardening: Added TypeScript 5.x with Next.js 15 (App Router) + @clerk/nextjs (auth), @supabase/supabase-js (database), React 19
