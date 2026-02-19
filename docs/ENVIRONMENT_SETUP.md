@@ -120,9 +120,13 @@ SENTRY_AUTH_TOKEN=sntrys_...
 ### Supabase (Database)
 
 1. **Create a project** at https://supabase.com/dashboard
-2. **Run the database schema**:
-   - Go to SQL Editor in Supabase Dashboard
-   - Run `supabase/updated_schema.sql` to create all tables
+2. **Initialize schema using migrations (recommended)**:
+   - Link your project with Supabase CLI:
+     - `supabase link --project-ref <your-dev-project-ref> --password '<db-password>'`
+   - Verify migration status:
+     - `supabase migration list`
+   - Apply pending migrations:
+     - `supabase db push`
    - Optionally run `supabase/dev_data_import.sql` for sample data
 3. **Get your API keys** from Settings → API
 
@@ -210,7 +214,8 @@ scripts/                      # Admin and maintenance scripts
 └── check-db-consistency.js      # Data integrity checks
 
 supabase/                     # Database schema
-├── updated_schema.sql        # Main schema (tables, triggers)
+├── migrations/               # Canonical schema history (source of truth)
+├── updated_schema.sql        # Legacy snapshot (reference only)
 └── dev_data_import.sql       # Sample data for development
 ```
 
@@ -222,7 +227,7 @@ supabase/                     # Database schema
 | `src/app/api/check-in/route.ts` | Core check-in logic (validation, rate limiting) |
 | `src/lib/services/database.ts` | All Supabase database queries |
 | `src/middleware.ts` | Clerk authentication middleware |
-| `supabase/updated_schema.sql` | Database schema with triggers |
+| `supabase/migrations/` | Canonical database schema and policy history |
 
 ### User Flows
 
@@ -338,7 +343,7 @@ npm run build
 **Solutions**:
 1. Verify `NEXT_PUBLIC_SUPABASE_URL` is correct (check for typos)
 2. Verify `SUPABASE_SERVICE_ROLE_KEY` is set (check Supabase dashboard)
-3. Ensure database schema was run (`supabase/updated_schema.sql`)
+3. Ensure database migrations were applied (`supabase migration list`, then `supabase db push`)
 
 ### "Clerk authentication fails"
 

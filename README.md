@@ -85,7 +85,7 @@ The application uses PostgreSQL via Supabase with these main tables:
 - **`users`** - Contact information for prize fulfillment
 - **`sponsors`** - Local business sponsors
 
-Complete schema: [`supabase/updated_schema.sql`](supabase/updated_schema.sql)
+Canonical schema history: `supabase/migrations/`
 
 ---
 
@@ -115,6 +115,11 @@ npm run backup                 # Backup dev database
 npm run backup:prod            # Backup production database
 npm run db:check-consistency   # Check for data inconsistencies
 npm run db:fix-user-stats      # Recalculate user statistics
+
+# Schema migrations (recommended)
+supabase link --project-ref <dev-project-ref> --password '<db-password>'
+supabase migration list
+supabase db push
 ```
 
 ### Import Workflow
@@ -148,6 +153,8 @@ git push origin dev
 git checkout main && git merge dev && git push origin main
 ```
 
+Apply and verify database migrations on `dev` first, then repeat on `main`/production.
+
 ### Vercel Configuration
 
 - `main` branch → Production deployment
@@ -177,4 +184,3 @@ MIT License - see [LICENSE](LICENSE) for details.
 ---
 
 **Built with ❤️ for local communities** by [Michelle Weirathmueller](https://waveformanalytics.com)
-
