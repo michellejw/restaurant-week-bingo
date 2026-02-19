@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useUser, SignInButton, UserButton, useAuth } from '@clerk/nextjs'
 import { useState, useEffect } from 'react'
 import { FaBars, FaTimes, FaHome } from 'react-icons/fa'
-import { DatabaseService } from '@/lib/services/database'
 
 export default function NavBar() {
   const { user } = useUser()
@@ -25,8 +24,14 @@ export default function NavBar() {
     const checkAdminStatus = async () => {
       if (user?.id) {
         try {
-          const adminStatus = await DatabaseService.users.isAdmin(user.id)
-          setIsAdmin(adminStatus)
+          const response = await fetch('/api/me/admin-status')
+          if (!response.ok) {
+            setIsAdmin(false)
+            return
+          }
+
+          const data = await response.json()
+          setIsAdmin(Boolean(data.isAdmin))
         } catch (error) {
           console.error('Error checking admin status:', error)
           setIsAdmin(false)

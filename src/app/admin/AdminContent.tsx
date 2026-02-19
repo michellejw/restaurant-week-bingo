@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import UserSearch from './components/UserSearch';
 import VisitEditor from './components/VisitEditor';
 import ConfirmationModal from './components/ConfirmationModal';
@@ -31,10 +29,8 @@ interface VisitChange {
 }
 
 export default function AdminContent() {
-  const { user } = useUser();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [, setIsAdmin] = useState<boolean | null>(null);
   
   // Data states
   const [users, setUsers] = useState<User[]>([]);
@@ -48,87 +44,70 @@ export default function AdminContent() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Check admin status
   useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        setError('Please sign in to access admin panel');
-        return;
-      }
-
+    const loadInitialData = async () => {
       try {
-        const adminStatus = await DatabaseService.users.isAdmin(user.id);
-        setIsAdmin(adminStatus);
-        
-        if (!adminStatus) {
-          setLoading(false);
-          setError('Access denied: Admin privileges required');
-          return;
-        }
-
-        // Load initial data
         await Promise.all([
           loadUsers(),
           loadRestaurants()
         ]);
-        
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setError('Error verifying permissions');
+      } catch {
+        setError('Failed to load admin data');
       } finally {
         setLoading(false);
       }
     };
 
-    checkAdminStatus();
-  }, [user?.id]);
+    loadInitialData();
+  }, []);
 
   const loadUsers = async () => {
-    try {
-      const { supabase } = await import('@/lib/supabase');
-      const { data, error } = await supabase
-        .from('users')
-        .select('id, email, name')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setUsers(data || []);
-    } catch (err) {
-      console.error('Error loading users:', err);
+    const response = await fetch('/api/admin/users');
+
+    if (response.status === 403) {
+      throw new Error('Access denied: Admin privileges required');
     }
+
+    if (!response.ok) {
+      throw new Error('Failed to load users');
+    }
+
+    const data = await response.json();
+    setUsers(data.users || []);
   };
 
   const loadRestaurants = async () => {
-    try {
-      const restaurants = await DatabaseService.restaurants.getAll();
-      setRestaurants(restaurants);
-    } catch (err) {
-      console.error('Error loading restaurants:', err);
+    const response = await fetch('/api/restaurants');
+
+    if (!response.ok) {
+      throw new Error('Failed to load restaurants');
     }
+
+    const data = await response.json();
+    setRestaurants(data.restaurants || []);
   };
 
   const loadUserVisits = async (userId: string) => {
     try {
-      const { supabase } = await import('@/lib/supabase');
-      const { data, error } = await supabase
-        .from('visits')
-        .select('restaurant_id, created_at')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      setUserVisits(data || []);
+      const response = await fetch(`/api/admin/user-visits?userId=${encodeURIComponent(userId)}`);
+
+      if (!response.ok) {
+        throw new Error('Failed to load user visits');
+      }
+
+      const data = await response.json();
+      const visits = data.visits || [];
+      setUserVisits(visits);
       
       // Initialize pending changes map
       const currentVisits = new Map<string, boolean>();
-      (data || []).forEach(visit => {
+      visits.forEach((visit: Visit) => {
         currentVisits.set(visit.restaurant_id, true);
       });
       setPendingChanges(new Map(currentVisits));
       
-    } catch (err) {
-      console.error('Error loading user visits:', err);
+    } catch {
+      setError('Failed to load user visits');
     }
   };
 
@@ -186,33 +165,24 @@ export default function AdminContent() {
     
     try {
       const changes = getChanges();
-      const { supabase } = await import('@/lib/supabase');
-      
-      for (const change of changes) {
-        if (change.action === 'add') {
-          // Add visit
-          await supabase
-            .from('visits')
-            .insert({
-              user_id: selectedUser.id,
-              restaurant_id: change.restaurantId,
-              created_at: new Date().toISOString()
-            });
-        } else {
-          // Remove visit
-          await supabase
-            .from('visits')
-            .delete()
-            .eq('user_id', selectedUser.id)
-            .eq('restaurant_id', change.restaurantId);
-        }
+
+      const response = await fetch('/api/admin/user-visits', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          changes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save changes');
       }
       
       // Reload user visits to show updated state
       await loadUserVisits(selectedUser.id);
       
-    } catch (err) {
-      console.error('Error saving changes:', err);
+    } catch {
       setError('Failed to save changes');
     } finally {
       setSaving(false);

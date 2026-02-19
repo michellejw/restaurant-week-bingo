@@ -1,7 +1,6 @@
 "use client"
 import { useEffect } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import { setSentryUserContext } from '@/lib/sentry/user-context';
 
 export function UserInitializer() {
@@ -28,9 +27,15 @@ export function UserInitializer() {
           return;
         }
 
-        // Initialize user and user stats
-        await DatabaseService.users.createIfNotExists(user.id, primaryEmail);
-        await DatabaseService.userStats.getOrCreate(user.id);
+        const response = await fetch('/api/me/initialize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: primaryEmail }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to initialize user');
+        }
       } catch (error) {
         console.error('Error initializing user:', error);
       }

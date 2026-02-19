@@ -2,7 +2,6 @@
 
 import useSWR, { mutate } from 'swr';
 import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import { CACHE_KEYS } from '@/lib/swr/config';
 
 interface UserStats {
@@ -14,7 +13,16 @@ const DEFAULT_STATS: UserStats = { visit_count: 0, raffle_entries: 0 };
 
 async function fetchUserStats(key: readonly [string, string]): Promise<UserStats> {
   const [, userId] = key;
-  const stats = await DatabaseService.userStats.getOrCreate(userId);
+  if (!userId) {
+    return DEFAULT_STATS;
+  }
+
+  const response = await fetch('/api/me/stats');
+  if (!response.ok) {
+    throw new Error('Failed to load user stats');
+  }
+
+  const stats = await response.json();
   return {
     visit_count: stats.visit_count,
     raffle_entries: stats.raffle_entries,

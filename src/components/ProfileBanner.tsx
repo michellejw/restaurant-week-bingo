@@ -2,32 +2,35 @@
 
 import Link from 'next/link';
 import { useUser } from '@clerk/nextjs';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
-import { DatabaseService } from '@/lib/services/database';
 
 export default function ProfileBanner() {
   const { user } = useUser();
   const [showBanner, setShowBanner] = useState(false);
   const pathname = usePathname();
 
-  const checkContactInfo = async () => {
+  const checkContactInfo = useCallback(async () => {
     if (!user) return;
+
     try {
-      const data = await DatabaseService.users.getContactInfo(user.id);
-      // Show banner if no data or no phone number
+      const response = await fetch('/api/me/contact');
+      if (!response.ok) {
+        throw new Error('Failed to load contact info');
+      }
+
+      const data = await response.json();
       setShowBanner(!data || !data.phone);
     } catch (error) {
       console.error('Error checking contact info:', error);
-      // On error, show banner to be safe
       setShowBanner(true);
     }
-  };
+  }, [user]);
 
   // Check contact info when user changes or when navigating back from /my-info
   useEffect(() => {
     checkContactInfo();
-  }, [user, pathname]);
+  }, [checkContactInfo, pathname]);
 
   if (!user || !showBanner) {
     return null;

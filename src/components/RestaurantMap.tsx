@@ -2,8 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import type { Restaurant, Sponsor } from '@/types/supabase';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -135,7 +133,6 @@ interface RestaurantMapProps {
 
 
 export default function RestaurantMap({ onVisitUpdate, targetRestaurantId, onRestaurantSelect, onRestaurantDeselect }: RestaurantMapProps) {
-  const { user } = useUser();
   const [restaurants, setRestaurants] = useState<Restaurant[]>([]);
   const [sponsors, setSponsors] = useState<Sponsor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -161,27 +158,15 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId, onRes
   // Fetch restaurants, sponsors, and user visits all together
   useEffect(() => {
     const fetchAllData = async () => {
-      if (!user?.id) {
-        return;
-      }
-
       try {
-        const [restaurantsData, sponsorsData, visits] = await Promise.all([
-          DatabaseService.restaurants.getAll(),
-          DatabaseService.sponsors.getAll(),
-          DatabaseService.visits.getByUser(user.id)
-        ]);
-        
-        const visitedIds = new Set(visits.map(v => v.restaurant_id));
-        
-        // Set restaurants with correct visited status from the start
-        const restaurantsWithVisits = restaurantsData.map(r => ({
-          ...r,
-          visited: visitedIds.has(r.id)
-        }));
-        
-        setRestaurants(restaurantsWithVisits);
-        setSponsors(sponsorsData);
+        const response = await fetch('/api/restaurants');
+        if (!response.ok) {
+          throw new Error('Failed to fetch map data');
+        }
+
+        const data = await response.json();
+        setRestaurants(data.restaurants || []);
+        setSponsors(data.sponsors || []);
       } catch (e) {
         console.error('Error fetching data:', e);
       } finally {
@@ -189,10 +174,8 @@ export default function RestaurantMap({ onVisitUpdate, targetRestaurantId, onRes
       }
     };
 
-    if (user) {
-      fetchAllData();
-    }
-  }, [user, onVisitUpdate]);
+    fetchAllData();
+  }, [onVisitUpdate]);
 
   if (loading) {
     return <div>Loading map...</div>;
