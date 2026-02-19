@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 
 // Format phone number as (XXX) XXX-XXXX
 const formatPhoneNumber = (value: string) => {
@@ -42,7 +41,12 @@ export default function Settings() {
     const loadContactInfo = async () => {
       if (user && !initialValuesSet.current) {
         try {
-          const data = await DatabaseService.users.getContactInfo(user.id);
+          const response = await fetch('/api/me/contact');
+          if (!response.ok) {
+            throw new Error('Failed to load contact info');
+          }
+
+          const data = await response.json();
           if (data) {
             setName(data.name || '');
             setPhone(data.phone ? formatPhoneNumber(data.phone) : '');

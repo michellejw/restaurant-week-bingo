@@ -1,8 +1,6 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useUser } from '@clerk/nextjs';
-import { DatabaseService } from '@/lib/services/database';
 import * as Plot from '@observablehq/plot';
 import OverallStatsCards from './components/OverallStatsCards';
 
@@ -192,8 +190,17 @@ export interface StatsData {
   };
 }
 
+interface StatsRestaurant {
+  id: string;
+  name: string;
+}
+
+interface StatsVisit {
+  user_id: string;
+  restaurant_id: string;
+}
+
 export default function StatsContent() {
-  const { user } = useUser();
   const [data, setData] = useState<StatsData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -201,43 +208,36 @@ export default function StatsContent() {
 
   useEffect(() => {
     const fetchStatsData = async () => {
-      if (!user?.id) {
-        setLoading(false);
-        setError('Please sign in to view stats');
-        return;
-      }
-
-      // Check if user is admin first
-      try {
-        const adminStatus = await DatabaseService.users.isAdmin(user.id);
-        
-        if (!adminStatus) {
-          setLoading(false);
-          setError('Access denied: Admin privileges required');
-          return;
-        }
-      } catch (err) {
-        console.error('Error checking admin status:', err);
-        setLoading(false);
-        setError('Error verifying permissions');
-        return;
-      }
       try {
         setLoading(true);
         setError(null);
 
-        // Fetch required data
-        const [restaurants, visits, totalRegisteredUsers] = await Promise.all([
-          DatabaseService.restaurants.getAll(),
-          fetchAllVisits(),
-          fetchTotalRegisteredUsers(),
-        ]);
+        const response = await fetch('/api/admin/stats');
+        if (response.status === 403) {
+          setError('Access denied: Admin privileges required');
+          return;
+        }
+
+        if (!response.ok) {
+          setError('Failed to load statistics data');
+          return;
+        }
+
+        const {
+          restaurants,
+          visits,
+          totalRegisteredUsers,
+        }: {
+          restaurants: StatsRestaurant[];
+          visits: StatsVisit[];
+          totalRegisteredUsers: number;
+        } = await response.json();
 
         console.log('Raw visits:', visits);
 
         // Calculate user visit counts directly from visits data (more reliable)
         const userVisitCountMap = new Map<string, number>();
-        visits.forEach(visit => {
+        visits.forEach((visit: StatsVisit) => {
           const currentCount = userVisitCountMap.get(visit.user_id) || 0;
           userVisitCountMap.set(visit.user_id, currentCount + 1);
         });
@@ -252,12 +252,12 @@ export default function StatsContent() {
         
         // Process restaurant visit counts
         const visitCounts = new Map<string, number>();
-        visits.forEach(visit => {
+        visits.forEach((visit: StatsVisit) => {
           const restaurantId = visit.restaurant_id;
           visitCounts.set(restaurantId, (visitCounts.get(restaurantId) || 0) + 1);
         });
 
-        const restaurantVisits = restaurants.map(restaurant => ({
+        const restaurantVisits = restaurants.map((restaurant: StatsRestaurant) => ({
           name: restaurant.name,
           visits: visitCounts.get(restaurant.id) || 0,
         })).sort((a, b) => b.visits - a.visits); // Sort descending by visit count
@@ -283,8 +283,7 @@ export default function StatsContent() {
         };
 
         setData(statsData);
-      } catch (err) {
-        console.error('Error fetching stats data:', err);
+      } catch {
         setError('Failed to load statistics data');
       } finally {
         setLoading(false);
@@ -292,7 +291,7 @@ export default function StatsContent() {
     };
 
     fetchStatsData();
-  }, [user?.id, refreshTrigger]);
+  }, [refreshTrigger]);
 
   if (loading) {
     return (
@@ -370,26 +369,3 @@ export default function StatsContent() {
     </div>
   );
 }
-
-// Helper functions for data fetching
-async function fetchAllVisits() {
-  const { supabase } = await import('@/lib/supabase');
-  const { data, error } = await supabase
-    .from('visits')
-    .select('*')
-    .order('created_at', { ascending: false });
-  
-  if (error) throw error;
-  return data || [];
-}
-
-async function fetchTotalRegisteredUsers() {
-  const { supabase } = await import('@/lib/supabase');
-  const { count, error } = await supabase
-    .from('users')
-    .select('*', { count: 'exact', head: true });
-  
-  if (error) throw error;
-  return count || 0;
-}
-
