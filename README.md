@@ -130,7 +130,7 @@ The application uses PostgreSQL via Supabase with these main tables:
 - **`users`** - Contact information for prize fulfillment
 - **`sponsors`** - Local business sponsors
 
-Complete schema available in [`supabase/updated_schema.sql`](supabase/updated_schema.sql).
+Canonical schema history: `supabase/migrations/`
 
 ## 📊 Data Management
 
@@ -173,7 +173,12 @@ npm run sponsor:import         # Import sponsor data with smart matching
 #### **Database Maintenance**
 ```bash
 npm run db:check-consistency   # Check for data inconsistencies
-npm run db:fix-user-stats      # Recalculate user visit statistics
+npm run db:fix-user-stats      # Recalculate user statistics
+
+# Schema migrations (recommended)
+supabase link --project-ref <dev-project-ref> --password '<db-password>'
+supabase migration list
+supabase db push
 npm run db:reset-dev           # Reset development database
 ```
 
@@ -355,6 +360,8 @@ This project uses separate development and production environments:
    # Generate template from production data if needed
    npm run template            # Choose production in interactive mode
    ```
+
+Apply and verify database migrations on `dev` first, then repeat on `main`/production.
 
 ### Vercel Configuration
 
