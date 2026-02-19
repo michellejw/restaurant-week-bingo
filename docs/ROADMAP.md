@@ -64,11 +64,11 @@
 
 > **Goal**: Enable smooth handoff and seasonal operations.
 
-- [ ] **006-operations-docs** - Seasonal operations documentation
-  - [ ] Create `docs/OPERATIONS.md` runbook
-  - [ ] Document pre-season setup steps
-  - [ ] Document during-event monitoring
-  - [ ] Document post-event tasks (raffle, backup)
+- [x] **006-operations-docs** - Seasonal operations documentation
+  - [x] Create `docs/OPERATIONS.md` runbook
+  - [x] Document pre-season setup steps
+  - [x] Document during-event monitoring
+  - [x] Document post-event tasks (raffle, backup)
 
 - [ ] **007-developer-docs** - Developer onboarding
   - [ ] Create `docs/ENVIRONMENT_SETUP.md`
@@ -102,7 +102,7 @@
 | Phase 1: Security | ✅ Complete | 001 |
 | Phase 2: Code Quality | ✅ Complete | 002 |
 | Phase 3: Dev Experience | ✅ Complete | 003 ✅, 004 ✅, 005 ✅ |
-| Phase 4: Documentation | ⏳ Not Started | 006, 007 |
+| Phase 4: Documentation | ⏳ In Progress | 006 ✅, 007 |
 
 ---
 
@@ -117,4 +117,4 @@
 
 ---
 
-*Last updated: 2026-02-11*
+*Last updated: 2026-02-17*
