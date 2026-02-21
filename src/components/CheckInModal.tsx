@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useUser } from '@clerk/nextjs';
+import { mutate } from 'swr';
 import { RESTAURANT_WEEK_CONFIG, RestaurantWeekUtils } from '@/config/restaurant-week';
+import { CACHE_KEYS } from '@/lib/swr/config';
 
 interface CheckInModalProps {
   isOpen: boolean;
@@ -51,6 +53,15 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
       if (response.ok) {
         // T015: Handle 200 success
         setSuccess(`Successfully checked in at ${data.restaurant}!`);
+
+        // Invalidate SWR caches to trigger refetch
+        if (user?.id) {
+          await Promise.all([
+            mutate(CACHE_KEYS.userStats(user.id)),
+            mutate(CACHE_KEYS.restaurantsWithVisits(user.id)),
+          ]);
+        }
+
         if (onCheckIn) {
           onCheckIn();
         }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import useSWR, { mutate } from 'swr';
 import { useUser } from '@clerk/nextjs';
+import { CACHE_KEYS } from '@/lib/swr/config';
 
 interface UserStats {
   visit_count: number;
@@ -10,7 +11,12 @@ interface UserStats {
 
 const DEFAULT_STATS: UserStats = { visit_count: 0, raffle_entries: 0 };
 
-async function fetchUserStats(): Promise<UserStats> {
+async function fetchUserStats(key: readonly [string, string]): Promise<UserStats> {
+  const [, userId] = key;
+  if (!userId) {
+    return DEFAULT_STATS;
+  }
+
   const response = await fetch('/api/me/stats');
   if (!response.ok) {
     throw new Error('Failed to load user stats');
@@ -25,42 +31,27 @@ async function fetchUserStats(): Promise<UserStats> {
 
 export function useUserStats() {
   const { user, isLoaded: clerkLoaded } = useUser();
-  const [stats, setStats] = useState<UserStats>(DEFAULT_STATS);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
-    async function loadStats() {
-      if (!user) {
-        setStats(DEFAULT_STATS);
-        setLoading(false);
-        return;
-      }
+  // Use user-specific cache key when logged in
+  const cacheKey = clerkLoaded && user?.id
+    ? CACHE_KEYS.userStats(user.id)
+    : null;
 
-      try {
-        const userStats = await fetchUserStats();
-        setStats(userStats);
-        setError(null);
-      } catch (e) {
-        setError(e instanceof Error ? e : new Error('Failed to load stats'));
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    if (clerkLoaded) {
-      loadStats();
-    }
-  }, [user, clerkLoaded]);
+  const { data, error, isLoading, isValidating } = useSWR<UserStats>(
+    cacheKey,
+    fetchUserStats
+  );
 
   return {
-    stats,
-    loading: loading || !clerkLoaded,
+    stats: data ?? DEFAULT_STATS,
+    loading: !clerkLoaded || isLoading,
+    isValidating,
     error,
+    // Expose refresh for cache invalidation after check-in
+    // Maintains backward compatibility with existing code
     refresh: async () => {
-      if (user) {
-        const userStats = await fetchUserStats();
-        setStats(userStats);
+      if (user?.id) {
+        await mutate(CACHE_KEYS.userStats(user.id));
       }
     },
   };

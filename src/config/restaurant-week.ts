@@ -57,6 +57,50 @@ export const RESTAURANT_WEEK_CONFIG = {
 } as const;
 
 /**
+ * 🎮 GAME CONFIGURATION
+ *
+ * Core game rules and operational settings.
+ * These values control gameplay mechanics and system behavior.
+ */
+export const GAME_CONFIG = {
+  /**
+   * 🎟️ RAFFLE RULES
+   */
+  raffle: {
+    /**
+     * Number of restaurant check-ins required for one raffle entry.
+     *
+     * ⚠️ CRITICAL: This value MUST match the SQL trigger!
+     * The database trigger at `supabase/fix-user-stats-triggers.sql` uses:
+     *   FLOOR(visit_count / 4)
+     *
+     * If you change this value, you MUST also update the SQL trigger
+     * and run a migration to recalculate existing raffle_entries.
+     */
+    restaurantsPerEntry: 4,
+  },
+
+  /**
+   * 🚦 RATE LIMITING
+   *
+   * Controls how often users can submit check-in requests.
+   * Prevents abuse and accidental rapid submissions.
+   */
+  rateLimit: {
+    /**
+     * Maximum check-in requests allowed per time window.
+     */
+    maxRequestsPerWindow: 10,
+
+    /**
+     * Time window in milliseconds.
+     * After this duration, the request count resets.
+     */
+    windowMs: 60_000, // 1 minute
+  },
+} as const;
+
+/**
  * 🔧 UTILITY FUNCTIONS
  * 
  * Helper functions to check Restaurant Week status

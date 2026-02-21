@@ -46,17 +46,17 @@
   - [x] Set up error alerting for production
   - [x] Add user context to error reports
 
-- [ ] **004-data-caching** - SWR for client-side caching
-  - [ ] Install SWR
-  - [ ] Create `useRestaurants` hook with caching
-  - [ ] Create `useUserStats` hook with caching
-  - [ ] Reduce unnecessary API calls on page loads
+- [x] **004-data-caching** - SWR for client-side caching
+  - [x] Install SWR
+  - [x] Create `useRestaurants` hook with caching
+  - [x] Create `useUserStats` hook with caching
+  - [x] Reduce unnecessary API calls on page loads
 
-- [ ] **005-config-constants** - Centralize magic numbers
-  - [ ] Create `GAME_CONFIG` in restaurant-week.ts
-  - [ ] Extract `RESTAURANTS_PER_RAFFLE_ENTRY` (currently hardcoded as 4)
-  - [ ] Extract `MAX_CHECKINS_PER_MINUTE` (currently hardcoded as 10)
-  - [ ] Update all references to use config constants
+- [x] **005-config-constants** - Centralize magic numbers
+  - [x] Create `GAME_CONFIG` in restaurant-week.ts
+  - [x] Extract `RESTAURANTS_PER_RAFFLE_ENTRY` (currently hardcoded as 4)
+  - [x] Extract `MAX_CHECKINS_PER_MINUTE` (currently hardcoded as 10)
+  - [x] Update all references to use config constants
 
 ---
 
@@ -64,16 +64,16 @@
 
 > **Goal**: Enable smooth handoff and seasonal operations.
 
-- [ ] **006-operations-docs** - Seasonal operations documentation
-  - [ ] Create `docs/OPERATIONS.md` runbook
-  - [ ] Document pre-season setup steps
-  - [ ] Document during-event monitoring
-  - [ ] Document post-event tasks (raffle, backup)
+- [x] **006-operations-docs** - Seasonal operations documentation
+  - [x] Create `docs/OPERATIONS.md` runbook
+  - [x] Document pre-season setup steps
+  - [x] Document during-event monitoring
+  - [x] Document post-event tasks (raffle, backup)
 
-- [ ] **007-developer-docs** - Developer onboarding
-  - [ ] Create `docs/ENVIRONMENT_SETUP.md`
-  - [ ] Update README with quick start guide
-  - [ ] Add architecture overview
+- [x] **007-developer-docs** - Developer onboarding
+  - [x] Create `docs/ENVIRONMENT_SETUP.md`
+  - [x] Update README with quick start guide
+  - [x] Add architecture overview
 
 ---
 
@@ -101,20 +101,15 @@
 |-------|--------|-------|
 | Phase 1: Security | ✅ Complete | 001 |
 | Phase 2: Code Quality | ✅ Complete | 002 |
-| Phase 3: Dev Experience | 🔄 In Progress | 003 ✅, 004, 005 |
-| Phase 4: Documentation | ⏳ Not Started | 006, 007 |
+| Phase 3: Dev Experience | ✅ Complete | 003 ✅, 004 ✅, 005 ✅ |
+| Phase 4: Documentation | ✅ Complete | 006 ✅, 007 ✅ |
 
 ---
 
 ## Next Steps
 
-1. Pick the next unchecked item
-2. Run `/speckit.specify` to create the feature spec
-3. Run `/speckit.plan` to create the implementation plan
-4. Run `/speckit.tasks` to generate tasks
-5. Implement and verify
-6. Check off items in this roadmap
+All planned features complete! Future work is in the backlog section above.
 
 ---
 
-*Last updated: 2026-01-26*
+*Last updated: 2026-02-17*

@@ -5,9 +5,9 @@
  * Note: Resets when Vercel function cold starts, but sufficient for this use case.
  */
 
-const WINDOW_MS = 60 * 1000; // 1 minute window
-const MAX_REQUESTS = 10; // 10 requests per minute per user
-const MAX_ENTRIES = 1000; // Max entries before cleanup
+import { GAME_CONFIG } from '@/config/restaurant-week';
+
+const MAX_ENTRIES = 1000; // Max entries before cleanup (implementation detail)
 
 interface RateLimitRecord {
   count: number;
@@ -41,18 +41,20 @@ export function checkRateLimit(identifier: string): RateLimitResult {
 
   const record = requests.get(identifier);
 
+  const { maxRequestsPerWindow, windowMs } = GAME_CONFIG.rateLimit;
+
   // No existing record or window expired - start fresh
   if (!record || now > record.resetAt) {
-    requests.set(identifier, { count: 1, resetAt: now + WINDOW_MS });
+    requests.set(identifier, { count: 1, resetAt: now + windowMs });
     return {
       allowed: true,
-      remaining: MAX_REQUESTS - 1,
-      resetIn: WINDOW_MS
+      remaining: maxRequestsPerWindow - 1,
+      resetIn: windowMs
     };
   }
 
   // Within window, check if limit exceeded
-  if (record.count >= MAX_REQUESTS) {
+  if (record.count >= maxRequestsPerWindow) {
     return {
       allowed: false,
       remaining: 0,
@@ -64,7 +66,7 @@ export function checkRateLimit(identifier: string): RateLimitResult {
   record.count++;
   return {
     allowed: true,
-    remaining: MAX_REQUESTS - record.count,
+    remaining: maxRequestsPerWindow - record.count,
     resetIn: record.resetAt - now
   };
 }
