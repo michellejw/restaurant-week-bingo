@@ -47,8 +47,7 @@ export const DatabaseService = {
           .from('visits')
           .insert([{ 
             user_id: userId, 
-            restaurant_id: restaurantId,
-            created_at: new Date().toISOString()
+            restaurant_id: restaurantId
           }])
           .select()
           .single();
@@ -111,7 +110,7 @@ export const DatabaseService = {
       // If user doesn't exist, create new user
       const { error } = await supabase
         .from('users')
-        .insert([{ id: userId, email }])
+        .insert([{ id: userId, email, is_admin: false }])
         .select()
         .single();
       
@@ -142,7 +141,8 @@ export const DatabaseService = {
         .upsert({ 
           id: userId,
           name,
-          phone
+          phone,
+          is_admin: false,
         });
       
       if (error) throw error;
