@@ -1,5 +1,7 @@
 // Restaurant-specific configuration for SmartImporter
 
+const gameRules = require('../../config/game-rules.json');
+
 function normalizeRestaurantName(name) {
   return name
     .toLowerCase()
@@ -164,7 +166,7 @@ async function postImportTasks(supabase) {
   
   for (const stat of userStats) {
     const actualVisits = userVisitCounts[stat.user_id] || 0;
-    const correctRaffleEntries = Math.floor(actualVisits / 5);
+    const correctRaffleEntries = Math.floor(actualVisits / gameRules.raffleRestaurantsPerEntry);
     
     if (actualVisits !== stat.visit_count || correctRaffleEntries !== stat.raffle_entries) {
       await supabase

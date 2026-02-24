@@ -1,3 +1,5 @@
+import gameRules from '../../config/game-rules.json';
+
 /**
  * RESTAURANT WEEK CONFIGURATION
  * 
@@ -77,7 +79,7 @@ export const GAME_CONFIG = {
      * If you change this value, you MUST also update the SQL trigger
      * and run a migration to recalculate existing raffle_entries.
      */
-    restaurantsPerEntry: 4,
+    restaurantsPerEntry: gameRules.raffleRestaurantsPerEntry,
   },
 
   /**

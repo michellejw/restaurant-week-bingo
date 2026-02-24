@@ -20,6 +20,7 @@
     "db:check-consistency": "node scripts/check-db-consistency.js",
     "db:fix-user-stats": "node scripts/fix-user-stats.js",
     "db:reset-dev": "node scripts/reset-dev-database.js",
+    "season:rollover": "node scripts/season-rollover.js",
     "template": "node scripts/generate-restaurant-template-interactive.js",
     "import": "node scripts/smart-import-restaurants.js",
     "restaurant:backup": "node scripts/backup-database.js",

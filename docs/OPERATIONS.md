@@ -69,7 +69,38 @@ Complete these tasks 4-6 weeks before Restaurant Week begins.
 
 ---
 
-### Step 2: Import/Update Restaurant Data
+### Step 2: Archive Previous Season and Reset Active Gameplay Data
+
+Do this once per new season so users start with zero check-ins while preserving historical records.
+
+1. Create a production backup:
+   ```bash
+   npm run backup:prod
+   ```
+
+2. Ensure latest migrations are applied to production:
+   ```bash
+   supabase link --project-ref <prod-project-ref> --password '<db-password>'
+   supabase migration list
+   supabase db push
+   ```
+
+3. Run season rollover (archives `visits` + `user_stats`, then clears active tables):
+   ```bash
+   npm run season:rollover
+   ```
+
+4. When prompted, choose `Production` and enter previous season key (example: `fall2025`).
+
+**Verification checkpoint**:
+- [ ] `visits_archive` has rows for the archived season key
+- [ ] `user_stats_archive` has rows for the archived season key
+- [ ] Active `visits` table is empty
+- [ ] Active `user_stats` table is empty
+
+---
+
+### Step 3: Import/Update Restaurant Data
 
 Use the smart-import script to add or update restaurants from the Chamber of Commerce data.
 
@@ -77,14 +108,14 @@ Use the smart-import script to add or update restaurants from the Chamber of Com
 
 2. Generate a template if needed:
    ```bash
-   node scripts/generate-restaurant-template-interactive.js
+    npm run restaurant:template
    ```
 
 3. Place your data file in the project root (e.g., `restaurants.csv`)
 
 4. Run the smart import:
    ```bash
-   node scripts/smart-import-restaurants.js
+    npm run restaurant:import
    ```
 
 5. The script will:
@@ -99,7 +130,7 @@ Use the smart-import script to add or update restaurants from the Chamber of Com
 
 ---
 
-### Step 3: Import/Update Sponsor Data
+### Step 4: Import/Update Sponsor Data
 
 Similar process for sponsors who are supporting the event.
 
@@ -107,12 +138,12 @@ Similar process for sponsors who are supporting the event.
 
 2. Generate a template if needed:
    ```bash
-   node scripts/generate-sponsor-template-interactive.js
+    npm run sponsor:template
    ```
 
 3. Run the smart import:
    ```bash
-   node scripts/smart-import-sponsors.js
+    npm run sponsor:import
    ```
 
 **Verification checkpoint**:
@@ -121,7 +152,7 @@ Similar process for sponsors who are supporting the event.
 
 ---
 
-### Step 4: Test on Dev Environment
+### Step 5: Test on Dev Environment
 
 Before deploying to production, thoroughly test the full user flow.
 
@@ -600,6 +631,7 @@ WHERE user_id = 'user-id';
 | `scripts/smart-import-sponsors.js` | Import sponsor data |
 | `scripts/check-db-consistency.js` | Verify database integrity |
 | `scripts/backup-database.js` | Create database backup |
+| `scripts/season-rollover.js` | Archive previous season and reset active gameplay data |
 | `scripts/raffle-draw.js` | Draw raffle winner |
 | `scripts/fix-user-stats.js` | Recalculate user statistics |
 | `supabase/fix-user-stats-triggers.sql` | Database trigger (raffle calculation) |
@@ -633,8 +665,9 @@ npm run build                            # Test production build
 npm run lint                             # Check for lint errors
 
 # Data Import
-node scripts/smart-import-restaurants.js # Import restaurants
-node scripts/smart-import-sponsors.js    # Import sponsors
+npm run season:rollover                  # Archive old season + reset active data
+npm run restaurant:import                # Import restaurants
+npm run sponsor:import                   # Import sponsors
 
 # Diagnostics
 node scripts/check-db-consistency.js     # Check data integrity
@@ -654,7 +687,7 @@ node scripts/reset-dev-database.js       # Reset dev database
 
 | Rule | Value | Location |
 |------|-------|----------|
-| Restaurants per raffle entry | 4 | `GAME_CONFIG.raffle.restaurantsPerEntry` |
+| Restaurants per raffle entry | 4 | `config/game-rules.json` (`src/config/restaurant-week.ts` reads this) |
 | Rate limit (requests) | 10 per minute | `GAME_CONFIG.rateLimit.maxRequestsPerWindow` |
 | Rate limit (window) | 60,000ms (1 min) | `GAME_CONFIG.rateLimit.windowMs` |
 

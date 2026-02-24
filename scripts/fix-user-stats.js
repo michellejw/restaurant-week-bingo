@@ -2,6 +2,7 @@
 
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config({ path: '.env.local' });
+const gameRules = require('../config/game-rules.json');
 
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -38,7 +39,7 @@ async function fixUserStats() {
     // Update each user's stats
     for (const stat of userStats) {
       const actualVisits = userVisitCounts[stat.user_id] || 0;
-      const correctRaffleEntries = Math.floor(actualVisits / 4);
+      const correctRaffleEntries = Math.floor(actualVisits / gameRules.raffleRestaurantsPerEntry);
       
       if (actualVisits !== stat.visit_count || correctRaffleEntries !== stat.raffle_entries) {
         console.log(`📝 Updating user ${stat.user_id}:`);
