@@ -16,7 +16,7 @@ export const RESTAURANT_WEEK_CONFIG = {
    * Place the seasonal logo under /public and set this path.
    * Example: '/rest-week-logo-spring2026.png'
    */
-  logoFile: '/rest-week-logo.png',
+  logoFile: '/rest-week-logo-spring2026.png',
 
   /**
    * 📅 RESTAURANT WEEK START DATE
@@ -30,7 +30,7 @@ export const RESTAURANT_WEEK_CONFIG = {
    * 
    * (These are just examples - use your actual dates)
    */
-  startDate: '2025-10-10',
+  startDate: '2026-03-14',
 
   /**
    * 📅 RESTAURANT WEEK END DATE
@@ -38,7 +38,7 @@ export const RESTAURANT_WEEK_CONFIG = {
    * Format: 'YYYY-MM-DD'
    * Check-ins close at the end of this date.
    */
-  endDate: '2025-10-26',
+  endDate: '2026-03-21',
   
   /**
    * 🧪 TESTING OVERRIDES
@@ -68,11 +68,11 @@ export const RESTAURANT_WEEK_CONFIG = {
    * Update these messages for each event
    */
   messages: {
-    title: "Restaurant Week Coming Soon!",
-    beforeStart: "Restaurant Week check-ins will be available starting October 10, 2025. Get ready to discover amazing local restaurants and earn raffle entries!",
+    title: "Spring Restaurant Week Starts Soon!",
+    beforeStart: "Restaurant Week check-ins will be available starting March 14, 2026. You can sign in now and get ready to discover amazing local restaurants and earn raffle entries!",
     duringEvent: "Restaurant Week is active! Enter restaurant codes to check in and earn raffle entries.",
     afterEndTitle: "Thanks For A Great Restaurant Week!",
-    afterEnd: "Thanks for participating in Restaurant Week Fall 2025. Check-ins are now closed. See you next season!"
+    afterEnd: "Thanks for participating in Restaurant Week Spring 2026. Check-ins are now closed. See you next season!"
   }
 } as const;
 
