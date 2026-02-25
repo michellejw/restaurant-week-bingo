@@ -126,6 +126,26 @@ export const GAME_CONFIG = {
  * Helper functions to check Restaurant Week status
  */
 export const RestaurantWeekUtils = {
+  isDevelopmentOverrideEnvironment(): boolean {
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    const hostname = window.location.hostname;
+    const configuredDevHost = process.env.NEXT_PUBLIC_DEV_HOSTNAME;
+    const configuredProdHost = process.env.NEXT_PUBLIC_PROD_HOSTNAME;
+
+    const isLocalhost = hostname === 'localhost' || hostname === '127.0.0.1';
+    const isConfiguredDevHost = Boolean(configuredDevHost && hostname === configuredDevHost);
+    const isVercelDeploymentHost = hostname.endsWith('.vercel.app');
+    const isConfiguredProductionHost = Boolean(configuredProdHost && hostname === configuredProdHost);
+
+    return process.env.NODE_ENV === 'development' ||
+      isLocalhost ||
+      isConfiguredDevHost ||
+      (isVercelDeploymentHost && !isConfiguredProductionHost);
+  },
+
   getPhaseByDateOnly(): 'before_start' | 'active' | 'after_end' {
     const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
     const endDate = new Date(`${RESTAURANT_WEEK_CONFIG.endDate}T23:59:59`);
@@ -154,12 +174,7 @@ export const RestaurantWeekUtils = {
     
     // Always allow in development environments
     if (RESTAURANT_WEEK_CONFIG.testing.allowInDevelopment) {
-      const isDevelopment = typeof window !== 'undefined' && 
-        (process.env.NODE_ENV === 'development' || 
-         // Only localhost - not Vercel deployments
-         window.location.hostname === 'localhost' ||
-         // Specific dev deployment only (configured via env var)
-         (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+      const isDevelopment = this.isDevelopmentOverrideEnvironment();
       
       if (isDevelopment) {
         return true;
@@ -216,10 +231,7 @@ export const RestaurantWeekUtils = {
    * Get status info for debugging/display
    */
   getStatusInfo() {
-    const isDevelopment = typeof window !== 'undefined' && 
-      (process.env.NODE_ENV === 'development' || 
-       window.location.hostname === 'localhost' ||
-       (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+    const isDevelopment = this.isDevelopmentOverrideEnvironment();
     
     return {
       isDevelopment,

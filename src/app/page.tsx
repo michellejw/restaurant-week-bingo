@@ -77,9 +77,7 @@ export default function Home() {
 
           {/* Wide check-in button */}
           {(() => {
-            const isDevMode = typeof window !== 'undefined' &&
-              (process.env.NODE_ENV === 'development' ||
-                (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+            const isDevMode = RestaurantWeekUtils.isDevelopmentOverrideEnvironment();
             const phase = RestaurantWeekUtils.getPhaseByDateOnly();
 
             if (isDevMode || phase === 'active') {

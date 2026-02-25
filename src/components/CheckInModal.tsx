@@ -21,9 +21,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
 
   if (!isOpen) return null;
 
-  const isDevEnvironment = typeof window !== 'undefined' &&
-    (process.env.NODE_ENV === 'development' ||
-      (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+  const isDevEnvironment = RestaurantWeekUtils.isDevelopmentOverrideEnvironment();
 
   const isRestaurantWeekActive = RestaurantWeekUtils.isActive();
   const phaseByDateOnly = RestaurantWeekUtils.getPhaseByDateOnly();
