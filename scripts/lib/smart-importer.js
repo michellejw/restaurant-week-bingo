@@ -3,6 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 const inquirer = require('inquirer');
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 
 // Shared fuzzy matching functions
 function levenshteinDistance(str1, str2) {
@@ -174,6 +175,20 @@ class SmartImporter {
     
     console.log('');
     return selectedFile;
+  }
+
+  getFileSha256(filePath) {
+    const fileBuffer = fs.readFileSync(filePath);
+    return crypto.createHash('sha256').update(fileBuffer).digest('hex');
+  }
+
+  showSelectedFileFingerprint(filePath) {
+    const fileName = path.basename(filePath);
+    const fileHash = this.getFileSha256(filePath);
+    console.log(`🔐 Selected file: ${fileName}`);
+    console.log(`   SHA256: ${fileHash}`);
+    console.log('');
+    return { fileName, fileHash };
   }
 
   async createBackup() {
@@ -523,8 +538,15 @@ class SmartImporter {
         if (this.config.handleCascadingDeletes) {
           await this.config.handleCascadingDeletes(this.supabase, removeIds);
         }
-        
-        await this.supabase.from(this.config.tableName).delete().in('id', removeIds);
+
+        const { error: removeError } = await this.supabase
+          .from(this.config.tableName)
+          .delete()
+          .in('id', removeIds);
+
+        if (removeError) {
+          throw new Error(`Failed removing ${this.config.displayName.toLowerCase()}s: ${removeError.message}`);
+        }
         
         console.log('   ✅ Removed');
       }
@@ -535,10 +557,14 @@ class SmartImporter {
         
         for (const { existing, new: newData } of results.toUpdate) {
           const updateData = this.config.prepareUpdateData(newData);
-          await this.supabase
+          const { error: updateError } = await this.supabase
             .from(this.config.tableName)
             .update(updateData)
             .eq('id', existing.id);
+
+          if (updateError) {
+            throw new Error(`Failed updating "${existing.name}": ${updateError.message}`);
+          }
         }
         
         console.log('   ✅ Updated');
@@ -553,7 +579,13 @@ class SmartImporter {
           return this.config.prepareInsertData ? this.config.prepareInsertData(itemData) : itemData;
         });
         
-        await this.supabase.from(this.config.tableName).insert(itemsToAdd);
+        const { error: insertError } = await this.supabase
+          .from(this.config.tableName)
+          .insert(itemsToAdd);
+
+        if (insertError) {
+          throw new Error(`Failed adding new ${this.config.displayName.toLowerCase()}s: ${insertError.message}`);
+        }
         
         console.log('   ✅ Added');
       }
@@ -575,14 +607,44 @@ class SmartImporter {
     }
   }
 
+  async verifyImportedItems(newItems) {
+    const { data: currentItems, error } = await this.supabase
+      .from(this.config.tableName)
+      .select('name');
+
+    if (error) {
+      throw new Error(`Post-import verification failed: ${error.message}`);
+    }
+
+    const currentNames = new Set((currentItems || []).map(item => item.name));
+    const expectedNames = new Set(newItems.map(item => item.name));
+    const missingNames = [...expectedNames].filter(name => !currentNames.has(name));
+
+    if (missingNames.length > 0) {
+      console.log('\n❌ Post-import verification failed.');
+      console.log(`Missing ${this.config.displayName.toLowerCase()}s from database (${missingNames.length}):`);
+      missingNames.forEach(name => console.log(`   - ${name}`));
+      throw new Error('Import completed with mismatched data. Review errors and rerun import.');
+    }
+
+    console.log(`✅ Post-import verification passed: all ${expectedNames.size} imported ${this.config.displayName.toLowerCase()}s are present.`);
+  }
+
   async run() {
     try {
       await this.initialize();
       const filePath = await this.selectFile();
+      const selectedFileMeta = this.showSelectedFileFingerprint(filePath);
       await this.createBackup();
       
       const newItems = await this.parseData(filePath);
-      const { data: existingItems } = await this.supabase.from(this.config.tableName).select('*');
+      const { data: existingItems, error: existingItemsError } = await this.supabase
+        .from(this.config.tableName)
+        .select('*');
+
+      if (existingItemsError) {
+        throw new Error(`Failed loading existing ${this.config.displayName.toLowerCase()}s: ${existingItemsError.message}`);
+      }
       
       const results = await this.processMatches(newItems, existingItems);
       await this.showSummary(results);
@@ -600,6 +662,10 @@ class SmartImporter {
       }
       
       await this.executeImport(results);
+      await this.verifyImportedItems(newItems);
+
+      console.log(`📎 Import source: ${selectedFileMeta.fileName}`);
+      console.log(`📎 Source SHA256: ${selectedFileMeta.fileHash}`);
       
     } catch (error) {
       console.error('❌ Error:', error.message);
