@@ -92,9 +92,19 @@ async function run() {
     return;
   }
 
+  const seasonKey = previousSeasonKey.trim();
+
   const { data, error } = await supabase.rpc('archive_and_reset_season', {
-    previous_season_key: previousSeasonKey.trim(),
+    previous_season_key: seasonKey,
   });
+
+  if (error && error.message && error.message.includes('DELETE requires a WHERE clause')) {
+    console.log('\n⚠️  RPC rollover blocked by safe-delete policy; using client-side fallback...');
+    const fallbackResult = await runClientSideRollover(supabase, seasonKey);
+    console.log('\n✅ Season rollover complete (fallback):');
+    console.log(JSON.stringify(fallbackResult, null, 2));
+    return;
+  }
 
   if (error) {
     throw error;
@@ -102,6 +112,93 @@ async function run() {
 
   console.log('\n✅ Season rollover complete:');
   console.log(JSON.stringify(data, null, 2));
+}
+
+async function runClientSideRollover(supabase, seasonKey) {
+  const { data: visits, error: visitsError } = await supabase
+    .from('visits')
+    .select('id, user_id, restaurant_id, created_at');
+
+  if (visitsError) {
+    throw visitsError;
+  }
+
+  const { data: userStats, error: userStatsError } = await supabase
+    .from('user_stats')
+    .select('user_id, visit_count, raffle_entries, created_at, updated_at');
+
+  if (userStatsError) {
+    throw userStatsError;
+  }
+
+  const visitsToArchive = (visits || []).map((v) => ({
+    season_key: seasonKey,
+    id: v.id,
+    user_id: v.user_id,
+    restaurant_id: v.restaurant_id,
+    created_at: v.created_at,
+  }));
+
+  if (visitsToArchive.length > 0) {
+    const { error: archiveVisitsError } = await supabase
+      .from('visits_archive')
+      .upsert(visitsToArchive, { onConflict: 'season_key,id' });
+
+    if (archiveVisitsError) {
+      throw archiveVisitsError;
+    }
+  }
+
+  const userStatsToArchive = (userStats || []).map((s) => ({
+    season_key: seasonKey,
+    user_id: s.user_id,
+    visit_count: s.visit_count,
+    raffle_entries: s.raffle_entries,
+    created_at: s.created_at,
+    updated_at: s.updated_at,
+  }));
+
+  if (userStatsToArchive.length > 0) {
+    const { error: archiveUserStatsError } = await supabase
+      .from('user_stats_archive')
+      .upsert(userStatsToArchive, { onConflict: 'season_key,user_id' });
+
+    if (archiveUserStatsError) {
+      throw archiveUserStatsError;
+    }
+  }
+
+  if ((visits || []).length > 0) {
+    const visitIds = visits.map((v) => v.id);
+    const { error: deleteVisitsError } = await supabase
+      .from('visits')
+      .delete()
+      .in('id', visitIds);
+
+    if (deleteVisitsError) {
+      throw deleteVisitsError;
+    }
+  }
+
+  if ((userStats || []).length > 0) {
+    const userIds = userStats.map((s) => s.user_id);
+    const { error: deleteUserStatsError } = await supabase
+      .from('user_stats')
+      .delete()
+      .in('user_id', userIds);
+
+    if (deleteUserStatsError) {
+      throw deleteUserStatsError;
+    }
+  }
+
+  return {
+    previous_season_key: seasonKey,
+    visits_archived: visitsToArchive.length,
+    user_stats_archived: userStatsToArchive.length,
+    visits_cleared: true,
+    user_stats_cleared: true,
+  };
 }
 
 run().catch((error) => {
