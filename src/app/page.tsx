@@ -164,9 +164,9 @@ export default function Home() {
           <Image
             src={RESTAURANT_WEEK_CONFIG.logoFile}
             alt="Restaurant Week Logo"
-            width={320}
-            height={320}
-            className="h-80 w-auto mb-8"
+            width={440}
+            height={440}
+            className="h-[24rem] md:h-[30rem] w-auto mb-8"
             priority
           />
           <h1 className="text-4xl font-bold text-gray-900 mb-6">

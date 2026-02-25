@@ -37,11 +37,9 @@ function isCheckInWindowOpen(request: NextRequest): boolean {
   if (RESTAURANT_WEEK_CONFIG.testing.allowInDevelopment) {
     const host = request.headers.get('host') ?? '';
     const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1');
-    const isConfiguredDevHost = Boolean(
-      process.env.NEXT_PUBLIC_DEV_HOSTNAME && host === process.env.NEXT_PUBLIC_DEV_HOSTNAME
-    );
+    const isPreviewDeployment = process.env.VERCEL_ENV === 'preview';
 
-    if (process.env.NODE_ENV === 'development' || isLocalhost || isConfiguredDevHost) {
+    if (process.env.NODE_ENV === 'development' || isLocalhost || isPreviewDeployment) {
       return true;
     }
   }
@@ -52,12 +50,37 @@ function isCheckInWindowOpen(request: NextRequest): boolean {
   return currentDate >= startDate && currentDate <= endDate;
 }
 
+function getCheckInClosedMessage(): string {
+  const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
+  const endDate = new Date(`${RESTAURANT_WEEK_CONFIG.endDate}T23:59:59`);
+  const currentDate = new Date();
+
+  if (currentDate < startDate) {
+    const formattedStartDate = startDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    return `Check-ins are not open yet. Restaurant Week starts on ${formattedStartDate}.`;
+  }
+
+  if (currentDate > endDate) {
+    return 'Check-ins for this season are now closed. Thanks for participating!';
+  }
+
+  return 'Check-ins are currently unavailable. Please try again later.';
+}
+
 export async function POST(request: NextRequest) {
   try {
     if (!isCheckInWindowOpen(request)) {
       return NextResponse.json(
-        { error: 'Check-ins are currently closed for this season.' },
-        { status: 403 }
+        {
+          error: getCheckInClosedMessage(),
+          reason: 'season_not_active'
+        },
+        { status: 423 }
       );
     }
 

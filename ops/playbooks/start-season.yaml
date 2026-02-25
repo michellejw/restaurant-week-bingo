@@ -7,6 +7,7 @@ references:
   - src/config/restaurant-week.ts
   - config/game-rules.json
   - scripts/season-rollover.js
+  - sentry.server.config.ts
 
 phases:
   - name: preflight
@@ -27,6 +28,11 @@ phases:
           - npm run build
         required: true
         expected: No blocking vulnerabilities or build failures.
+
+      - id: PRE-003
+        title: Verify Sentry configuration in target environment
+        required: true
+        expected: Sentry DSN and auth values are configured correctly in Vercel env for dev/prod as applicable.
 
   - name: season-content
     steps:
@@ -98,6 +104,11 @@ phases:
         required: true
         expected: Login, my-info save, check-in, admin, and stats paths pass.
 
+      - id: REL-004
+        title: Post-deploy observability check
+        required: true
+        expected: Sentry receives expected app telemetry and shows no new untriaged critical errors after smoke test.
+
 rollback:
   - If import is wrong, restore from latest backup and rerun with corrected source.
   - If production deploy fails, fix on dev, retest preview, then redeploy main.
@@ -108,3 +119,4 @@ evidence:
   - Save rollover JSON result.
   - Save import counts (updated/added/removed).
   - Save final production smoke test notes.
+  - Save Sentry post-deploy check note.
