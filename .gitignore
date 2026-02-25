@@ -66,5 +66,8 @@ supabase/data/
 # Database backups (contains user data)
 backups/
 
+# Supabase CLI local state
+supabase/.temp/
+
 # Sentry Config File
 .env.sentry-build-plugin
