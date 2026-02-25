@@ -1,0 +1,110 @@
+playbook: start-season
+version: 1
+description: Prepare and launch a new Restaurant Week season safely across dev and production.
+references:
+  - ops/environment-map.md
+  - docs/OPERATIONS.md
+  - src/config/restaurant-week.ts
+  - config/game-rules.json
+  - scripts/season-rollover.js
+
+phases:
+  - name: preflight
+    steps:
+      - id: PRE-001
+        title: Confirm environment mapping
+        commands:
+          - git branch --show-current
+          - cat supabase/.temp/project-ref
+        required: true
+        expected: Current context matches ops/environment-map.md for intended environment.
+
+      - id: PRE-002
+        title: Security and build health check
+        commands:
+          - npm audit --omit=dev
+          - npm run lint
+          - npm run build
+        required: true
+        expected: No blocking vulnerabilities or build failures.
+
+  - name: season-content
+    steps:
+      - id: CNT-001
+        title: Update season config
+        files:
+          - src/config/restaurant-week.ts
+        required: true
+        expected: startDate, endDate, messages, and logoFile updated for new season.
+
+      - id: CNT-002
+        title: Add seasonal logo asset
+        files:
+          - public/rest-week-logo-<season>.png
+        required: true
+        expected: New logo exists and logoFile points to it.
+
+  - name: database-rollover
+    steps:
+      - id: DB-001
+        title: Ensure migrations are applied on prod
+        commands:
+          - supabase link --project-ref ncezsildjpkioofgsmkj --password '<prod-db-password>'
+          - supabase migration list
+          - supabase db push
+        required: true
+        expected: Local and remote migration history aligned.
+
+      - id: DB-002
+        title: Backup production data
+        commands:
+          - npm run backup:prod
+        required: true
+        expected: Backup file created for current date.
+
+      - id: DB-003
+        title: Archive prior season and reset active gameplay
+        commands:
+          - npm run season:rollover
+        required: true
+        expected: visits/user_stats archived for prior season key and active tables cleared.
+
+      - id: DB-004
+        title: Import restaurant roster for new season
+        commands:
+          - npm run restaurant:import
+        required: true
+        expected: Import summary reviewed and intentional add/update/remove applied.
+
+  - name: release
+    steps:
+      - id: REL-001
+        title: Validate on dev preview
+        required: true
+        expected: User/admin smoke tests pass on Vercel preview.
+
+      - id: REL-002
+        title: Merge dev into main and deploy
+        commands:
+          - git checkout main
+          - git pull origin main
+          - git merge dev
+          - git push origin main
+        required: true
+        expected: Production deployment completes successfully.
+
+      - id: REL-003
+        title: Post-deploy production verification
+        required: true
+        expected: Login, my-info save, check-in, admin, and stats paths pass.
+
+rollback:
+  - If import is wrong, restore from latest backup and rerun with corrected source.
+  - If production deploy fails, fix on dev, retest preview, then redeploy main.
+
+evidence:
+  - Capture migration list output.
+  - Save backup filename and timestamp.
+  - Save rollover JSON result.
+  - Save import counts (updated/added/removed).
+  - Save final production smoke test notes.

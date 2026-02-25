@@ -1,0 +1,56 @@
+playbook: close-season
+version: 1
+description: Close out an active Restaurant Week season and preserve reporting artifacts.
+references:
+  - ops/environment-map.md
+  - docs/OPERATIONS.md
+  - scripts/raffle-draw.js
+  - scripts/backup-database.js
+
+phases:
+  - name: wrap-up
+    steps:
+      - id: CLS-001
+        title: Confirm event has ended
+        files:
+          - src/config/restaurant-week.ts
+        required: true
+        expected: Current date is after endDate or closure approved by stakeholders.
+
+      - id: CLS-002
+        title: Draw raffle winner(s)
+        commands:
+          - node scripts/raffle-draw.js
+        required: true
+        expected: Winner output captured and shared with Chamber.
+
+      - id: CLS-003
+        title: Run production backup
+        commands:
+          - npm run backup:prod
+        required: true
+        expected: Backup file generated and copied to durable storage.
+
+  - name: reporting
+    steps:
+      - id: CLS-004
+        title: Generate season summary
+        required: true
+        expected: Participation, restaurant engagement, and winner summary prepared.
+
+      - id: CLS-005
+        title: Store official season artifacts
+        required: true
+        expected: Backup file path, summary, and winner info logged in operations notes.
+
+  - name: transition
+    steps:
+      - id: CLS-006
+        title: Prepare next-season branch work
+        required: true
+        expected: Follow start-season playbook for next event setup.
+
+evidence:
+  - Raffle draw output
+  - Backup filename and timestamp
+  - Season summary metrics and delivery confirmation
