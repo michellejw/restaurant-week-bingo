@@ -15,6 +15,7 @@ import { auth } from '@clerk/nextjs/server';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { RESTAURANT_WEEK_CONFIG } from '@/config/restaurant-week';
 
 // Initialize Supabase client with service role for writes
 function getSupabaseAdmin() {
@@ -28,8 +29,38 @@ function getSupabaseAdmin() {
   return createClient(supabaseUrl, serviceRoleKey);
 }
 
+function isCheckInWindowOpen(request: NextRequest): boolean {
+  if (RESTAURANT_WEEK_CONFIG.testing.forceEnableInProduction) {
+    return true;
+  }
+
+  if (RESTAURANT_WEEK_CONFIG.testing.allowInDevelopment) {
+    const host = request.headers.get('host') ?? '';
+    const isLocalhost = host.startsWith('localhost') || host.startsWith('127.0.0.1');
+    const isConfiguredDevHost = Boolean(
+      process.env.NEXT_PUBLIC_DEV_HOSTNAME && host === process.env.NEXT_PUBLIC_DEV_HOSTNAME
+    );
+
+    if (process.env.NODE_ENV === 'development' || isLocalhost || isConfiguredDevHost) {
+      return true;
+    }
+  }
+
+  const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
+  const endDate = new Date(`${RESTAURANT_WEEK_CONFIG.endDate}T23:59:59`);
+  const currentDate = new Date();
+  return currentDate >= startDate && currentDate <= endDate;
+}
+
 export async function POST(request: NextRequest) {
   try {
+    if (!isCheckInWindowOpen(request)) {
+      return NextResponse.json(
+        { error: 'Check-ins are currently closed for this season.' },
+        { status: 403 }
+      );
+    }
+
     // T005: Auth check
     const { userId } = await auth();
 

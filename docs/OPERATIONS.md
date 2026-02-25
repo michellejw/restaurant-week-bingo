@@ -41,21 +41,28 @@ Complete these tasks 4-6 weeks before Restaurant Week begins.
    code src/config/restaurant-week.ts
    ```
 
-2. Update the `startDate` value to the new Restaurant Week start date:
+2. Update the `startDate` and `endDate` values to the new Restaurant Week dates:
    ```typescript
    startDate: '2026-04-15',  // Format: YYYY-MM-DD
+   endDate: '2026-04-30',
    ```
 
-3. Update the display messages to reflect the new dates:
+3. Update the display messages to reflect the new season dates:
    ```typescript
-   messages: {
-     title: "Restaurant Week Coming Soon!",
-     beforeStart: "Restaurant Week check-ins will be available starting April 15, 2026...",
-     duringEvent: "Restaurant Week is active! Enter restaurant codes to check in..."
-   }
-   ```
+    messages: {
+      title: "Restaurant Week Coming Soon!",
+      beforeStart: "Restaurant Week check-ins will be available starting April 15, 2026...",
+      duringEvent: "Restaurant Week is active! Enter restaurant codes to check in...",
+      afterEndTitle: "Thanks For A Great Restaurant Week!",
+      afterEnd: "Thanks for participating in Restaurant Week Spring 2026. See you next season!"
+    }
+    ```
 
-4. **IMPORTANT**: Ensure `forceEnableInProduction` is set to `false`:
+4. Update the season logo image if provided by the Chamber:
+   - Replace `public/rest-week-logo.png` with the new approved asset.
+   - Keep the same filename so no code changes are required.
+
+5. **IMPORTANT**: Ensure `forceEnableInProduction` is set to `false`:
    ```typescript
    testing: {
      allowInDevelopment: true,

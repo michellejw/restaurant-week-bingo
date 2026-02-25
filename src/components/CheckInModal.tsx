@@ -28,6 +28,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
 
   // Check if Restaurant Week is active
   const isRestaurantWeekActive = RestaurantWeekUtils.isActive();
+  const phaseByDateOnly = RestaurantWeekUtils.getPhaseByDateOnly();
   const daysUntilStart = RestaurantWeekUtils.getDaysUntilStart();
   const formattedStartDate = RestaurantWeekUtils.getFormattedStartDate();
   const statusInfo = RestaurantWeekUtils.getStatusInfo();
@@ -152,7 +153,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
                 Continue Playing
               </button>
             </div>
-          ) : !(isDevEnvironment || isRestaurantWeekActive) ? (
+          ) : phaseByDateOnly === 'before_start' ? (
             // Restaurant Week hasn't started yet - show countdown
             <div className="text-center space-y-4">
               <div className="mx-auto w-16 h-16 bg-coral-100 rounded-full flex items-center justify-center mb-4">
@@ -225,7 +226,7 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   }
 
   // Show coming soon modal if Restaurant Week hasn't started yet
-  if (daysUntilStart > 0) {
+  if (phaseByDateOnly === 'before_start') {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[2000]">
         <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
@@ -261,11 +262,9 @@ export default function CheckInModal({ isOpen, onClose, onCheckIn }: CheckInModa
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[2000]">
       <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Thanks For A Great Restaurant Week!</h2>
+        <h2 className="text-xl font-semibold text-gray-900 mb-4">{RESTAURANT_WEEK_CONFIG.messages.afterEndTitle}</h2>
         <p className="text-gray-600 mb-6">
-          We hope you enjoyed discovering Pleasure Island&apos;s amazing restaurants! While check-ins are now closed, 
-          we encourage you to keep supporting our local restaurants throughout the year. See you next fall for 
-          more delicious adventures!
+          {RESTAURANT_WEEK_CONFIG.messages.afterEnd}
         </p>
         <div className="flex justify-end">
           <button

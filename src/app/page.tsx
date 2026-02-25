@@ -6,7 +6,7 @@ import Image from 'next/image';
 import BingoCard from '@/components/BingoCard';
 import dynamic from 'next/dynamic';
 import CheckInModal from '@/components/CheckInModal';
-import { RestaurantWeekUtils } from '@/config/restaurant-week';
+import { RESTAURANT_WEEK_CONFIG, RestaurantWeekUtils } from '@/config/restaurant-week';
 import { useUserStats } from '@/hooks/useUserStats';
 import { useRestaurants } from '@/hooks/useRestaurants';
 
@@ -77,15 +77,12 @@ export default function Home() {
 
           {/* Wide check-in button */}
           {(() => {
-            const isDevMode = typeof window !== 'undefined' && 
-              (process.env.NODE_ENV === 'development' || 
-               (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
-            
-            const isRestaurantWeekActive = RestaurantWeekUtils.isActiveByDateOnly();
-            const daysUntilStart = RestaurantWeekUtils.getDaysUntilStart();
-            
-            // Development mode or Restaurant Week is active
-            if (isDevMode || isRestaurantWeekActive) {
+            const isDevMode = typeof window !== 'undefined' &&
+              (process.env.NODE_ENV === 'development' ||
+                (process.env.NEXT_PUBLIC_DEV_HOSTNAME && window.location.hostname === process.env.NEXT_PUBLIC_DEV_HOSTNAME));
+            const phase = RestaurantWeekUtils.getPhaseByDateOnly();
+
+            if (isDevMode || phase === 'active') {
               return (
                 <button
                   onClick={() => setIsCheckInModalOpen(true)}
@@ -95,34 +92,32 @@ export default function Home() {
                 </button>
               );
             }
-            
-            // Restaurant Week hasn't started yet
-            if (daysUntilStart > 0) {
+
+            if (phase === 'before_start') {
               return (
                 <button
                   onClick={() => setIsCheckInModalOpen(true)}
                   className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
                 >
-                  Restaurant Week Coming Soon!
+                  {RESTAURANT_WEEK_CONFIG.messages.title}
                 </button>
               );
             }
-            
-            // Restaurant Week is over
+
             return (
               <button
                 onClick={() => setIsCheckInModalOpen(true)}
                 className="w-full py-3 px-4 bg-gray-400 text-white text-lg font-medium rounded-lg cursor-not-allowed"
               >
-                Thanks For A Great Restaurant Week!
+                {RESTAURANT_WEEK_CONFIG.messages.afterEndTitle}
               </button>
             );
           })()}
 
           {/* Full-width map */}
           <div className="w-full h-[400px] bg-white rounded-lg border border-gray-200 overflow-hidden">
-            <RestaurantMap 
-              onVisitUpdate={handleCheckIn} 
+            <RestaurantMap
+              onVisitUpdate={handleCheckIn}
               targetRestaurantId={selectedRestaurantId}
               onRestaurantSelect={handleRestaurantSelect}
               onRestaurantDeselect={handleRestaurantDeselect}
@@ -149,7 +144,7 @@ export default function Home() {
 
           {/* Bingo card */}
           <div className="w-full bg-white rounded-lg border border-gray-200 p-6">
-            <BingoCard 
+            <BingoCard
               onVisitUpdate={handleCheckIn}
               onRestaurantSelect={handleRestaurantSelect}
               selectedRestaurantId={selectedRestaurantId}
@@ -185,13 +180,13 @@ export default function Home() {
               routing="hash"
               appearance={{
                 elements: {
-                  rootBox: "w-full flex justify-center",
-                  card: "w-full max-w-[400px] shadow-lg",
-                  formButtonPrimary: "bg-coral-600 hover:bg-coral-700"
+                  rootBox: 'w-full flex justify-center',
+                  card: 'w-full max-w-[400px] shadow-lg',
+                  formButtonPrimary: 'bg-coral-600 hover:bg-coral-700'
                 },
                 layout: {
-                  socialButtonsPlacement: "bottom",
-                  socialButtonsVariant: "blockButton"
+                  socialButtonsPlacement: 'bottom',
+                  socialButtonsVariant: 'blockButton'
                 }
               }}
             />

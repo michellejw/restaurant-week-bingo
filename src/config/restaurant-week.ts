@@ -23,6 +23,14 @@ export const RESTAURANT_WEEK_CONFIG = {
    * (These are just examples - use your actual dates)
    */
   startDate: '2025-10-10',
+
+  /**
+   * 📅 RESTAURANT WEEK END DATE
+   *
+   * Format: 'YYYY-MM-DD'
+   * Check-ins close at the end of this date.
+   */
+  endDate: '2025-10-26',
   
   /**
    * 🧪 TESTING OVERRIDES
@@ -54,7 +62,9 @@ export const RESTAURANT_WEEK_CONFIG = {
   messages: {
     title: "Restaurant Week Coming Soon!",
     beforeStart: "Restaurant Week check-ins will be available starting October 10, 2025. Get ready to discover amazing local restaurants and earn raffle entries!",
-    duringEvent: "Restaurant Week is active! Enter restaurant codes to check in and earn raffle entries."
+    duringEvent: "Restaurant Week is active! Enter restaurant codes to check in and earn raffle entries.",
+    afterEndTitle: "Thanks For A Great Restaurant Week!",
+    afterEnd: "Thanks for participating in Restaurant Week Fall 2025. Check-ins are now closed. See you next season!"
   }
 } as const;
 
@@ -108,6 +118,22 @@ export const GAME_CONFIG = {
  * Helper functions to check Restaurant Week status
  */
 export const RestaurantWeekUtils = {
+  getPhaseByDateOnly(): 'before_start' | 'active' | 'after_end' {
+    const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
+    const endDate = new Date(`${RESTAURANT_WEEK_CONFIG.endDate}T23:59:59`);
+    const currentDate = new Date();
+
+    if (currentDate < startDate) {
+      return 'before_start';
+    }
+
+    if (currentDate > endDate) {
+      return 'after_end';
+    }
+
+    return 'active';
+  },
+
   /**
    * Check if Restaurant Week is currently active
    * (includes testing overrides)
@@ -132,10 +158,7 @@ export const RestaurantWeekUtils = {
       }
     }
     
-    // Check actual date
-    const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
-    const currentDate = new Date();
-    return currentDate >= startDate;
+    return this.getPhaseByDateOnly() === 'active';
   },
   
   /**
@@ -143,9 +166,7 @@ export const RestaurantWeekUtils = {
    * (ignores all testing overrides)
    */
   isActiveByDateOnly(): boolean {
-    const startDate = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
-    const currentDate = new Date();
-    return currentDate >= startDate;
+    return this.getPhaseByDateOnly() === 'active';
   },
 
   /**
@@ -159,6 +180,15 @@ export const RestaurantWeekUtils = {
     if (currentDate >= startDate) return 0;
     
     return Math.ceil((startDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
+  },
+
+  getDaysUntilEnd(): number {
+    const endDate = new Date(`${RESTAURANT_WEEK_CONFIG.endDate}T23:59:59`);
+    const currentDate = new Date();
+
+    if (currentDate > endDate) return 0;
+
+    return Math.ceil((endDate.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24));
   },
 
   /**
@@ -185,12 +215,16 @@ export const RestaurantWeekUtils = {
     
     return {
       isDevelopment,
+      phaseByDateOnly: this.getPhaseByDateOnly(),
       dateBasedActive: this.isActiveByDateOnly(),
       overrideActive: this.isActive(),
       daysUntilStart: this.getDaysUntilStart(),
+      daysUntilEnd: this.getDaysUntilEnd(),
       config: {
         allowInDevelopment: RESTAURANT_WEEK_CONFIG.testing.allowInDevelopment,
-        forceEnableInProduction: RESTAURANT_WEEK_CONFIG.testing.forceEnableInProduction
+        forceEnableInProduction: RESTAURANT_WEEK_CONFIG.testing.forceEnableInProduction,
+        startDate: RESTAURANT_WEEK_CONFIG.startDate,
+        endDate: RESTAURANT_WEEK_CONFIG.endDate,
       }
     };
   }
