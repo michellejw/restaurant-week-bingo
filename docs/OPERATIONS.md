@@ -58,9 +58,9 @@ Complete these tasks 4-6 weeks before Restaurant Week begins.
     }
     ```
 
-4. Update the season logo image if provided by the Chamber:
-   - Replace `public/rest-week-logo.png` with the new approved asset.
-   - Keep the same filename so no code changes are required.
+4. Update the season logo if provided by the Chamber:
+   - Add the new asset file under `public/` (example: `public/rest-week-logo-spring2026.png`).
+   - Set `logoFile` in `src/config/restaurant-week.ts` to the new path.
 
 5. **IMPORTANT**: Ensure `forceEnableInProduction` is set to `false`:
    ```typescript

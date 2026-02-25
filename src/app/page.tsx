@@ -162,7 +162,7 @@ export default function Home() {
       <SignedOut>
         <div className="flex flex-col items-center justify-center w-full max-w-3xl mx-auto text-center py-12">
           <Image
-            src="/rest-week-logo.png"
+            src={RESTAURANT_WEEK_CONFIG.logoFile}
             alt="Restaurant Week Logo"
             width={320}
             height={320}

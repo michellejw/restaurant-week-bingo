@@ -11,6 +11,14 @@ import gameRules from '../../config/game-rules.json';
 
 export const RESTAURANT_WEEK_CONFIG = {
   /**
+   * 🖼️ SEASON LOGO FILE
+   *
+   * Place the seasonal logo under /public and set this path.
+   * Example: '/rest-week-logo-spring2026.png'
+   */
+  logoFile: '/rest-week-logo.png',
+
+  /**
    * 📅 RESTAURANT WEEK START DATE
    * 
    * Format: 'YYYY-MM-DD'
