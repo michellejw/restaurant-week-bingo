@@ -45,23 +45,6 @@ Open http://localhost:3000
 - **Maps**: Leaflet with OpenStreetMap
 - **Deployment**: Vercel
 
----
-
-## Hosted Service
-
-**Need this running for your community without the technical setup?**
-
-I offer a fully hosted service that includes:
-- Complete setup and configuration
-- Custom branding and domain
-- Restaurant data import
-- Ongoing support and maintenance
-- Analytics and reporting
-- Automatic backups and security updates
-
-Perfect for chambers of commerce and downtown associations who want "it just works" without managing servers.
-
-**[Contact me for pricing and setup →](mailto:michelle@waveformanalytics.com)**
 
 ---
 
