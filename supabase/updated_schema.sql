@@ -89,11 +89,11 @@ BEGIN
 
     -- Update stats with the actual count
     INSERT INTO user_stats (user_id, visit_count, raffle_entries, updated_at)
-    VALUES (NEW.user_id, visit_count_val, FLOOR(visit_count_val/4), NOW())
+    VALUES (NEW.user_id, visit_count_val, FLOOR(visit_count_val/3), NOW())
     ON CONFLICT (user_id) 
     DO UPDATE SET 
         visit_count = visit_count_val,
-        raffle_entries = FLOOR(visit_count_val/4),
+        raffle_entries = FLOOR(visit_count_val/3),
         updated_at = NOW();
     
     RETURN NEW;

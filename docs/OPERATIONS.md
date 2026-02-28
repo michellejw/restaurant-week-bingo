@@ -410,7 +410,7 @@ Prepare summary data for the Chamber of Commerce records.
    SELECT
      COUNT(DISTINCT user_id) as total_users,
      COUNT(*) as total_visits,
-     SUM(FLOOR(visit_count / 4)) as total_raffle_entries
+     SUM(FLOOR(visit_count / 3)) as total_raffle_entries
    FROM user_stats;
 
    -- Visits per restaurant
@@ -470,7 +470,7 @@ node scripts/check-db-consistency.js
 UPDATE user_stats us
 SET
   visit_count = (SELECT COUNT(*) FROM visits WHERE user_id = us.user_id),
-  raffle_entries = FLOOR((SELECT COUNT(*) FROM visits WHERE user_id = us.user_id) / 4);
+  raffle_entries = FLOOR((SELECT COUNT(*) FROM visits WHERE user_id = us.user_id) / 3);
 ```
 
 Or use the fix script:
@@ -579,12 +579,12 @@ SELECT
   us.visit_count as recorded_visits,
   COUNT(v.id) as actual_visits,
   us.raffle_entries as recorded_entries,
-  FLOOR(COUNT(v.id) / 4) as expected_entries
+  FLOOR(COUNT(v.id) / 3) as expected_entries
 FROM user_stats us
 LEFT JOIN visits v ON us.user_id = v.user_id
 GROUP BY us.user_id, us.visit_count, us.raffle_entries
 HAVING us.visit_count != COUNT(v.id)
-   OR us.raffle_entries != FLOOR(COUNT(v.id) / 4);
+   OR us.raffle_entries != FLOOR(COUNT(v.id) / 3);
 
 -- Restaurants without any visits
 SELECT r.name, r.code
@@ -619,7 +619,7 @@ DELETE FROM visits WHERE id = 'visit-id';
 -- Recalculate user stats
 UPDATE user_stats
 SET visit_count = visit_count - 1,
-    raffle_entries = FLOOR((visit_count - 1) / 4)
+    raffle_entries = FLOOR((visit_count - 1) / 3)
 WHERE user_id = 'user-id';
 ```
 

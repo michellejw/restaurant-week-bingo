@@ -4,7 +4,7 @@
  * Fetches users with raffle entries from production database
  * and randomly selects a winner based on their entry count.
  * 
- * Raffle entries = floor(visits / 4)
+ * Raffle entries = floor(visits / 3)
  * Each entry gives one chance in the drawing.
  */
 

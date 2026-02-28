@@ -91,8 +91,8 @@ export const GAME_CONFIG = {
      * Number of restaurant check-ins required for one raffle entry.
      *
      * ⚠️ CRITICAL: This value MUST match the SQL trigger!
-     * The database trigger at `supabase/fix-user-stats-triggers.sql` uses:
-     *   FLOOR(visit_count / 4)
+     * The database trigger at `supabase/fix-user-stats-triggers.sql` must use:
+     *   FLOOR(visit_count / raffleRestaurantsPerEntry)
      *
      * If you change this value, you MUST also update the SQL trigger
      * and run a migration to recalculate existing raffle_entries.

@@ -27,11 +27,11 @@ BEGIN
 
     -- Update stats with the actual count
     INSERT INTO user_stats (user_id, visit_count, raffle_entries, updated_at)
-    VALUES (affected_user_id, visit_count_val, FLOOR(visit_count_val/4), NOW())
+    VALUES (affected_user_id, visit_count_val, FLOOR(visit_count_val/3), NOW())
     ON CONFLICT (user_id) 
     DO UPDATE SET 
         visit_count = visit_count_val,
-        raffle_entries = FLOOR(visit_count_val/4),
+        raffle_entries = FLOOR(visit_count_val/3),
         updated_at = NOW();
     
     -- If user has 0 visits, we might want to keep the record but with 0 counts
@@ -58,7 +58,7 @@ INSERT INTO user_stats (user_id, visit_count, raffle_entries, updated_at)
 SELECT 
     v.user_id,
     COUNT(*) as visit_count,
-    FLOOR(COUNT(*)/4) as raffle_entries,
+    FLOOR(COUNT(*)/3) as raffle_entries,
     NOW() as updated_at
 FROM visits v
 GROUP BY v.user_id
@@ -72,4 +72,4 @@ DO UPDATE SET
 -- 1. user_stats is updated when visits are added (INSERT trigger)
 -- 2. user_stats is updated when visits are removed (DELETE trigger)  
 -- 3. Any existing inconsistencies are fixed by recalculating from visits
--- 4. The raffle_entries are correctly calculated as FLOOR(visit_count/4)
+-- 4. The raffle_entries are correctly calculated as FLOOR(visit_count/3)

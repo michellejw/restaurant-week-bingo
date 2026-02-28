@@ -1,4 +1,4 @@
--- Fix Bug 1: Update raffle entry calculation from /4 to /5
+-- Fix bug: update raffle entry calculation to /3
 -- Fix Bug 2: Ensure trigger uses correct calculation
 
 -- Drop and recreate the trigger function with correct calculation
@@ -14,13 +14,13 @@ BEGIN
     FROM visits
     WHERE user_id = NEW.user_id;
 
-    -- Update stats with the actual count (FIXED: /5 instead of /4)
+    -- Update stats with the actual count (using /3 rule)
     INSERT INTO user_stats (user_id, visit_count, raffle_entries, updated_at)
-    VALUES (NEW.user_id, visit_count_val, FLOOR(visit_count_val/5), NOW())
+    VALUES (NEW.user_id, visit_count_val, FLOOR(visit_count_val/3), NOW())
     ON CONFLICT (user_id) 
     DO UPDATE SET 
         visit_count = visit_count_val,
-        raffle_entries = FLOOR(visit_count_val/5),
+        raffle_entries = FLOOR(visit_count_val/3),
         updated_at = NOW();
     
     RETURN NEW;
@@ -35,4 +35,4 @@ CREATE TRIGGER update_stats_on_visit
     EXECUTE FUNCTION update_user_stats();
 
 -- Fix existing user stats with correct raffle entry calculation
-UPDATE user_stats SET raffle_entries = FLOOR(visit_count/5);
+UPDATE user_stats SET raffle_entries = FLOOR(visit_count/3);

@@ -248,7 +248,7 @@ User enters restaurant code
     ↓
 Database trigger updates user_stats
   - Increments visit_count
-  - Calculates raffle_entries = floor(visit_count / 4)
+  - Calculates raffle_entries = floor(visit_count / 3)
     ↓
 Response returned → UI updates via SWR revalidation
 ```
