@@ -54,7 +54,14 @@ export default function SponsorsPage() {
           setSponsors([])
         } else {
           console.log('Successfully fetched sponsors:', JSON.stringify(data, null, 2))
-          setSponsors(data)
+          // Show newer sponsors first, Proximity and Waveform last
+          const bottomNames = ['proximity carolina beach', 'waveform analytics']
+          const sorted = [...data].sort((a, b) => {
+            const aBottom = bottomNames.includes(a.name.toLowerCase()) ? 1 : 0
+            const bBottom = bottomNames.includes(b.name.toLowerCase()) ? 1 : 0
+            return aBottom - bBottom
+          })
+          setSponsors(sorted)
         }
       } catch (err: unknown) {
         const supabaseError = err as SupabaseError
