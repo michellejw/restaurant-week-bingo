@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import * as Plot from '@observablehq/plot';
 import OverallStatsCards from './components/OverallStatsCards';
+import { RESTAURANT_WEEK_CONFIG } from '@/config/restaurant-week';
 
 // Horizontal bar chart for restaurant visits
 function RestaurantVisitsChart({ data }: { data: { name: string; visits: number }[] }) {
@@ -183,10 +184,10 @@ export interface StatsData {
   }[];
   overallStats: {
     totalVisits: number;
-    totalUsers: number;
+    checkedIn: number;
+    openedApp: number;
+    newAccounts: number;
     totalRestaurants: number;
-    totalRegisteredUsers: number;
-    avgVisitsPerUser: number;
   };
 }
 
@@ -198,6 +199,12 @@ interface StatsRestaurant {
 interface StatsVisit {
   user_id: string;
   restaurant_id: string;
+}
+
+interface StatsUser {
+  id: string;
+  created_at: string;
+  last_seen_at: string | null;
 }
 
 export default function StatsContent() {
@@ -226,11 +233,11 @@ export default function StatsContent() {
         const {
           restaurants,
           visits,
-          totalRegisteredUsers,
+          users,
         }: {
           restaurants: StatsRestaurant[];
           visits: StatsVisit[];
-          totalRegisteredUsers: number;
+          users: StatsUser[];
         } = await response.json();
 
         console.log('Raw visits:', visits);
@@ -264,21 +271,25 @@ export default function StatsContent() {
         
         console.log('Restaurant visits:', restaurantVisits);
 
-        // Calculate basic stats directly from raw data
-        const totalUsers = userVisitCountMap.size; // Users who have made visits
+        // Season activity threshold: 2 weeks before startDate
+        const seasonStart = new Date(`${RESTAURANT_WEEK_CONFIG.startDate}T00:00:00`);
+        seasonStart.setDate(seasonStart.getDate() - 14);
+
+        const checkedIn = userVisitCountMap.size;
+        const openedApp = users.filter(u => u.last_seen_at && new Date(u.last_seen_at) >= seasonStart).length;
+        const newAccounts = users.filter(u => new Date(u.created_at) >= seasonStart).length;
         const totalRestaurants = restaurants.length;
-        const totalVisits = visits.length; // Direct count from visits table
-        const avgVisitsPerUser = totalUsers > 0 ? totalVisits / totalUsers : 0;
+        const totalVisits = visits.length;
 
         const statsData: StatsData = {
           userVisitCounts,
           restaurantVisits,
           overallStats: {
             totalVisits,
-            totalUsers,
+            checkedIn,
+            openedApp,
+            newAccounts,
             totalRestaurants,
-            totalRegisteredUsers,
-            avgVisitsPerUser: Math.round(avgVisitsPerUser * 100) / 100,
           },
         };
 

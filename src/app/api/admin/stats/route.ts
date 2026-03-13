@@ -12,23 +12,24 @@ export async function GET() {
   try {
     const supabase = getSupabaseAdminClient();
 
-    const [restaurantsResult, visitsResult, usersCountResult] = await Promise.all([
+    const [restaurantsResult, visitsResult, usersResult] = await Promise.all([
       supabase.from('restaurants').select('id, name'),
       supabase
         .from('visits')
         .select('user_id, restaurant_id, created_at')
         .order('created_at', { ascending: false }),
-      supabase.from('users').select('id', { count: 'exact', head: true }),
+      supabase.from('users').select('id, created_at, last_seen_at'),
     ]);
 
-    if (restaurantsResult.error || visitsResult.error || usersCountResult.error) {
+    if (restaurantsResult.error || visitsResult.error || usersResult.error) {
       return NextResponse.json({ error: 'Failed to load stats' }, { status: 500 });
     }
 
     return NextResponse.json({
       restaurants: restaurantsResult.data ?? [],
       visits: visitsResult.data ?? [],
-      totalRegisteredUsers: usersCountResult.count ?? 0,
+      users: usersResult.data ?? [],
+      totalRegisteredUsers: (usersResult.data ?? []).length,
     });
   } catch {
     return NextResponse.json({ error: 'Failed to load stats' }, { status: 500 });

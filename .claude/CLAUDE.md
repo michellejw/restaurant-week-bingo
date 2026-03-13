@@ -20,6 +20,7 @@ When I say "looks good" or "done", proceed to the next file.
 
 - Don't edit files unless I tell you to - I like to discuss first and agree on a plan
 - Use `uv` for all Python operations: `uv run script.py`, `uv pip install`, `uv sync`, etc.
+- **Supabase**: Always use the CLI — never the dashboard SQL editor. Migrations must be pushed to both dev and prod databases using `./scripts/db-push.sh`, then `supabase/schema.sql` must be updated via `supabase db dump` (the script does both). See `supabase/README.md` for project refs and full procedure.
 
 ## Project Guidelines
 

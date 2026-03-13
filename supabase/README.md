@@ -1,46 +1,76 @@
-# Supabase Database Files
+# Supabase Database
 
-This folder contains the essential database schema and configuration files for the Restaurant Week Bingo project.
+Two Supabase projects, one for dev and one for prod:
 
-## 📁 Files Overview
+| Environment | Project Ref | Used by |
+|-------------|-------------|---------|
+| **Dev** | `lhynosiqalkouyotibwt` | Local dev (`npm run dev`), Vercel preview deploys |
+| **Prod** | `ncezsildjpkioofgsmkj` | `picc-rest-week.waveformanalytics.com` |
 
-### **Core Schema & Data**
-- **`updated_schema.sql`** - **Main database schema** with all tables, policies, and functions
-- **`dev_data_import.sql`** - **Sample data** for development testing (restaurants & sponsors)
-- **`dev_config.sql`** - **Development-specific settings** (disables RLS for easier testing)
+The Supabase CLI defaults to linking to **dev**. The app connects to whichever database is configured in `.env.local` (local) or Vercel env vars (deployed).
 
-### **Archive**
-- **`db_cluster-27-05-2025@09-24-48.backup`** - **Original production backup** (451KB - keep for reference)
+## Files
 
-## 🚀 Database Setup Instructions
+| File | Purpose |
+|------|---------|
+| `schema.sql` | Canonical snapshot of the full database schema (generated via `supabase db dump`) |
+| `migrations/` | Timestamped migration files applied to both dev and prod |
+| `data/` | Data import files (restaurants, sponsors) |
+| `dev_data_import.sql` | Sample data for development |
+| `dev_config.sql` | Dev-specific settings (disables RLS for easier testing) |
+| `fix-user-stats-triggers.sql` | Trigger definitions (referenced by game config) |
+| `updated_schema.sql` | Legacy full schema — superseded by `schema.sql` |
 
-### **For New Development Database:**
-```sql
-1. Run: updated_schema.sql      -- Creates all tables and policies
-2. Run: dev_data_import.sql     -- Adds sample restaurant data  
-3. Run: dev_config.sql          -- Makes testing easier (disables RLS)
+## Applying Migrations
+
+Always use the CLI, never the Supabase dashboard.
+
+### Quick way (recommended)
+
+```bash
+./scripts/db-push.sh
 ```
 
-### **For Production Database:**
-```sql
-1. Run: updated_schema.sql      -- Creates all tables and policies
-2. Import real data as needed   -- Skip dev_data_import.sql
-3. DO NOT run dev_config.sql    -- Keep RLS enabled for security
+This script pushes pending migrations to both dev and prod, re-links to dev, and dumps a fresh `schema.sql`. It asks for confirmation before pushing.
+
+### Manual way
+
+```bash
+# 1. Link to dev and push
+supabase link --project-ref lhynosiqalkouyotibwt
+supabase db push
+
+# 2. Link to prod and push
+supabase link --project-ref ncezsildjpkioofgsmkj
+supabase db push
+
+# 3. Re-link to dev
+supabase link --project-ref lhynosiqalkouyotibwt
+
+# 4. Dump fresh schema snapshot
+supabase db dump -s public -f supabase/schema.sql
 ```
 
-## 🔄 File Relationships
+### Checking migration status
 
-- **`updated_schema.sql`** is the complete base schema that works for both environments
-- **`dev_data_import.sql`** provides realistic test data for development
-- **`dev_config.sql`** modifies the base schema for easier development (optional)
-- **`db_cluster-*.backup`** is the original data source (archived)
+```bash
+supabase migration list
+```
 
-## 🧹 Recently Cleaned Up
+Shows which migrations are applied to the currently linked database vs which are local-only.
 
-The following redundant files were removed during the 2025-09-30 cleanup:
-- Various outdated schema versions (init.sql, supabase_schema.sql, etc.)
-- Individual table creation files (add_users_table.sql, etc.)
-- Temporary RLS fix files (fix_rls_policies.sql, etc.)
-- Outdated data files (seed_data.sql, etc.)
+## Setting Up a New Database From Scratch
 
-All functionality from these files has been consolidated into the core files above.
+```
+1. Run: schema.sql               -- Full schema with tables, policies, functions
+2. Run: dev_data_import.sql      -- Sample data (dev only, skip for prod)
+3. Run: dev_config.sql           -- Disables RLS for easier testing (dev only)
+```
+
+## Architecture Notes
+
+- **Auth**: Clerk handles authentication; Supabase is data-only
+- **RLS**: Policies allow `anon` and `service_role` access (Clerk manages who can reach the app)
+- **Frontend**: Uses Supabase anon/publishable key
+- **Server/scripts**: Uses service role key
+- See `DATABASE_SETUP_GUIDE.md` for details on the Clerk + Supabase RLS pattern

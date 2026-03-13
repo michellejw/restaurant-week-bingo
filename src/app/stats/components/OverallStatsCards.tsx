@@ -1,9 +1,9 @@
 interface OverallStats {
   totalVisits: number;
-  totalUsers: number;
+  checkedIn: number;
+  openedApp: number;
+  newAccounts: number;
   totalRestaurants: number;
-  totalRegisteredUsers: number;
-  avgVisitsPerUser: number;
 }
 
 interface Props {
@@ -19,28 +19,28 @@ export default function OverallStatsCards({ stats }: Props) {
       color: 'bg-coral-100 text-coral-900',
     },
     {
-      title: 'Active Users',
-      value: stats.totalUsers.toLocaleString(),
+      title: 'Checked In',
+      value: stats.checkedIn.toLocaleString(),
       icon: '👥',
       color: 'bg-blue-100 text-blue-900',
     },
     {
-      title: 'Registered Users',
-      value: stats.totalRegisteredUsers.toLocaleString(),
-      icon: '👤',
+      title: 'Opened App',
+      value: stats.openedApp.toLocaleString(),
+      icon: '📱',
       color: 'bg-yellow-100 text-yellow-900',
+    },
+    {
+      title: 'New Accounts',
+      value: stats.newAccounts.toLocaleString(),
+      icon: '✨',
+      color: 'bg-purple-100 text-purple-900',
     },
     {
       title: 'Restaurants',
       value: stats.totalRestaurants.toLocaleString(),
       icon: '🍽️',
       color: 'bg-green-100 text-green-900',
-    },
-    {
-      title: 'Avg Visits/User',
-      value: stats.avgVisitsPerUser.toString(),
-      icon: '📊',
-      color: 'bg-purple-100 text-purple-900',
     },
   ];
 

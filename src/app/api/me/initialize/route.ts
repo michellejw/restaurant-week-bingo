@@ -31,20 +31,23 @@ export async function POST(request: NextRequest) {
     }
 
     if (existingUser) {
+      const updates: Record<string, unknown> = { last_seen_at: new Date().toISOString() };
       if (!existingUser.email && email) {
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ email })
-          .eq('id', userId);
+        updates.email = email;
+      }
 
-        if (updateError) {
-          return NextResponse.json({ error: 'Failed to initialize user' }, { status: 500 });
-        }
+      const { error: updateError } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId);
+
+      if (updateError) {
+        return NextResponse.json({ error: 'Failed to initialize user' }, { status: 500 });
       }
     } else {
       const { error: createUserError } = await supabase
         .from('users')
-        .insert([{ id: userId, email }]);
+        .insert([{ id: userId, email, last_seen_at: new Date().toISOString() }]);
 
       if (createUserError && createUserError.code !== '23505') {
         return NextResponse.json({ error: 'Failed to initialize user' }, { status: 500 });
