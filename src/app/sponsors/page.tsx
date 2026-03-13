@@ -127,8 +127,8 @@ export default function SponsorsPage() {
                       <p className="text-sm text-gray-600">{sponsor.phone}</p>
                     )}
                     {sponsor.url && (
-                      <a 
-                        href={`https://${sponsor.url}`} 
+                      <a
+                        href={sponsor.url.startsWith('http') ? sponsor.url : `https://${sponsor.url}`}
                         className="text-sm text-coral-500 hover:text-coral-600 block"
                         target="_blank" 
                         rel="noopener noreferrer"
