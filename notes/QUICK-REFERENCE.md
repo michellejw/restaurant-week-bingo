@@ -2,6 +2,11 @@
 
 **Essential commands and workflows for managing your Restaurant Week app**
 
+> ⚠️ **Picking this up after a long break?** Supabase projects were
+> paused 2026-05-11 and may be deleted after ~2026-08-09. If the
+> dashboard says the project is gone or pause won't unpause, read
+> [`ops/RESTORE-FROM-PAUSED.md`](../ops/RESTORE-FROM-PAUSED.md) first.
+
 ---
 
 ## 📋 Command Overview
