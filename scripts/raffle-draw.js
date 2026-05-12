@@ -1,42 +1,43 @@
 /**
  * Raffle Draw Script
- * 
- * Fetches users with raffle entries from production database
- * and randomly selects a winner based on their entry count.
- * 
- * Raffle entries = floor(visits / 3)
- * Each entry gives one chance in the drawing.
+ *
+ * Draws a random raffle winner from production, weighted by entry count.
+ *
+ * Usage:
+ *   node scripts/raffle-draw.js                     # Show eligible users + draw a winner
+ *   node scripts/raffle-draw.js --exclude=id1,id2   # Draw excluding specific user IDs
+ *
+ * Designed to be run by the assistant interactively:
+ *   1. Run with no args to see the pool and first draw
+ *   2. If the winner should be rejected, re-run with --exclude to add them
+ *   3. Repeat until an acceptable winner is drawn
  */
 
 require('dotenv').config({ path: '.env.production' });
 const { createClient } = require('@supabase/supabase-js');
 
-// Verify environment variables are loaded
+// --- CLI args ---
+const args = process.argv.slice(2);
+const excludeArg = args.find(a => a.startsWith('--exclude='));
+const excludeIds = excludeArg
+  ? excludeArg.replace('--exclude=', '').split(',').map(id => id.trim())
+  : [];
+
+// --- Supabase setup ---
 if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Missing required environment variables:');
-  console.error('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✓' : '✗');
-  console.error('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? '✓' : '✗');
+  console.error('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'set' : 'MISSING');
+  console.error('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'set' : 'MISSING');
   process.exit(1);
 }
 
-console.log('Connecting to Supabase:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-
-// Initialize Supabase client with service role key for admin access
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
+  { auth: { autoRefreshToken: false, persistSession: false } }
 );
 
 async function getRaffleEligibleUsers() {
-  console.log('Fetching raffle-eligible users from production database...\n');
-  
-  // Get all users with at least one raffle entry, including their contact info
   const { data: userStats, error } = await supabase
     .from('user_stats')
     .select(`
@@ -54,96 +55,93 @@ async function getRaffleEligibleUsers() {
 
   if (error) {
     console.error('Error fetching user stats:', error);
-    throw error;
+    process.exit(1);
   }
 
   if (!userStats || userStats.length === 0) {
     console.log('No users with raffle entries found.');
-    return [];
+    process.exit(0);
   }
 
-  // Format user data with contact information
-  const eligibleUsers = userStats.map(stat => ({
+  return userStats.map(stat => ({
     userId: stat.user_id,
-    name: stat.users?.name || 'N/A',
+    name: stat.users?.name || 'Unknown',
     phone: stat.users?.phone || 'N/A',
     email: stat.users?.email || 'N/A',
     visits: stat.visit_count,
     raffleEntries: stat.raffle_entries
   }));
-
-  return eligibleUsers;
 }
 
-function displayEligibleUsers(users) {
+function displayPool(users, excluded) {
   console.log('='.repeat(60));
-  console.log('RAFFLE-ELIGIBLE USERS');
+  console.log('RAFFLE POOL');
   console.log('='.repeat(60));
-  console.log(`Total eligible users: ${users.length}\n`);
 
-  let totalEntries = 0;
-  users.forEach((user, index) => {
-    console.log(`${index + 1}. ${user.name}`);
-    console.log(`   Phone: ${user.phone}`);
-    console.log(`   Email: ${user.email}`);
-    console.log(`   Visits: ${user.visits}`);
-    console.log(`   Raffle Entries: ${user.raffleEntries}`);
-    console.log('');
-    totalEntries += user.raffleEntries;
+  if (excluded.length > 0) {
+    console.log(`\nExcluded from this draw (${excluded.length}):`);
+    excluded.forEach(u => console.log(`  - ${u.name} (${u.userId})`));
+  }
+
+  const pool = users.filter(u => !excludeIds.includes(u.userId));
+  const totalEntries = pool.reduce((sum, u) => sum + u.raffleEntries, 0);
+
+  console.log(`\nEligible users: ${pool.length}`);
+  console.log(`Total raffle entries: ${totalEntries}\n`);
+
+  pool.forEach((user, i) => {
+    const odds = ((user.raffleEntries / totalEntries) * 100).toFixed(1);
+    console.log(`  ${i + 1}. ${user.name} — ${user.visits} visits, ${user.raffleEntries} entries (${odds}%)`);
   });
 
-  console.log(`Total raffle entries: ${totalEntries}\n`);
-  return totalEntries;
+  console.log('');
+  return { pool, totalEntries };
 }
 
-function drawWinner(users) {
-  // Create an array with one slot per entry
+function drawWinner(pool, totalEntries) {
+  // Build weighted entry array
   const entries = [];
-  users.forEach(user => {
+  pool.forEach(user => {
     for (let i = 0; i < user.raffleEntries; i++) {
       entries.push(user);
     }
   });
 
-  // Randomly select an entry
   const winningIndex = Math.floor(Math.random() * entries.length);
   const winner = entries[winningIndex];
 
   console.log('='.repeat(60));
-  console.log('🎉 RAFFLE WINNER 🎉');
+  console.log('WINNER');
   console.log('='.repeat(60));
-  console.log(`Name: ${winner.name}`);
-  console.log(`Phone: ${winner.phone}`);
-  console.log(`Email: ${winner.email}`);
-  console.log(`Visits: ${winner.visits}`);
-  console.log(`Raffle Entries: ${winner.raffleEntries}`);
-  console.log(`\nWinning entry #${winningIndex + 1} out of ${entries.length} total entries`);
+  console.log(`  Name:    ${winner.name}`);
+  console.log(`  Phone:   ${winner.phone}`);
+  console.log(`  Email:   ${winner.email}`);
+  console.log(`  Visits:  ${winner.visits}`);
+  console.log(`  Entries: ${winner.raffleEntries}`);
+  console.log(`  Odds:    ${((winner.raffleEntries / totalEntries) * 100).toFixed(1)}%`);
+  console.log(`\n  (entry ${winningIndex + 1} of ${totalEntries})`);
   console.log('='.repeat(60));
+  console.log(`\nTo accept: done!`);
+  console.log(`To reject and redraw, run again with:`);
+  console.log(`  node scripts/raffle-draw.js --exclude=${[...excludeIds, winner.userId].join(',')}`);
 
   return winner;
 }
 
 async function main() {
-  try {
-    const eligibleUsers = await getRaffleEligibleUsers();
-    
-    if (eligibleUsers.length === 0) {
-      console.log('No eligible users for the raffle.');
-      return;
-    }
+  console.log(`Connecting to: ${process.env.NEXT_PUBLIC_SUPABASE_URL}\n`);
 
-    const totalEntries = displayEligibleUsers(eligibleUsers);
-    
-    console.log('\nPress Enter to draw a winner...');
-    process.stdin.once('data', () => {
-      drawWinner(eligibleUsers);
-      process.exit(0);
-    });
+  const allUsers = await getRaffleEligibleUsers();
 
-  } catch (error) {
-    console.error('Error running raffle:', error);
-    process.exit(1);
+  const excluded = allUsers.filter(u => excludeIds.includes(u.userId));
+  const { pool, totalEntries } = displayPool(allUsers, excluded);
+
+  if (pool.length === 0) {
+    console.log('No eligible users remaining after exclusions.');
+    process.exit(0);
   }
+
+  drawWinner(pool, totalEntries);
 }
 
 main();

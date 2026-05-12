@@ -37,6 +37,9 @@ export const RESTAURANT_WEEK_CONFIG = {
    *
    * Format: 'YYYY-MM-DD'
    * Check-ins close at the end of this date.
+   *
+   * NOTE: Close check-ins on the Sunday morning after the last day at 6:00 AM ET.
+   * Participants check in late at night (especially at bars), so don't cut off at midnight.
    */
   endDate: '2026-03-21',
   

@@ -10,6 +10,17 @@ references:
 phases:
   - name: wrap-up
     steps:
+      - id: CLS-000
+        title: Close check-ins
+        required: true
+        notes: >
+          Check-ins must be closed on Sunday morning at 6:00 AM ET, the day after
+          the last event day. Participants check in late at night (especially bars),
+          so don't close at midnight — wait until 6 AM.
+          Set endDate in src/config/restaurant-week.ts or use forceEnableInProduction: false
+          to disable check-ins, then deploy.
+        expected: Check-ins are no longer accepted on production.
+
       - id: CLS-001
         title: Confirm event has ended
         files:

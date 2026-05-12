@@ -2,65 +2,38 @@
 
 AI-first seasonal operations for a Next.js app (Clerk + Supabase + Vercel).
 
-## Start Here (Fully Guided)
+## Start Here: Meet the Assistant
 
-If you want a guided, one-step-at-a-time AI experience, start here and skip the rest for now.
+This project ships with a built-in AI assistant that knows the codebase, walks you through operations step by step, and adapts to your experience level. You don't need to be a developer to use it.
 
-### OpenCode
-
-Run:
-
-- `/new-season-quickstart` for season setup
-- `/close-season` for season closeout
-
-Wrapper files (repo):
-
-- `.opencode/commands/new-season-quickstart.md`
-- `.opencode/commands/close-season.md`
-
-### Claude
+### Claude Code or OpenCode
 
 Run:
 
-- `/new-season-quickstart` for season setup
-- `/close-season` for season closeout
+```
+/assistant
+```
 
-These commands will guide you through everything, including safety checks and required outputs.
+That's it. The assistant will introduce itself, ask a couple of questions, and help you with whatever you need.
 
-### Not Using OpenCode Or Claude?
+### Any other AI tool
 
-Paste this into your AI to get a fully guided setup in your harness:
+If you're using Cursor, Windsurf, or any other AI tool that can read files and run terminal commands, paste this into a new chat:
 
 ```text
-You are my Restaurant Week Bingo operations assistant.
-
-First, research whether this harness supports slash/custom commands and how to define them.
-If slash/custom commands are supported, create thin wrappers named:
-- /new-season-quickstart
-- /close-season
-
-Wrappers must load and follow exactly:
-1) ops/environment-map.md
-2) ops/playbooks/start-season.yaml (or close-season.yaml)
-3) ops/ai/new-season-assistant.md (or close-season-assistant.md)
-
-Rules:
-- one step at a time
-- require command output before moving on
-- enforce hard-stop safety checks
-- do not duplicate business logic inside wrappers
-
-If slash/custom commands are NOT supported, run this workflow directly by loading the same files and guiding me step-by-step.
+Read .assist/prompt.md and follow it as your operating instructions for this
+conversation. Start with the onboarding flow described there.
 ```
 
-Fallback commands (works in any harness):
+### What can it help with?
 
-```bash
-npm run ai:new-season-guide
-npm run ai:close-season-guide
-```
+- **Season setup** — walks you through everything from updating dates to importing restaurants
+- **Season closeout** — raffle draw, backups, reporting
+- **Understanding the codebase** — explains how things work in plain language
+- **Making changes** — guides you through edits with safety checks
+- **Troubleshooting** — helps investigate and fix issues
 
-Then paste that guidance into your AI and follow it exactly.
+The assistant remembers where you left off between sessions (stored locally in `.assist/memory.md`, not shared with the repo).
 
 ---
 
